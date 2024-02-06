@@ -44,11 +44,15 @@
 	async function onSubmit(event: Event) {
 		event.preventDefault();
 		showOptions = false;
+		const previousHistory = JSON.parse(JSON.stringify(session));
+		if (options.system) {
+			session.push({ type: 'system', content: options.system });
+		}
 		session.push({ type: 'question', content: promptText });
 		const promptInput = promptText;
 		promptText = '';
 
-		const answer = $state<Answer>({ type: 'answer' as 'answer', content: '', usage: undefined });
+		const answer = $state<Question | Answer>({ type: 'answer', content: '', usage: undefined });
 		session.push(answer);
 
 		const response = await fetch('/api/chat', {
@@ -59,12 +63,23 @@
 			body: JSON.stringify({
 				apiKey: $apiKey,
 				prompt: promptInput,
-				history: session,
+				history: previousHistory,
 				options
 			})
 		});
 		if (!response.ok) {
-			// TODO Handle errors
+			const rawBody = await response.text();
+			answer.type = 'error';
+			try {
+				const body = JSON.parse(rawBody) as { error: any; code: 'ERR_PARSING' | 'ERR_API_KEY' };
+				if (body.code === 'ERR_PARSING') {
+					answer.content = `Failed to send request:\n${body.error.issues.map((issue: { message: string }) => issue.message).join('\n')}`;
+				} else if (body.code === 'ERR_API_KEY') {
+					answer.content = 'Your API Key is invalid.';
+				}
+			} catch (error) {
+				answer.content = `Failed to send request: ${response.status} ${response.statusText}`;
+			}
 			return;
 		}
 		const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
@@ -73,7 +88,7 @@
 			if (done) break;
 			if (/^#/.test(value)) {
 				const usage = JSON.parse(value.slice(1)) as Usage;
-				answer.usage = usage;
+				(answer as Answer).usage = usage;
 			} else {
 				answer.content += value ?? '';
 			}
@@ -96,7 +111,7 @@
 		{#if session.length > 0}
 			{#each session as block}
 				{#if block.type === 'answer'}
-					<div class=" max-w-[66%] ml-auto">
+					<div class="max-w-[66%] ml-auto">
 						<p class="text-xs opacity-75 text-right text-primary-500">Answer</p>
 						<div class="card p-4 variant-ghost-primary whitespace-pre-wrap" transition:scale>
 							{block.content}
@@ -109,10 +124,24 @@
 							</p>
 						{/if}
 					</div>
-				{:else}
-					<div class=" max-w-[66%]">
+				{:else if block.type === 'question'}
+					<div class="max-w-[66%]">
 						<p class="text-xs opacity-75 text-surface-300">Question</p>
 						<div class="card p-4 variant-ghost-surface whitespace-pre-wrap" transition:scale>
+							{block.content}
+						</div>
+					</div>
+				{:else if block.type === 'error'}
+					<div class="max-w-[66%] ml-auto">
+						<p class="text-xs opacity-75 text-error-300">Error</p>
+						<div class="card p-4 variant-ghost-error whitespace-pre-wrap" transition:scale>
+							{block.content}
+						</div>
+					</div>
+				{:else}
+					<div class="w-full">
+						<p class="text-xs opacity-75 text-surface-300">System</p>
+						<div class="card p-4 variant-ghost-secondary whitespace-pre-wrap" transition:scale>
 							{block.content}
 						</div>
 					</div>

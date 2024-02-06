@@ -1,7 +1,7 @@
 export type Usage = { prompt_tokens: number; total_tokens: number; completion_tokens: number };
 
 export type Question = {
-	type: 'question' | 'system';
+	type: 'question' | 'system' | 'error';
 	content: string;
 };
 
