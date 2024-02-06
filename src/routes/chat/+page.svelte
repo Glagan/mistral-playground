@@ -43,6 +43,7 @@
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
+		showOptions = false;
 		session.push({ type: 'question', content: promptText });
 		const promptInput = promptText;
 		promptText = '';
@@ -86,9 +87,9 @@
 	}
 </script>
 
-<div class="flex flex-col gap-4 p-4 max-w-3xl w-[768px] mx-auto">
+<div class="flex justify-center items-stretch flex-col gap-4 p-4">
 	<div
-		class="flex flex-col gap-4 flex-shrink"
+		class="flex flex-col gap-4 flex-shrink w-full"
 		class:flex-grow={session.length === 0}
 		transition:scale
 	>
@@ -154,15 +155,11 @@
 					Options
 				</button>
 			{:else}
-				<span class="flex-grow"></span>
+				<button class="btn variant-ghost-warning" onclick={resetSession}>Reset session</button>
 			{/if}
 			<button type="submit" class="btn variant-filled-primary">Submit</button>
 		</div>
-		{#if session.length}
-			<div class="flex items-center justify-center mt-4">
-				<button class="btn variant-ghost-warning" onclick={resetSession}>Reset session</button>
-			</div>
-		{:else if showOptions}
+		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
 				<div class="flex flex-row justify-between gap-2 items-center">
 					<select bind:value={options.model} class="select flex-grow-0">
@@ -223,9 +220,9 @@
 						placeholder="Seed"
 					/>
 					<div class="flex-shrink-0 cursor-pointer">
-						<SlideToggle name="safePrompt" bind:checked={options.safePrompt}>
-							Safe prompt
-						</SlideToggle>
+						<SlideToggle name="safePrompt" bind:checked={options.safePrompt}
+							>Safe prompt</SlideToggle
+						>
 					</div>
 				</div>
 				<label class="label">

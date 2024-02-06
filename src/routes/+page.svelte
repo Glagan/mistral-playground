@@ -19,8 +19,8 @@
 	}
 </script>
 
-<div class="flex flex-col justify-evenly p-4 max-w-3xl w-[768px] mx-auto">
-	<div class="flex flex-col gap-2">
+<div class="flex justify-center items-stretch flex-col gap-4 p-4">
+	<div class="flex flex-grow flex-col gap-2">
 		<span class="text-lucky-point-400"> This playground require an API key: </span>
 		<form class="flex gap-2" use:focusTrap={true} onsubmit={onSubmit}>
 			<input
