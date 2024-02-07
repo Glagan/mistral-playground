@@ -5,7 +5,7 @@
 	const { messages } = $props<{ messages: (Question | Answer)[] }>();
 </script>
 
-<div class="flex flex-col gap-4 flex-shrink w-full" class:flex-grow={messages.length === 0}>
+<div class="flex flex-col flex-grow gap-4 flex-shrink w-full">
 	{#if messages.length > 0}
 		{#each messages as message}
 			<Message {message} />

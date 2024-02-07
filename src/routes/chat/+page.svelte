@@ -30,7 +30,7 @@
 			topP: 1,
 			maxTokens: undefined,
 			safePrompt: false,
-			randomSeed: undefined,
+			randomSeed: $settings.seed,
 			system: ''
 		};
 	}
@@ -39,6 +39,7 @@
 	const unsubscribe = settings.subscribe((value) => {
 		if (messages.length === 0) {
 			options.temperature = value.temperature;
+			options.randomSeed = value.seed;
 		}
 	});
 
@@ -61,6 +62,10 @@
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
+		if (!promptText.length) {
+			return;
+		}
+
 		loading = true;
 		showOptions = false;
 		keepGenerating = true;
@@ -120,9 +125,11 @@
 			console.error(error);
 			answer.type = 'error';
 			answer.content = `Failed to generate: ${error}`;
+		} finally {
+			currentStream = null;
+			loading = false;
+			keepGenerating = false;
 		}
-		currentStream = null;
-		loading = false;
 	}
 
 	async function stopGenerating(event: Event) {
@@ -134,7 +141,9 @@
 		}
 	}
 
-	function resetSession() {
+	function resetSession(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
 		id = uuidv4();
 		messages = [];
 		showOptions = false;
@@ -149,11 +158,7 @@
 
 <div class="flex justify-center items-stretch flex-col gap-4 p-4">
 	<Messages bind:messages />
-	<form
-		class="flex flex-col gap-2 flex-grow flex-shrink-0"
-		use:focusTrap={true}
-		onsubmit={onSubmit}
-	>
+	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		<label class="label">
 			<div class="flex justify-between items-center">
 				<span>Prompt</span>
@@ -187,6 +192,7 @@
 				<button
 					class="btn variant-ghost-warning transition-all disabled:opacity-75"
 					disabled={loading}
+					type="button"
 					transition:fade={{ duration: 200 }}
 					onclick={resetSession}>Reset session</button
 				>
@@ -256,7 +262,7 @@
 						name="maxTokens"
 						id="maxTokens"
 						min="1"
-						max="16000"
+						max="32000"
 						placeholder="Max tokens"
 					/>
 					<input
@@ -268,9 +274,9 @@
 						placeholder="Seed"
 					/>
 					<div class="flex-shrink-0 cursor-pointer">
-						<SlideToggle name="safePrompt" bind:checked={options.safePrompt}
-							>Safe prompt</SlideToggle
-						>
+						<SlideToggle name="safePrompt" bind:checked={options.safePrompt}>
+							Safe prompt
+						</SlideToggle>
 					</div>
 				</div>
 				<label class="label">

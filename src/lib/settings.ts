@@ -3,6 +3,10 @@ import type { Writable } from 'svelte/store';
 
 export type Settings = {
 	temperature: number;
+	seed: number | undefined;
 };
 
-export const settings: Writable<Settings> = localStorageStore('settings', { temperature: 0.7 });
+export const settings: Writable<Settings> = localStorageStore('settings', {
+	temperature: 0.7,
+	seed: undefined
+});

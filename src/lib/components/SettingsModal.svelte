@@ -5,9 +5,9 @@
 	const modalStore = getModalStore();
 </script>
 
-<div class="w-modal-slim">
+<div class="w-modal">
 	<h2 class="text-xl">Settings</h2>
-	<div class="card variant-filled-surface p-4 min-w-52">
+	<div class="card variant-filled-surface p-4 flex flex-col gap-4">
 		<label>
 			<div class="flex items-center justify-between">
 				<span>Default temperature</span>
@@ -22,6 +22,17 @@
 				max="1"
 				step="0.01"
 				placeholder="Temperature"
+			/>
+		</label>
+		<label>
+			<div class="flex items-center justify-between">Default seed</div>
+			<input
+				bind:value={$settings.seed}
+				class="input"
+				type="number"
+				name="randomSeed"
+				id="randomSeed"
+				placeholder="Seed"
 			/>
 		</label>
 	</div>

@@ -100,16 +100,14 @@ export const POST: RequestHandler = async ({ url, request }) => {
 				if (usage) {
 					controller!.enqueue(`#${JSON.stringify(usage)}`);
 				}
-				if (!stream.locked) {
-					await stream.cancel();
-				}
 			} catch (_error) {
 				const error = _error as Error;
 				if (error.message !== 'Invalid state: Controller is already closed') {
 					console.error(error);
 				}
-				if (!stream.locked) {
-					await stream.cancel();
+			} finally {
+				if (!cancelled) {
+					controller!.close();
 				}
 			}
 		})();
