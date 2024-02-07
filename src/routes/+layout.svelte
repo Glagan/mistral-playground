@@ -3,7 +3,12 @@
 	import { goto } from '$app/navigation';
 	import { apiKey } from '$lib/apiKey';
 	import { history, type HistoryEntry } from '$lib/history';
-	import { initializeStores, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
+	import {
+		initializeStores,
+		Modal,
+		type ModalComponent,
+		type ModalSettings
+	} from '@skeletonlabs/skeleton';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import HistoryEntryModal from '$lib/components/HistoryEntryModal.svelte';
@@ -13,6 +18,11 @@
 	initializeStores();
 	const modalStore = getModalStore();
 
+	const modalRegistry: Record<string, ModalComponent> = {
+		settings: { ref: SettingsModal },
+		historyEntry: { ref: HistoryEntryModal }
+	};
+
 	function deleteApiKey() {
 		apiKey.set('');
 		goto('/');
@@ -21,10 +31,8 @@
 	function seeHistoryEntry(entry: HistoryEntry) {
 		const historyEntryModal: ModalSettings = {
 			type: 'component',
-			component: {
-				ref: HistoryEntryModal,
-				props: { entry }
-			}
+			component: 'historyEntry',
+			meta: { entry }
 		};
 		modalStore.trigger(historyEntryModal);
 	}
@@ -33,13 +41,11 @@
 		$history = $history.filter((e) => e.id !== entry.id);
 	}
 
-	const settingsModal: ModalSettings = {
-		type: 'component',
-		component: {
-			ref: SettingsModal
-		}
-	};
 	function openSettings() {
+		const settingsModal: ModalSettings = {
+			type: 'component',
+			component: 'settings'
+		};
 		modalStore.trigger(settingsModal);
 	}
 </script>
@@ -99,7 +105,7 @@
 		</button>
 	</div>
 </div>
-<Modal />
+<Modal components={modalRegistry} />
 
 <style lang="postcss">
 	.grid-layout {

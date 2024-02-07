@@ -182,7 +182,7 @@
 		</div>
 		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
-				<div class="flex flex-row justify-between gap-2 items-center">
+				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
 					<select bind:value={options.model} class="select flex-grow-0">
 						<option value="mistral-tiny">Mistral Tiny</option>
 						<option value="mistral-small">Mistral Small</option>
@@ -221,7 +221,7 @@
 						/>
 					</label>
 				</div>
-				<div class="flex flex-row justify-between gap-2 items-center">
+				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
 					<input
 						bind:value={options.maxTokens}
 						class="input"
@@ -261,6 +261,7 @@
 						name="system"
 						id="system"
 						placeholder="System prompt"
+						rows="4"
 					></textarea>
 				</label>
 			</div>
