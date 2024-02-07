@@ -1,11 +1,14 @@
 <script lang="ts">
-	import { fade, scale, slide } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/apiKey';
 	import type { Answer, Options, Question, Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
+	import { history } from '$lib/history';
+	import { v4 as uuidv4 } from 'uuid';
+	import Messages from '$lib/components/Messages.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -13,53 +16,53 @@
 
 	const encoding = get_encoding('cl100k_base');
 
-	let session = $state<(Question | Answer)[]>([
-		// {
-		// 	type: 'question',
-		// 	content:
-		// 		'Nulla nulla anim minim consequat laboris enim tempor eiusmod duis ad. Laboris dolor officia nostrud magna consequat sunt aliqua ex ea fugiat et nulla. Non qui exercitation ex sit duis anim in non amet qui nisi dolor aliqua sunt. Ut Lorem sint amet sit est cupidatat nostrud Lorem. Ex amet elit ullamco incididunt deserunt laborum fugiat aliqua. Minim ad in deserunt ea consectetur laborum pariatur elit fugiat aliquip nisi officia in et. Cupidatat adipisicing culpa ad nostrud officia veniam incididunt eiusmod aliqua officia ex aute.'
-		// },
-		// {
-		// 	type: 'answer',
-		// 	content:
-		// 		'Nulla nulla anim minim consequat laboris enim tempor eiusmod duis ad. Laboris dolor officia nostrud magna consequat sunt aliqua ex ea fugiat et nulla. Non qui exercitation ex sit duis anim in non amet qui nisi dolor aliqua sunt. Ut Lorem sint amet sit est cupidatat nostrud Lorem. Ex amet elit ullamco incididunt deserunt laborum fugiat aliqua. Minim ad in deserunt ea consectetur laborum pariatur elit fugiat aliquip nisi officia in et. Cupidatat adipisicing culpa ad nostrud officia veniam incididunt eiusmod aliqua officia ex aute.'
-		// }
-	]);
+	let id = $state(uuidv4());
+	let messages = $state<(Question | Answer)[]>([]);
 	let showOptions = $state(false);
 	let promptText = $state('');
 
-	const options = $state<Options>({
-		model: 'mistral-small',
-		temperature: 0.7,
-		topP: 1,
-		maxTokens: undefined,
-		safePrompt: false,
-		randomSeed: undefined,
-		system: ''
-	});
+	function defaultOptions(): Options {
+		return {
+			model: 'mistral-small',
+			temperature: 0.7,
+			topP: 1,
+			maxTokens: undefined,
+			safePrompt: false,
+			randomSeed: undefined,
+			system: ''
+		};
+	}
+	let options = $state<Options>(defaultOptions());
 
 	const tokens = $derived(encoding.encode(promptText).length);
 	const systemPromptTokens = $derived(encoding.encode(options.system).length);
 
+	function updateOrInsertHistory() {
+		$history = $history.filter((e) => e.id !== id);
+		$history.unshift({
+			id,
+			messages: JSON.parse(JSON.stringify(messages)),
+			options: JSON.parse(JSON.stringify(options))
+		});
+	}
+
 	async function onSubmit(event: Event) {
 		event.preventDefault();
 		showOptions = false;
-		const previousHistory = JSON.parse(JSON.stringify(session));
+		const previousHistory = JSON.parse(JSON.stringify(messages));
 		if (options.system) {
-			session.push({ type: 'system', content: options.system });
+			messages.push({ type: 'system', content: options.system });
 		}
-		session.push({ type: 'question', content: promptText });
+		messages.push({ type: 'question', content: promptText });
 		const promptInput = promptText;
 		promptText = '';
 
 		const answer = $state<Question | Answer>({ type: 'answer', content: '', usage: undefined });
-		session.push(answer);
+		messages.push(answer);
 
 		const response = await fetch('/api/chat', {
 			method: 'POST',
-			headers: {
-				'Content-Type': 'application/json'
-			},
+			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				apiKey: $apiKey,
 				prompt: promptInput,
@@ -67,88 +70,52 @@
 				options
 			})
 		});
-		if (!response.ok) {
-			const rawBody = await response.text();
-			answer.type = 'error';
-			try {
-				const body = JSON.parse(rawBody) as { error: any; code: 'ERR_PARSING' | 'ERR_API_KEY' };
-				if (body.code === 'ERR_PARSING') {
-					answer.content = `Failed to send request:\n${body.error.issues.map((issue: { message: string }) => issue.message).join('\n')}`;
-				} else if (body.code === 'ERR_API_KEY') {
-					answer.content = 'Your API Key is invalid.';
+		try {
+			if (!response.ok) {
+				const rawBody = await response.text();
+				answer.type = 'error';
+				try {
+					const body = JSON.parse(rawBody) as { error: any; code: 'ERR_PARSING' | 'ERR_API_KEY' };
+					if (body.code === 'ERR_PARSING') {
+						answer.content = `Failed to send request:\n${body.error.issues.map((issue: { message: string }) => issue.message).join('\n')}`;
+					} else if (body.code === 'ERR_API_KEY') {
+						answer.content = 'Your API Key is invalid.';
+					}
+				} catch (error) {
+					answer.content = `Failed to send request: ${response.status} ${response.statusText}`;
 				}
-			} catch (error) {
-				answer.content = `Failed to send request: ${response.status} ${response.statusText}`;
+				updateOrInsertHistory();
+				return;
 			}
-			return;
-		}
-		const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-		while (reader && true) {
-			const { value, done } = await reader.read();
-			if (done) break;
-			if (/^#/.test(value)) {
-				const usage = JSON.parse(value.slice(1)) as Usage;
-				(answer as Answer).usage = usage;
-			} else {
-				answer.content += value ?? '';
+			// Read each chunk and update the last response reference
+			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
+			while (reader && true) {
+				const { value, done } = await reader.read();
+				if (done) break;
+				if (/^#/.test(value)) {
+					const usage = JSON.parse(value.slice(1)) as Usage;
+					(answer as Answer).usage = usage;
+				} else {
+					answer.content += value ?? '';
+				}
 			}
+			updateOrInsertHistory();
+		} catch (error) {
+			console.error(error);
 		}
 	}
 
 	function resetSession() {
-		session = [];
+		id = uuidv4();
+		messages = [];
 		showOptions = false;
 		promptText = '';
+		options = defaultOptions();
 	}
 </script>
 
 <div class="flex justify-center items-stretch flex-col gap-4 p-4">
-	<div
-		class="flex flex-col gap-4 flex-shrink w-full"
-		class:flex-grow={session.length === 0}
-		transition:scale
-	>
-		{#if session.length > 0}
-			{#each session as block}
-				{#if block.type === 'answer'}
-					<div class="max-w-[66%] ml-auto">
-						<p class="text-xs opacity-75 text-right text-primary-500">Answer</p>
-						<div class="card p-4 variant-ghost-primary whitespace-pre-wrap" transition:scale>
-							{block.content}
-						</div>
-						{#if block.usage}
-							<p class="text-xs opacity-75 text-right text-primary-500">
-								Prompt: <span class="text-primary-400">{block.usage.prompt_tokens}</span> /
-								Completion: <span class="text-primary-400">{block.usage.completion_tokens}</span> /
-								Total: <span class="text-primary-400">{block.usage.total_tokens}</span>
-							</p>
-						{/if}
-					</div>
-				{:else if block.type === 'question'}
-					<div class="max-w-[66%]">
-						<p class="text-xs opacity-75 text-surface-300">Question</p>
-						<div class="card p-4 variant-ghost-surface whitespace-pre-wrap" transition:scale>
-							{block.content}
-						</div>
-					</div>
-				{:else if block.type === 'error'}
-					<div class="max-w-[66%] ml-auto">
-						<p class="text-xs opacity-75 text-error-300">Error</p>
-						<div class="card p-4 variant-ghost-error whitespace-pre-wrap" transition:scale>
-							{block.content}
-						</div>
-					</div>
-				{:else}
-					<div class="w-full">
-						<p class="text-xs opacity-75 text-surface-300">System</p>
-						<div class="card p-4 variant-ghost-secondary whitespace-pre-wrap" transition:scale>
-							{block.content}
-						</div>
-					</div>
-				{/if}
-			{/each}
-		{/if}
-	</div>
+	<Messages {messages} />
 	<form
 		class="flex flex-col gap-2 flex-grow flex-shrink-0"
 		use:focusTrap={true}
@@ -172,7 +139,7 @@
 			/>
 		</label>
 		<div class="flex flex-row justify-between">
-			{#if !session.length}
+			{#if !messages.length}
 				<button
 					class="btn variant-ghost-surface"
 					type="button"
@@ -275,6 +242,3 @@
 		{/if}
 	</form>
 </div>
-
-<style lang="postcss">
-</style>

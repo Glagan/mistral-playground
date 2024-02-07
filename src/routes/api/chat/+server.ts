@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ url, request }) => {
 			role: type === 'question' ? 'user' : 'assistant',
 			content
 		}));
-		const chatStreamResponse = await client.chatStream({
+		const chatStreamResponse = client.chatStream({
 			model: body.options?.model ? body.options?.model : 'mistral-small',
 			messages: [
 				...(body.options?.system ? [{ role: 'system', content: body.options.system }] : []),
