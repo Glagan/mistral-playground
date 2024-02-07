@@ -59,10 +59,10 @@
 		<img class="block" src="/logo.webp" alt="Mistral Playground" />
 	</div>
 	<slot />
-	<div class="flex flex-col items-center h-full p-4 overflow-hidden">
+	<div class="flex flex-col items-center h-full p-4 overflow-hidden max-h-screen">
 		{#if $apiKey}
 			{#if $history.length}
-				<div class="w-full overflow-hidden" transition:fade>
+				<div class="w-full overflow-auto" transition:fade={{ duration: 200 }}>
 					<h2 class="text-lg font-bold mb-2">History</h2>
 					<div class="flex flex-col gap-2">
 						{#each $history as entry (entry.id)}

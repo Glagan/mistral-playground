@@ -65,42 +65,53 @@ export const POST: RequestHandler = async ({ url, request }) => {
 		});
 
 		let controller: ReadableStreamDefaultController<any>;
-		const response = new Response(
-			new ReadableStream({
-				start(_controller) {
-					controller = _controller;
-				},
-				// TODO handle errors
-				pull(controller) {},
-				cancel() {}
-			}),
-			{
-				headers: {
-					'Cache-Control': 'no-store',
-					'Content-Type': 'text/event-stream',
-					Connection: 'keep-alive',
-					'Content-Encoding': 'none',
-					'Access-Control-Allow-Origin': '*'
-				}
+		let cancelled = false;
+		const stream = new ReadableStream({
+			start(_controller) {
+				controller = _controller;
+			},
+			cancel() {
+				cancelled = true;
 			}
-		);
+		});
+		const response = new Response(stream, {
+			headers: {
+				'Cache-Control': 'no-store',
+				'Content-Type': 'text/event-stream',
+				Connection: 'keep-alive',
+				'Content-Encoding': 'none',
+				'Access-Control-Allow-Origin': '*'
+			}
+		});
 
 		(async () => {
-			let usage: Usage | null = null;
-			for await (const chunk of chatStreamResponse) {
-				if (chunk.choices[0].delta.content !== undefined) {
-					const streamText = chunk.choices[0].delta.content;
-					controller!.enqueue(streamText);
+			try {
+				let usage: Usage | null = null;
+				for await (const chunk of chatStreamResponse) {
+					if (chunk.choices[0].delta.content !== undefined) {
+						const streamText = chunk.choices[0].delta.content;
+						controller!.enqueue(streamText);
+					}
+					const _usage = (chunk as unknown as { usage: Usage | null }).usage;
+					if (_usage) {
+						usage = _usage;
+					}
 				}
-				const _usage = (chunk as unknown as { usage: Usage | null }).usage;
-				if (_usage) {
-					usage = _usage;
+				if (usage) {
+					controller!.enqueue(`#${JSON.stringify(usage)}`);
+				}
+				if (!stream.locked) {
+					await stream.cancel();
+				}
+			} catch (_error) {
+				const error = _error as Error;
+				if (error.message !== 'Invalid state: Controller is already closed') {
+					console.error(error);
+				}
+				if (!stream.locked) {
+					await stream.cancel();
 				}
 			}
-			if (usage) {
-				controller!.enqueue(`#${JSON.stringify(usage)}`);
-			}
-			controller!.close();
 		})();
 
 		return response;

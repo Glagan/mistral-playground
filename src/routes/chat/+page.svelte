@@ -56,11 +56,14 @@
 	}
 
 	let loading = $state(false);
+	let keepGenerating = $state(true);
+	let currentStream: ReadableStream | null = null;
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
 		loading = true;
 		showOptions = false;
+		keepGenerating = true;
 		const previousHistory = JSON.parse(JSON.stringify(messages));
 		if (options.system) {
 			messages.push({ type: 'system', content: options.system });
@@ -100,8 +103,9 @@
 				return;
 			}
 			// Read each chunk and update the last response reference
+			currentStream = response.body;
 			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-			while (reader && true) {
+			while (reader && keepGenerating) {
 				const { value, done } = await reader.read();
 				if (done) break;
 				if (/^#/.test(value)) {
@@ -114,8 +118,20 @@
 			updateOrInsertHistory();
 		} catch (error) {
 			console.error(error);
+			answer.type = 'error';
+			answer.content = `Failed to generate: ${error}`;
 		}
+		currentStream = null;
 		loading = false;
+	}
+
+	async function stopGenerating(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+		keepGenerating = false;
+		if (currentStream && !currentStream.locked) {
+			currentStream.cancel();
+		}
 	}
 
 	function resetSession() {
@@ -171,8 +187,19 @@
 				<button
 					class="btn variant-ghost-warning transition-all disabled:opacity-75"
 					disabled={loading}
+					transition:fade={{ duration: 200 }}
 					onclick={resetSession}>Reset session</button
 				>
+			{/if}
+			{#if loading && keepGenerating}
+				<button
+					class="btn variant-ghost-error transition-all disabled:opacity-75"
+					type="button"
+					transition:fade={{ duration: 200 }}
+					onclick={stopGenerating}
+				>
+					Stop
+				</button>
 			{/if}
 			<button
 				type="submit"
