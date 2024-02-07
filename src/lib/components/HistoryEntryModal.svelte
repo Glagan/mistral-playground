@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { HistoryEntry } from '$lib/history';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import Messages from './Messages.svelte';
+	import Messages from '$lib/components/Messages.svelte';
 
 	const modalStore = getModalStore();
 
@@ -10,11 +10,11 @@
 
 {#if $modalStore.length && $modalStore[0]}
 	<div>
-		<div class="card variant-ghost-surface p-4">
+		<div class="card variant-filled-surface p-4 max-w-xl max-h-96 overflow-auto">
 			<Messages messages={entry.messages} />
 		</div>
 		<div class="flex items-center justify-center mt-2">
-			<button class="flex-shrink-0 btn variant-ringed-surface" onclick={() => modalStore.close()}>
+			<button class="flex-shrink-0 btn variant-filled-primary" onclick={() => modalStore.close()}>
 				Close
 			</button>
 		</div>

@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { scale } from 'svelte/transition';
-	import Message from './Message.svelte';
+	import Message from '$lib/components/Message.svelte';
 	import type { Answer, Question } from '$lib/types';
 
 	const { messages } = $props<{ messages: (Question | Answer)[] }>();

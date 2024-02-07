@@ -9,6 +9,8 @@
 	import { history } from '$lib/history';
 	import { v4 as uuidv4 } from 'uuid';
 	import Messages from '$lib/components/Messages.svelte';
+	import { settings } from '$lib/settings';
+	import { onDestroy } from 'svelte';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -24,7 +26,7 @@
 	function defaultOptions(): Options {
 		return {
 			model: 'mistral-small',
-			temperature: 0.7,
+			temperature: $settings.temperature,
 			topP: 1,
 			maxTokens: undefined,
 			safePrompt: false,
@@ -34,20 +36,30 @@
 	}
 	let options = $state<Options>(defaultOptions());
 
+	const unsubscribe = settings.subscribe((value) => {
+		if (messages.length === 0) {
+			options.temperature = value.temperature;
+		}
+	});
+
 	const tokens = $derived(encoding.encode(promptText).length);
 	const systemPromptTokens = $derived(encoding.encode(options.system).length);
 
 	function updateOrInsertHistory() {
 		$history = $history.filter((e) => e.id !== id);
-		$history.unshift({
+		$history.splice(0, 0, {
 			id,
 			messages: JSON.parse(JSON.stringify(messages)),
 			options: JSON.parse(JSON.stringify(options))
 		});
+		$history = $history;
 	}
+
+	let loading = $state(false);
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
+		loading = true;
 		showOptions = false;
 		const previousHistory = JSON.parse(JSON.stringify(messages));
 		if (options.system) {
@@ -103,6 +115,7 @@
 		} catch (error) {
 			console.error(error);
 		}
+		loading = false;
 	}
 
 	function resetSession() {
@@ -112,10 +125,14 @@
 		promptText = '';
 		options = defaultOptions();
 	}
+
+	onDestroy(() => {
+		unsubscribe();
+	});
 </script>
 
 <div class="flex justify-center items-stretch flex-col gap-4 p-4">
-	<Messages {messages} />
+	<Messages bind:messages />
 	<form
 		class="flex flex-col gap-2 flex-grow flex-shrink-0"
 		use:focusTrap={true}
@@ -151,9 +168,17 @@
 					Options
 				</button>
 			{:else}
-				<button class="btn variant-ghost-warning" onclick={resetSession}>Reset session</button>
+				<button
+					class="btn variant-ghost-warning transition-all disabled:opacity-75"
+					disabled={loading}
+					onclick={resetSession}>Reset session</button
+				>
 			{/if}
-			<button type="submit" class="btn variant-filled-primary">Submit</button>
+			<button
+				type="submit"
+				class="btn variant-filled-primary transition-all disabled:opacity-75"
+				disabled={loading}>Submit</button
+			>
 		</div>
 		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>

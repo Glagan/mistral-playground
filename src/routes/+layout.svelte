@@ -5,31 +5,42 @@
 	import { history, type HistoryEntry } from '$lib/history';
 	import { initializeStores, Modal, type ModalSettings } from '@skeletonlabs/skeleton';
 	import { getModalStore } from '@skeletonlabs/skeleton';
+	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import HistoryEntryModal from '$lib/components/HistoryEntryModal.svelte';
 
 	import '../app.css';
 
 	initializeStores();
+	const modalStore = getModalStore();
 
 	function deleteApiKey() {
 		apiKey.set('');
 		goto('/');
 	}
 
-	const modalStore = getModalStore();
 	function seeHistoryEntry(entry: HistoryEntry) {
-		const modal: ModalSettings = {
+		const historyEntryModal: ModalSettings = {
 			type: 'component',
 			component: {
 				ref: HistoryEntryModal,
 				props: { entry }
 			}
 		};
-		modalStore.trigger(modal);
+		modalStore.trigger(historyEntryModal);
 	}
 
 	function deleteHistoryEntry(entry: HistoryEntry) {
 		$history = $history.filter((e) => e.id !== entry.id);
+	}
+
+	const settingsModal: ModalSettings = {
+		type: 'component',
+		component: {
+			ref: SettingsModal
+		}
+	};
+	function openSettings() {
+		modalStore.trigger(settingsModal);
 	}
 </script>
 
@@ -50,11 +61,15 @@
 					<div class="flex flex-col gap-2">
 						{#each $history as entry (entry.id)}
 							<div class="flex flex-row items-center gap-2">
-								<span class="flex-grow flex-shrink truncate">{entry.messages[0].content}</span>
+								<span class="flex-grow flex-shrink truncate">
+									{entry.messages[0].content}
+								</span>
 								<button
 									class="flex-shrink-0 btn variant-ringed-secondary"
-									onclick={() => seeHistoryEntry(entry)}>See</button
+									onclick={() => seeHistoryEntry(entry)}
 								>
+									See
+								</button>
 								<button
 									class="flex-shrink-0 btn variant-ringed-error"
 									onclick={() => deleteHistoryEntry(entry)}>Delete</button
@@ -72,7 +87,16 @@
 			>
 				Delete API Key
 			</button>
+		{:else}
+			<div class="flex-grow flex-shrink"></div>
 		{/if}
+		<button
+			class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning mt-2"
+			transition:fade
+			onclick={openSettings}
+		>
+			Settings
+		</button>
 	</div>
 </div>
 <Modal />
