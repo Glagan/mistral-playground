@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
+	import { fade, slide } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { history } from '$lib/stores/history';
@@ -60,7 +60,7 @@
 					<h2 class="text-lg font-bold mb-2">History</h2>
 					<div class="flex flex-col gap-2">
 						{#each $history as entry (entry.id)}
-							<div class="flex flex-row items-center gap-2">
+							<div class="flex flex-row items-center gap-2" transition:slide={{ axis: 'y' }}>
 								<span class="flex-grow flex-shrink truncate">
 									{entry.messages[0].content}
 								</span>
