@@ -111,6 +111,7 @@
 				// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
 				const embeddedUsage = answer.content.match(/#({.+?})$/);
 				if (embeddedUsage) {
+					answer.content = answer.content.replace(/#({.+?})$/, '');
 					(answer as Answer).usage = JSON.parse(embeddedUsage[1]) as Usage;
 				}
 				// TODO scroll down messages container on new data
