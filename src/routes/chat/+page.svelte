@@ -58,13 +58,16 @@
 		const previousHistory = JSON.parse(JSON.stringify($current.messages));
 		if ($current.options.system) {
 			$current.messages.push({ type: 'system', content: $current.options.system });
+			$current.messages = $current.messages;
 		}
 		$current.messages.push({ type: 'question', content: promptText });
+		$current.messages = $current.messages;
 		const promptInput = promptText;
 		promptText = '';
 
 		const answer = $state<Question | Answer>({ type: 'answer', content: '', usage: undefined });
 		$current.messages.push(answer);
+		$current.messages = $current.messages;
 
 		const response = await fetch('/api/chat', {
 			method: 'POST',
@@ -147,7 +150,13 @@
 </script>
 
 <div class="flex justify-center items-stretch flex-col gap-4 p-4 max-h-screen">
-	<Messages bind:messages={$current.messages} />
+	{#if $current.messages.length}
+		<Messages bind:messages={$current.messages} />
+	{:else}
+		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto">
+			<span class="text-sm text-surface-200 text-opacity-75 italic">Messages will appear here</span>
+		</div>
+	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		<label class="label">
 			<div class="flex justify-between items-center">
