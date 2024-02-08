@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
-	import { apiKey } from '$lib/apiKey';
-	import { history, type HistoryEntry } from '$lib/history';
+	import { apiKey } from '$lib/stores/apiKey';
+	import { history } from '$lib/stores/history';
 	import {
 		initializeStores,
 		Modal,
@@ -11,7 +11,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import HistoryEntryModal from '$lib/components/HistoryEntryModal.svelte';
+	import { current, type ChatState } from '$lib/stores/current';
 
 	import '../app.css';
 
@@ -19,8 +19,7 @@
 	const modalStore = getModalStore();
 
 	const modalRegistry: Record<string, ModalComponent> = {
-		settings: { ref: SettingsModal },
-		historyEntry: { ref: HistoryEntryModal }
+		settings: { ref: SettingsModal }
 	};
 
 	function deleteApiKey() {
@@ -28,16 +27,11 @@
 		goto('/');
 	}
 
-	function seeHistoryEntry(entry: HistoryEntry) {
-		const historyEntryModal: ModalSettings = {
-			type: 'component',
-			component: 'historyEntry',
-			meta: { entry }
-		};
-		modalStore.trigger(historyEntryModal);
+	function loadHistoryEntry(entry: ChatState) {
+		$current = entry;
 	}
 
-	function deleteHistoryEntry(entry: HistoryEntry) {
+	function deleteHistoryEntry(entry: ChatState) {
 		$history = $history.filter((e) => e.id !== entry.id);
 	}
 
@@ -72,9 +66,9 @@
 								</span>
 								<button
 									class="flex-shrink-0 btn variant-ringed-secondary"
-									onclick={() => seeHistoryEntry(entry)}
+									onclick={() => loadHistoryEntry(entry)}
 								>
-									See
+									Load
 								</button>
 								<button
 									class="flex-shrink-0 btn variant-ringed-error"

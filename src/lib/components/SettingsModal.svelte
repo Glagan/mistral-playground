@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import { settings } from '$lib/settings';
+	import { settings } from '$lib/stores/settings';
 
 	const modalStore = getModalStore();
 </script>

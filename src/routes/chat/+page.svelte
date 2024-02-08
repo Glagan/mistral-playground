@@ -2,15 +2,16 @@
 	import { fade, slide } from 'svelte/transition';
 	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
-	import { apiKey } from '$lib/apiKey';
+	import { apiKey } from '$lib/stores/apiKey';
 	import type { Answer, Options, Question, Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import { history } from '$lib/history';
+	import { history } from '$lib/stores/history';
 	import { v4 as uuidv4 } from 'uuid';
 	import Messages from '$lib/components/Messages.svelte';
-	import { settings } from '$lib/settings';
+	import { settings } from '$lib/stores/settings';
 	import { onDestroy } from 'svelte';
+	import { current, resetCurrent } from '$lib/stores/current';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -18,40 +19,25 @@
 
 	const encoding = get_encoding('cl100k_base');
 
-	let id = $state(uuidv4());
-	let messages = $state<(Question | Answer)[]>([]);
 	let showOptions = $state(false);
 	let promptText = $state('');
 
-	function defaultOptions(): Options {
-		return {
-			model: 'mistral-small',
-			temperature: $settings.temperature,
-			topP: 1,
-			maxTokens: undefined,
-			safePrompt: false,
-			randomSeed: $settings.seed,
-			system: ''
-		};
-	}
-	let options = $state<Options>(defaultOptions());
-
 	const unsubscribe = settings.subscribe((value) => {
-		if (messages.length === 0) {
-			options.temperature = value.temperature;
-			options.randomSeed = value.seed;
+		if ($current.messages.length === 0) {
+			$current.options.temperature = value.temperature;
+			$current.options.randomSeed = value.seed;
 		}
 	});
 
 	const tokens = $derived(encoding.encode(promptText).length);
-	const systemPromptTokens = $derived(encoding.encode(options.system).length);
+	const systemPromptTokens = $derived(encoding.encode($current.options.system).length);
 
 	function updateOrInsertHistory() {
-		$history = $history.filter((e) => e.id !== id);
+		$history = $history.filter((e) => e.id !== $current.id);
 		$history.splice(0, 0, {
-			id,
-			messages: JSON.parse(JSON.stringify(messages)),
-			options: JSON.parse(JSON.stringify(options))
+			id: $current.id,
+			messages: JSON.parse(JSON.stringify($current.messages)),
+			options: JSON.parse(JSON.stringify($current.options))
 		});
 		$history = $history;
 	}
@@ -69,16 +55,16 @@
 		loading = true;
 		showOptions = false;
 		keepGenerating = true;
-		const previousHistory = JSON.parse(JSON.stringify(messages));
-		if (options.system) {
-			messages.push({ type: 'system', content: options.system });
+		const previousHistory = JSON.parse(JSON.stringify($current.messages));
+		if ($current.options.system) {
+			$current.messages.push({ type: 'system', content: $current.options.system });
 		}
-		messages.push({ type: 'question', content: promptText });
+		$current.messages.push({ type: 'question', content: promptText });
 		const promptInput = promptText;
 		promptText = '';
 
 		const answer = $state<Question | Answer>({ type: 'answer', content: '', usage: undefined });
-		messages.push(answer);
+		$current.messages.push(answer);
 
 		const response = await fetch('/api/chat', {
 			method: 'POST',
@@ -87,7 +73,7 @@
 				apiKey: $apiKey,
 				prompt: promptInput,
 				history: previousHistory,
-				options
+				options: $current.options
 			})
 		});
 		try {
@@ -119,6 +105,12 @@
 				} else {
 					answer.content += value ?? '';
 				}
+				// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
+				const embeddedUsage = answer.content.match(/#({.+?})$/);
+				if (embeddedUsage) {
+					(answer as Answer).usage = JSON.parse(embeddedUsage[1]) as Usage;
+				}
+				// TODO scroll down messages container on new data
 			}
 			updateOrInsertHistory();
 		} catch (error) {
@@ -144,11 +136,9 @@
 	function resetSession(event: Event) {
 		event.preventDefault();
 		event.stopPropagation();
-		id = uuidv4();
-		messages = [];
+		resetCurrent();
 		showOptions = false;
 		promptText = '';
-		options = defaultOptions();
 	}
 
 	onDestroy(() => {
@@ -156,8 +146,8 @@
 	});
 </script>
 
-<div class="flex justify-center items-stretch flex-col gap-4 p-4">
-	<Messages bind:messages />
+<div class="flex justify-center items-stretch flex-col gap-4 p-4 max-h-screen">
+	<Messages bind:messages={$current.messages} />
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		<label class="label">
 			<div class="flex justify-between items-center">
@@ -177,7 +167,7 @@
 			/>
 		</label>
 		<div class="flex flex-row justify-between">
-			{#if !messages.length}
+			{#if !$current.messages.length}
 				<button
 					class="btn variant-ghost-surface"
 					type="button"
@@ -194,7 +184,7 @@
 					disabled={loading}
 					type="button"
 					transition:fade={{ duration: 200 }}
-					onclick={resetSession}>Reset session</button
+					onclick={resetSession}>New session</button
 				>
 			{/if}
 			{#if loading && keepGenerating}
@@ -216,7 +206,7 @@
 		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
 				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
-					<select bind:value={options.model} class="select flex-grow-0">
+					<select bind:value={$current.options.model} class="select flex-grow-0">
 						<option value="mistral-tiny">Mistral Tiny</option>
 						<option value="mistral-small">Mistral Small</option>
 						<option value="mistral-medium">Mistral Medium</option>
@@ -224,10 +214,10 @@
 					<label class="flex-shrink-0">
 						<div class="flex flex-row justify-between items-center">
 							<span>Temperature</span>
-							<span class="text-surface-300">{options.temperature}</span>
+							<span class="text-surface-300">{$current.options.temperature}</span>
 						</div>
 						<input
-							bind:value={options.temperature}
+							bind:value={$current.options.temperature}
 							type="range"
 							name="temperature"
 							id="temperature"
@@ -240,10 +230,10 @@
 					<label class="flex-shrink-0">
 						<div class="flex flex-row justify-between items-center">
 							<span>Top P</span>
-							<span class="text-surface-300">{options.topP}</span>
+							<span class="text-surface-300">{$current.options.topP}</span>
 						</div>
 						<input
-							bind:value={options.topP}
+							bind:value={$current.options.topP}
 							type="range"
 							name="topP"
 							id="topP"
@@ -256,7 +246,7 @@
 				</div>
 				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
 					<input
-						bind:value={options.maxTokens}
+						bind:value={$current.options.maxTokens}
 						class="input"
 						type="number"
 						name="maxTokens"
@@ -266,7 +256,7 @@
 						placeholder="Max tokens"
 					/>
 					<input
-						bind:value={options.randomSeed}
+						bind:value={$current.options.randomSeed}
 						class="input"
 						type="number"
 						name="randomSeed"
@@ -274,7 +264,7 @@
 						placeholder="Seed"
 					/>
 					<div class="flex-shrink-0 cursor-pointer">
-						<SlideToggle name="safePrompt" bind:checked={options.safePrompt}>
+						<SlideToggle name="safePrompt" bind:checked={$current.options.safePrompt}>
 							Safe prompt
 						</SlideToggle>
 					</div>
@@ -289,7 +279,7 @@
 						{/if}
 					</div>
 					<textarea
-						bind:value={options.system}
+						bind:value={$current.options.system}
 						class="textarea"
 						name="system"
 						id="system"

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
-	import { apiKey } from '$lib/apiKey';
+	import { apiKey } from '$lib/stores/apiKey';
 	import { browser } from '$app/environment';
 
 	if (browser && $apiKey) {
