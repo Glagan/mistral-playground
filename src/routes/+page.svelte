@@ -38,7 +38,7 @@
 					type="password"
 					name="apiKey"
 					id="apiKey"
-					placeholder="API Key"
+					placeholder="API key"
 					data-focusindex="0"
 				/>
 				<button class="btn variant-filled-primary" type="submit">Start</button>
@@ -50,7 +50,7 @@
 					active="bg-primary-700 dark:bg-primary-700"
 					bind:checked={saveApiKey}
 				>
-					Remember API Key (Save to local storage)
+					Remember API key (Save to local storage)
 				</SlideToggle>
 			</div> -->
 		</form>

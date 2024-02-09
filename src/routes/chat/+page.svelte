@@ -30,8 +30,48 @@
 		}
 	});
 
+	function messageOrderIsValid(messages: (Question | Answer)[]) {
+		if (messages.length === 0) {
+			return true;
+		}
+		if (messages.length === 1) {
+			return messages[0].type === 'question';
+		}
+		return messages.every((message, index) => {
+			if (index === 0) {
+				return message.type === 'question' || message.type === 'system';
+			}
+			return true;
+		});
+	}
+
 	const tokens = $derived(encoding.encode(promptText).length);
 	const systemPromptTokens = $derived(encoding.encode($current.state.options.system).length);
+	const stateIsValid = $derived(tokens <= 32000 && messageOrderIsValid($current.state.messages));
+
+	// Update messages to include or remove the system prompt while writing it
+	function onSystemPromptChange(
+		event: Event & { currentTarget: EventTarget & HTMLTextAreaElement }
+	) {
+		if (event.currentTarget.value.length > 0) {
+			const systemPrompt = $current.state.messages.find((message) => message.type === 'system');
+			if (systemPrompt) {
+				systemPrompt.content[0] = event.currentTarget.value;
+			} else {
+				$current.state.messages.unshift({
+					id: uuid(),
+					type: 'system',
+					index: 0,
+					content: [event.currentTarget.value]
+				});
+			}
+		} else {
+			$current.state.messages = $current.state.messages.filter(
+				(message) => message.type !== 'system'
+			);
+		}
+		updateOrInsertHistory();
+	}
 
 	function updateOrInsertHistory() {
 		$history = $history.filter((e) => e.id !== $current.state.id);
@@ -86,7 +126,7 @@
 					answer.content[answer.index] =
 						`Failed to send request:\n${body.error.issues.map((issue: { message: string }) => issue.message).join('\n')}`;
 				} else if (body.code === 'ERR_API_KEY') {
-					answer.content[answer.index] = 'Your API Key is invalid.';
+					answer.content[answer.index] = 'Your API key is invalid.';
 				} else if (body.code === 'ERR_API_REQ') {
 					if (body.message) {
 						try {
@@ -130,9 +170,7 @@
 				if (outputNode) {
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
-				if (answer.content[answer.index].includes('```')) {
-					hljs.highlightAll();
-				}
+				hljs.highlightAll();
 			}
 			// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
 			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
@@ -157,14 +195,6 @@
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
-		if ($current.state.options.system) {
-			$current.state.messages.push({
-				id: uuid(),
-				type: 'system',
-				index: 0,
-				content: [$current.state.options.system]
-			});
-		}
 		if (promptText.length) {
 			$current.state.messages.push({
 				id: uuid(),
@@ -212,12 +242,9 @@
 	function moveUp(message: Question | Answer) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
-			console.log($current.state.messages, index);
 			$current.state.messages.splice(index, 1);
-			console.log($current.state.messages, index - 1);
 			$current.state.messages.splice(index - 1, 0, message);
-			console.log($current.state.messages, 'ok');
-			// updateOrInsertHistory();
+			updateOrInsertHistory();
 		}
 	}
 
@@ -318,12 +345,32 @@
 			{updateMessage}
 			{deleteMessage}
 		/>
+		{#if loading && keepGenerating}
+			<button
+				class="btn variant-ghost-error transition-all disabled:opacity-75 mx-auto"
+				type="button"
+				transition:slide={{ axis: 'y' }}
+				onclick={stopGenerating}
+			>
+				Stop
+			</button>
+		{/if}
 	{:else}
 		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto">
 			<span class="text-sm text-surface-200 text-opacity-75 italic">Messages will appear here</span>
 		</div>
 	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
+		{#if !stateIsValid}
+			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
+				<div class="alert-message">
+					<p>
+						Your input is invalid, the first message can only be a system prompt or a question and
+						the last message must be a question or system prompt.
+					</p>
+				</div>
+			</aside>
+		{/if}
 		<label class="label">
 			<div class="flex justify-between items-center">
 				<span>Prompt</span>
@@ -342,18 +389,18 @@
 			/>
 		</label>
 		<div class="flex flex-row justify-between">
-			{#if !$current.state.messages.length}
-				<button
-					class="btn variant-ghost-surface"
-					type="button"
-					onclick={(event) => {
-						event.preventDefault();
-						return (showOptions = !showOptions);
-					}}
-				>
-					Options
-				</button>
-			{:else}
+			<button
+				class="btn variant-ghost-surface"
+				type="button"
+				disabled={loading}
+				onclick={(event) => {
+					event.preventDefault();
+					return (showOptions = !showOptions);
+				}}
+			>
+				Options
+			</button>
+			{#if $current.state.messages.length}
 				<button
 					class="btn variant-ghost-warning transition-all disabled:opacity-75"
 					disabled={loading}
@@ -362,21 +409,15 @@
 					onclick={resetSession}>New session</button
 				>
 			{/if}
-			{#if loading && keepGenerating}
-				<button
-					class="btn variant-ghost-error transition-all disabled:opacity-75"
-					type="button"
-					transition:fade={{ duration: 200 }}
-					onclick={stopGenerating}
-				>
-					Stop
-				</button>
-			{/if}
 			<button
 				type="submit"
 				class="btn variant-filled-primary transition-all disabled:opacity-75"
-				disabled={loading}>Submit</button
+				disabled={loading ||
+					(!promptText &&
+						$current.state.messages[$current.state.messages.length - 1]?.type !== 'question')}
 			>
+				Submit
+			</button>
 		</div>
 		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
@@ -460,6 +501,7 @@
 						id="system"
 						placeholder="System prompt"
 						rows="4"
+						oninput={onSystemPromptChange}
 					></textarea>
 				</label>
 			</div>

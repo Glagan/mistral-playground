@@ -84,16 +84,24 @@
 				<h2 class="text-lg font-bold mb-2">History</h2>
 				<div class="flex flex-col gap-2">
 					{#each $history as entry (entry.id)}
-						<div class="flex flex-row items-center gap-2" transition:slide={{ axis: 'y' }}>
+						<div
+							class="flex flex-row items-center gap-2 border-2 py-1 px-2 rounded-md transition-all {entry.id ===
+							$current.state.id
+								? 'border-primary-700 bg-primary-700/20'
+								: 'border-transparent'}"
+							transition:slide={{ axis: 'y' }}
+						>
 							<span class="flex-grow flex-shrink truncate">
 								{entry.messages[0].content}
 							</span>
-							<button
-								class="flex-shrink-0 btn variant-ringed-secondary"
-								onclick={() => loadHistoryEntry(entry)}
-							>
-								Load
-							</button>
+							{#if entry.id !== $current.state.id}
+								<button
+									class="flex-shrink-0 btn variant-ringed-secondary"
+									onclick={() => loadHistoryEntry(entry)}
+								>
+									Load
+								</button>
+							{/if}
 							<button
 								class="flex-shrink-0 btn variant-ringed-error"
 								onclick={() => deleteHistoryEntry(entry)}>Delete</button
@@ -112,7 +120,7 @@
 				transition:fade
 				onclick={deleteApiKey}
 			>
-				Delete API Key
+				Delete API key
 			</button>
 		{:else}
 			<div class="flex-grow flex-shrink"></div>
