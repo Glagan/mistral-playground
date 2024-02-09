@@ -33,7 +33,7 @@
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id)}
 			<Message
-				{message}
+				bind:message
 				isFirst={index === 0}
 				isLast={index === messages.length - 1}
 				{interactive}

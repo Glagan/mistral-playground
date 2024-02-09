@@ -14,6 +14,7 @@
 		previousVersion,
 		nextVersion,
 		deleteVersion,
+		updateMessage,
 		deleteMessage
 	} = $props<{
 		message: Question | Answer;
@@ -31,9 +32,7 @@
 	}>();
 
 	function onMessageChange(event: Event & { currentTarget: EventTarget & HTMLDivElement }) {
-		const target = event.currentTarget;
-		const newText = target.innerText;
-		// TODO debounce and send updateMessage
+		updateMessage(message, event.currentTarget.innerText);
 	}
 
 	let currentMessage = $derived(message.content[message.index]);
@@ -42,7 +41,7 @@
 	);
 </script>
 
-{#snippet actions({ message })}
+{#snippet actions({ message }: { message: Question | Answer })}
 	<div
 		class="flex gap-2 flex-grow flex-shrink items-center pt-2 justify-between"
 		transition:slide={{ axis: 'y' }}

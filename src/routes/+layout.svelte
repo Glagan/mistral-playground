@@ -9,9 +9,9 @@
 		type ModalComponent,
 		type ModalSettings
 	} from '@skeletonlabs/skeleton';
-	import { getModalStore, storeHighlightJs } from '@skeletonlabs/skeleton';
+	import { getModalStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import { current, type ChatState, resetCurrent } from '$lib/stores/current';
+	import { current, type ChatState } from '$lib/stores/current.svelte';
 
 	import '../app.css';
 
@@ -47,7 +47,7 @@
 	}
 
 	function loadHistoryEntry(entry: ChatState) {
-		$current = entry;
+		$current.setFromEntry(entry);
 		tick().then(() => {
 			hljs.highlightAll();
 		});
@@ -55,8 +55,8 @@
 
 	function deleteHistoryEntry(entry: ChatState) {
 		$history = $history.filter((e) => e.id !== entry.id);
-		if ($current.id === entry.id) {
-			resetCurrent();
+		if ($current.state.id === entry.id) {
+			$current.reset();
 		}
 	}
 

@@ -1,9 +1,9 @@
 import type { Usage } from '$lib/types';
 import type { RequestHandler } from './$types';
-import MistralClient from '@mistralai/mistralai';
+import MistralClient, { type ChatCompletionResponseChunk } from '@mistralai/mistralai';
 import { z } from 'zod';
 
-export const POST: RequestHandler = async ({ url, request }) => {
+export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();
 	const unparsedBody = JSON.parse(rawBody);
 
@@ -41,81 +41,117 @@ export const POST: RequestHandler = async ({ url, request }) => {
 	}
 	const body = parsingResponse.data;
 
-	try {
-		const client = new MistralClient(body.apiKey);
-		const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
+	const client = new MistralClient(body.apiKey);
+	const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
 
-		const chatStreamResponse = client.chatStream({
-			model: body.options?.model ? body.options?.model : 'mistral-small',
-			messages: [
-				...(body.options?.system ? [{ role: 'system', content: body.options.system }] : []),
-				...body.messages.map((message) => ({
-					role: message.type === 'question' ? 'user' : 'assistant',
-					content: message.content
-				}))
-			],
-			maxTokens: maxTokens ? maxTokens : undefined,
-			randomSeed: randomSeed ? randomSeed : undefined,
-			safePrompt,
-			temperature,
-			topP
-		});
+	const chatStreamResponse = client.chatStream({
+		model: body.options?.model ? body.options?.model : 'mistral-small',
+		messages: [
+			...(body.options?.system ? [{ role: 'system', content: body.options.system }] : []),
+			...body.messages.map((message) => ({
+				role: message.type === 'question' ? 'user' : 'assistant',
+				content: message.content
+			}))
+		],
+		maxTokens: maxTokens ? maxTokens : undefined,
+		randomSeed: randomSeed ? randomSeed : undefined,
+		safePrompt,
+		temperature,
+		topP
+	});
 
-		let controller: ReadableStreamDefaultController<any>;
-		let cancelled = false;
-		const stream = new ReadableStream({
-			start(_controller) {
-				controller = _controller;
-			},
-			cancel() {
-				cancelled = true;
-			}
-		});
-		const response = new Response(stream, {
-			headers: {
-				'Cache-Control': 'no-store',
-				'Content-Type': 'text/event-stream',
-				Connection: 'keep-alive',
-				'Content-Encoding': 'none',
-				'Access-Control-Allow-Origin': '*'
-			}
-		});
+	let controller: ReadableStreamDefaultController<any>;
+	let cancelled = false;
+	const stream = new ReadableStream({
+		start(_controller) {
+			controller = _controller;
+		},
+		cancel() {
+			cancelled = true;
+		}
+	});
+	const response = new Response(stream, {
+		headers: {
+			'Cache-Control': 'no-store',
+			'Content-Type': 'text/event-stream',
+			Connection: 'keep-alive',
+			'Content-Encoding': 'none',
+			'Access-Control-Allow-Origin': '*'
+		}
+	});
 
-		(async () => {
-			try {
-				let usage: Usage | null = null;
-				for await (const chunk of chatStreamResponse) {
-					if (chunk.choices[0].delta.content !== undefined) {
-						const streamText = chunk.choices[0].delta.content;
-						controller!.enqueue(streamText);
-					}
-					const _usage = (chunk as unknown as { usage: Usage | null }).usage;
-					if (_usage) {
-						usage = _usage;
-					}
-				}
-				if (usage) {
-					controller!.enqueue(`#${JSON.stringify(usage)}`);
-				}
-			} catch (_error) {
-				const error = _error as Error;
-				if (error.message !== 'Invalid state: Controller is already closed') {
-					console.error(error);
-				}
-			} finally {
-				if (!cancelled) {
-					controller!.close();
-				}
-			}
-		})();
+	let usage: Usage | null = null;
 
-		return response;
-	} catch (error) {
-		return new Response(JSON.stringify({ error: 'Invalid API key', code: 'ERR_API_KEY' }), {
-			headers: {
-				'Content-Type': 'application/json'
-			},
-			status: 400
-		});
+	function handleChunk(chunk: ChatCompletionResponseChunk) {
+		if (chunk.choices[0].delta.content !== undefined) {
+			const streamText = chunk.choices[0].delta.content;
+			controller!.enqueue(streamText);
+		}
+		const _usage = (chunk as unknown as { usage: Usage | null }).usage;
+		if (_usage) {
+			usage = _usage;
+		}
 	}
+
+	// Check the first chunk first to handle API errors
+	try {
+		const firstChunk = (await chatStreamResponse.next()).value;
+		if (firstChunk !== undefined) {
+			handleChunk(firstChunk);
+			if (usage) {
+				controller!.enqueue(`#${JSON.stringify(usage)}`);
+			}
+		} else {
+			throw new Error('Invalid state: First chunk is undefined');
+		}
+	} catch (error) {
+		if ((error as any).message.includes('Unauthorized')) {
+			return new Response(
+				JSON.stringify({
+					error: 'Invalid API key',
+					message: (error as any).message.replace(/.+?Response:\s+(.+)/i, '$1'),
+					code: 'ERR_API_KEY'
+				}),
+				{
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					status: 400
+				}
+			);
+		}
+		return new Response(
+			JSON.stringify({
+				error: 'Invalid Request',
+				message: (error as any).message.replace(/.+?Response:\s+(.+)/i, '$1'),
+				code: 'ERR_API_REQ'
+			}),
+			{
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				status: 400
+			}
+		);
+	}
+
+	(async () => {
+		try {
+			let usage: Usage | null = null;
+			for await (const chunk of chatStreamResponse) {
+				handleChunk(chunk);
+			}
+			if (usage) {
+				controller!.enqueue(`#${JSON.stringify(usage)}`);
+			}
+		} catch (_error) {
+			console.error(_error);
+		} finally {
+			if (!cancelled) {
+				controller!.close();
+			}
+		}
+	})();
+
+	return response;
 };

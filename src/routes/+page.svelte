@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { browser } from '$app/environment';
@@ -9,6 +9,7 @@
 	}
 
 	let apiKeyInput = $state('');
+	let saveApiKey = $state(true);
 
 	function onSubmit(event: Event) {
 		event.preventDefault();
@@ -21,18 +22,37 @@
 
 <div class="flex justify-center items-stretch flex-col gap-4 p-4">
 	<div class="flex justify-center flex-grow flex-col gap-2">
-		<span class="text-lucky-point-400"> This playground require an API key: </span>
-		<form class="flex gap-2" use:focusTrap={true} onsubmit={onSubmit}>
-			<input
-				bind:value={apiKeyInput}
-				class="input"
-				type="password"
-				name="apiKey"
-				id="apiKey"
-				placeholder="API Key"
-				data-focusindex="0"
-			/>
-			<button class="btn variant-filled-primary" type="submit">Start</button>
+		<div class="text-lucky-point-400">This playground require an API key:</div>
+		<div>
+			If you don't have a Mistral account, you can create one <a
+				href="https://mistral.ai/"
+				class="text-primary-600 hover:underline"
+				rel="noreferrer noopener">here</a
+			>.
+		</div>
+		<form class="flex flex-col gap-2" use:focusTrap={true} onsubmit={onSubmit}>
+			<div class="flex gap-1 w-full">
+				<input
+					bind:value={apiKeyInput}
+					class="input"
+					type="password"
+					name="apiKey"
+					id="apiKey"
+					placeholder="API Key"
+					data-focusindex="0"
+				/>
+				<button class="btn variant-filled-primary" type="submit">Start</button>
+			</div>
+			<!-- <div>
+				<SlideToggle
+					name="saveApiKey"
+					size="sm"
+					active="bg-primary-700 dark:bg-primary-700"
+					bind:checked={saveApiKey}
+				>
+					Remember API Key (Save to local storage)
+				</SlideToggle>
+			</div> -->
 		</form>
 	</div>
 </div>
