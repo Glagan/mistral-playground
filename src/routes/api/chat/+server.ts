@@ -10,15 +10,14 @@ export const POST: RequestHandler = async ({ url, request }) => {
 	const parsingResponse = z
 		.object({
 			apiKey: z.string(),
-			prompt: z.string(),
-			history: z
+			messages: z
 				.array(
 					z.object({
-						type: z.enum(['question', 'answer']),
+						type: z.enum(['question', 'answer', 'system']),
 						content: z.string()
 					})
 				)
-				.optional(),
+				.min(0),
 			options: z
 				.object({
 					model: z.enum(['mistral-tiny', 'mistral-small', 'mistral-medium']),
@@ -46,16 +45,14 @@ export const POST: RequestHandler = async ({ url, request }) => {
 		const client = new MistralClient(body.apiKey);
 		const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
 
-		const history = (body.history ?? []).map(({ type, content }) => ({
-			role: type === 'question' ? 'user' : 'assistant',
-			content
-		}));
 		const chatStreamResponse = client.chatStream({
 			model: body.options?.model ? body.options?.model : 'mistral-small',
 			messages: [
 				...(body.options?.system ? [{ role: 'system', content: body.options.system }] : []),
-				...history,
-				{ role: 'user', content: body.prompt }
+				...body.messages.map((message) => ({
+					role: message.type === 'question' ? 'user' : 'assistant',
+					content: message.content
+				}))
 			],
 			maxTokens: maxTokens ? maxTokens : undefined,
 			randomSeed: randomSeed ? randomSeed : undefined,

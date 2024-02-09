@@ -9,11 +9,30 @@
 		type ModalComponent,
 		type ModalSettings
 	} from '@skeletonlabs/skeleton';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, storeHighlightJs } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import { current, type ChatState } from '$lib/stores/current';
+	import { current, type ChatState, resetCurrent } from '$lib/stores/current';
 
 	import '../app.css';
+
+	import hljs from 'highlight.js/lib/core';
+	// hljs
+	import xml from 'highlight.js/lib/languages/xml'; // for HTML
+	import css from 'highlight.js/lib/languages/css';
+	import json from 'highlight.js/lib/languages/json';
+	import javascript from 'highlight.js/lib/languages/javascript';
+	import typescript from 'highlight.js/lib/languages/typescript';
+	import shell from 'highlight.js/lib/languages/shell';
+
+	hljs.registerLanguage('xml', xml); // for HTML
+	hljs.registerLanguage('css', css);
+	hljs.registerLanguage('json', json);
+	hljs.registerLanguage('javascript', javascript);
+	hljs.registerLanguage('typescript', typescript);
+	hljs.registerLanguage('shell', shell);
+
+	import 'highlight.js/styles/github-dark.css';
+	import { tick } from 'svelte';
 
 	initializeStores();
 	const modalStore = getModalStore();
@@ -29,10 +48,16 @@
 
 	function loadHistoryEntry(entry: ChatState) {
 		$current = entry;
+		tick().then(() => {
+			hljs.highlightAll();
+		});
 	}
 
 	function deleteHistoryEntry(entry: ChatState) {
 		$history = $history.filter((e) => e.id !== entry.id);
+		if ($current.id === entry.id) {
+			resetCurrent();
+		}
 	}
 
 	function openSettings() {

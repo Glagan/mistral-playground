@@ -2,15 +2,50 @@
 	import Message from '$lib/components/Message.svelte';
 	import type { Answer, Question } from '$lib/types';
 
-	const { messages } = $props<{
+	const {
+		messages,
+		interactive,
+		moveUp,
+		moveDown,
+		refresh,
+		previousVersion,
+		nextVersion,
+		deleteVersion,
+		updateMessage,
+		deleteMessage
+	} = $props<{
 		messages: (Question | Answer)[];
+		interactive?: boolean;
+		moveUp: (message: Question | Answer) => void;
+		moveDown: (message: Question | Answer) => void;
+		refresh: (message: Question | Answer) => void;
+		previousVersion: (message: Question | Answer) => void;
+		nextVersion: (message: Question | Answer) => void;
+		deleteVersion: (message: Question | Answer) => void;
+		updateMessage: (message: Question | Answer, content: string) => void;
+		deleteMessage: (message: Question | Answer) => void;
 	}>();
+
+	// TODO delayed fade-in per messages
 </script>
 
-<div class="flex flex-col flex-grow gap-4 flex-shrink w-full overflow-auto">
+<div id="messages-container" class="flex flex-col flex-grow gap-4 flex-shrink w-full overflow-auto">
 	{#if messages.length > 0}
-		{#each messages as message}
-			<Message {message} />
+		{#each messages as message, index (message.id)}
+			<Message
+				{message}
+				isFirst={index === 0}
+				isLast={index === messages.length - 1}
+				{interactive}
+				{moveUp}
+				{moveDown}
+				{refresh}
+				{previousVersion}
+				{nextVersion}
+				{deleteVersion}
+				{updateMessage}
+				{deleteMessage}
+			/>
 		{/each}
 	{/if}
 </div>
