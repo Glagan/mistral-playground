@@ -110,6 +110,9 @@
 				answer.content[answer.index] = answer.content[answer.index].replace(/#({.+?})$/, '');
 				(answer as Answer).usage = JSON.parse(embeddedUsage[1]) as Usage;
 			}
+			if (outputNode) {
+				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			}
 			updateOrInsertHistory();
 		} catch (error) {
 			console.error(error);

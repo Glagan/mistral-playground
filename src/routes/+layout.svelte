@@ -80,30 +80,32 @@
 	<slot />
 	<div class="flex flex-col items-center h-full p-4 overflow-hidden max-h-screen">
 		{#if $apiKey}
-			{#if $history.length}
-				<div class="w-full overflow-auto" transition:fade={{ duration: 200 }}>
-					<h2 class="text-lg font-bold mb-2">History</h2>
-					<div class="flex flex-col gap-2">
-						{#each $history as entry (entry.id)}
-							<div class="flex flex-row items-center gap-2" transition:slide={{ axis: 'y' }}>
-								<span class="flex-grow flex-shrink truncate">
-									{entry.messages[0].content}
-								</span>
-								<button
-									class="flex-shrink-0 btn variant-ringed-secondary"
-									onclick={() => loadHistoryEntry(entry)}
-								>
-									Load
-								</button>
-								<button
-									class="flex-shrink-0 btn variant-ringed-error"
-									onclick={() => deleteHistoryEntry(entry)}>Delete</button
-								>
-							</div>
-						{/each}
-					</div>
+			<div class="w-full overflow-auto" transition:fade={{ duration: 200 }}>
+				<h2 class="text-lg font-bold mb-2">History</h2>
+				<div class="flex flex-col gap-2">
+					{#each $history as entry (entry.id)}
+						<div class="flex flex-row items-center gap-2" transition:slide={{ axis: 'y' }}>
+							<span class="flex-grow flex-shrink truncate">
+								{entry.messages[0].content}
+							</span>
+							<button
+								class="flex-shrink-0 btn variant-ringed-secondary"
+								onclick={() => loadHistoryEntry(entry)}
+							>
+								Load
+							</button>
+							<button
+								class="flex-shrink-0 btn variant-ringed-error"
+								onclick={() => deleteHistoryEntry(entry)}>Delete</button
+							>
+						</div>
+					{:else}
+						<span class="text-sm text-surface-200 text-opacity-75 italic text-center">
+							Your history will appear here
+						</span>
+					{/each}
 				</div>
-			{/if}
+			</div>
 			<div class="flex-grow flex-shrink"></div>
 			<button
 				class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning"
