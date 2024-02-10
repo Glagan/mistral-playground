@@ -56,6 +56,7 @@
 	function stopEditing() {
 		editing = false;
 		message.content[message.index] = unstate(localCopy);
+		updateMessage(message, message.content[message.index]);
 		tick().then(() => hljs.highlightAll());
 	}
 </script>
@@ -65,7 +66,7 @@
 		class="flex gap-2 flex-grow flex-shrink items-center pt-2 justify-between transition-all"
 		transition:slide={{ axis: 'y' }}
 	>
-		{#if message.content.length > 1}
+		{#if message.content.length > 1 && !editing}
 			<div class="flex flex-row gap-2 items-center flex-grow flex-shrink">
 				<button
 					type="button"
