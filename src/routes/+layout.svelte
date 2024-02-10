@@ -14,6 +14,18 @@
 	import { getModalStore, getDrawerStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { current, type ChatState } from '$lib/stores/current.svelte';
+	import { tick } from 'svelte';
+	import { page } from '$app/stores';
+	import {
+		BotIcon,
+		CandlestickChartIcon,
+		GalleryHorizontalEndIcon,
+		LogOutIcon,
+		MenuIcon,
+		PackagePlusIcon,
+		SettingsIcon,
+		Trash2Icon
+	} from 'lucide-svelte';
 
 	import '../app.css';
 
@@ -39,7 +51,6 @@
 	hljs.registerLanguage('sql', sql);
 
 	import 'highlight.js/styles/github-dark.css';
-	import { tick } from 'svelte';
 
 	initializeStores();
 	const modalStore = getModalStore();
@@ -79,12 +90,12 @@
 			component: 'settings'
 		};
 		modalStore.trigger(settingsModal);
+		drawerStore.close();
 	}
 
-	function openHistoryDrawer() {
+	function openNavigationDrawer() {
 		const drawerSettings: DrawerSettings = {
-			id: 'history',
-			// Provide your property overrides:
+			id: 'navigation',
 			bgDrawer: 'bg-surface-900 text-white',
 			bgBackdrop: 'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
 			width: 'w-[320px] md:w-[540px]',
@@ -94,18 +105,104 @@
 		};
 		drawerStore.open(drawerSettings);
 	}
+
+	function openHistoryDrawer() {
+		drawerStore.close();
+		tick().then(() => {
+			const drawerSettings: DrawerSettings = {
+				id: 'history',
+				bgDrawer: 'bg-surface-900 text-white',
+				bgBackdrop: 'bg-gradient-to-tr from-secondary-500/50 via-primary-500/50 to-surface-500/50',
+				width: 'w-[320px] md:w-[540px]',
+				padding: 'p-4',
+				rounded: 'rounded-xl',
+				position: 'right'
+			};
+			drawerStore.open(drawerSettings);
+		});
+	}
+
+	function resetSession(event: Event) {
+		event.preventDefault();
+		event.stopPropagation();
+		$current.reset();
+		drawerStore.close();
+	}
 </script>
 
 <svelte:head>
 	<title>Mistral Playground</title>
 </svelte:head>
 
+{#snippet navigation({ isFromRoot }: { isFromRoot: boolean })}
+	<div
+		class="{isFromRoot
+			? 'hidden lg:flex'
+			: 'flex'} flex-col flex-grow justify-start gap-2 {isFromRoot ? 'px-4' : 'p-4 h-full'} w-full"
+	>
+		<a
+			href="/chat"
+			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/chat'
+				? 'variant-soft-primary'
+				: ' '} hover:variant-soft-primary"
+			onclick={() => drawerStore.close()}
+		>
+			<BotIcon />
+			<span>Chat</span>
+		</a>
+		{#if !isFromRoot}
+			<button
+				type="button"
+				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+				transition:slide={{ axis: 'y' }}
+				onclick={openHistoryDrawer}
+			>
+				<GalleryHorizontalEndIcon />
+				<span>History</span>
+			</button>
+		{/if}
+		{#if $page.url.pathname === '/chat' && $current.state.messages.length}
+			<button
+				type="button"
+				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+				transition:slide={{ axis: 'y' }}
+				onclick={resetSession}
+			>
+				<PackagePlusIcon />
+				<span>New Chat</span>
+			</button>
+		{/if}
+		<div class="flex-grow"></div>
+		{#if $apiKey}
+			<button
+				class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
+				transition:fade
+				onclick={deleteApiKey}
+			>
+				<LogOutIcon />
+				<span>Delete API key</span>
+			</button>
+		{/if}
+		<button
+			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
+			transition:fade
+			onclick={openSettings}
+		>
+			<SettingsIcon />
+			<span>Settings</span>
+		</button>
+	</div>
+{/snippet}
+
 {#snippet historyList({ mobile }: { mobile: boolean })}
 	<div
-		class="w-full overflow-auto {!mobile ? 'hidden lg:block' : ''}"
+		class="w-full overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
 		transition:fade={{ duration: 200 }}
 	>
-		<h2 class="text-lg font-bold mb-2">History</h2>
+		<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
+			<GalleryHorizontalEndIcon />
+			<span>History</span>
+		</h2>
 		<div class="flex flex-col gap-2">
 			{#each $history as entry (entry.id)}
 				<div
@@ -135,8 +232,10 @@
 						{/if}
 						<button
 							class="flex-shrink-0 btn variant-ringed-error"
-							onclick={() => deleteHistoryEntry(entry)}>Delete</button
+							onclick={() => deleteHistoryEntry(entry)}
 						>
+							<Trash2Icon />
+						</button>
 					</div>
 				</div>
 			{:else}
@@ -148,48 +247,35 @@
 	</div>
 {/snippet}
 
-<div class="flex flex-col lg:grid grid-layout min-h-screen">
-	<div class="flex h-full items-start justify-between lg:justify-around p-4">
-		<img class="block max-h-16 lg:max-h-max" src="/logo-dark.webp" alt="Mistral Playground" />
-		{#if $history.length}
-			<button
-				type="button"
-				class="lg:hidden btn variant-filled-primary"
-				onclick={openHistoryDrawer}
-			>
-				History
+<div class="flex flex-col flex-nowrap lg:grid grid-layout min-h-screen max-h-screen">
+	<div
+		class="flex lg:flex-col flex-grow-0 flex-shrink-0 h-full justify-between lg:justify-normal items-center lg:items-start p-4 gap-4"
+	>
+		<img
+			class="block max-h-14 lg:max-h-max lg:mx-auto"
+			src="/logo-dark.webp"
+			alt="Mistral Playground"
+		/>
+		<div class="flex lg:hidden flex-col items-center gap-2">
+			<button type="button" class="transition-all font-bold text-lg" onclick={openNavigationDrawer}>
+				<MenuIcon size={40} />
 			</button>
-		{/if}
+		</div>
+		{@render navigation({ isFromRoot: true })}
 	</div>
 	<slot />
-	<span class="flex-grow lg:hidden"></span>
 	<div
-		class="flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
+		class="hidden lg:flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
 	>
 		{#if $apiKey}
 			{@render historyList({ mobile: false })}
-			<div class="flex-grow flex-shrink hidden lg:block"></div>
-			<button
-				class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning"
-				transition:fade
-				onclick={deleteApiKey}
-			>
-				Delete API key
-			</button>
-		{:else}
-			<div class="hidden lg:block flex-grow flex-shrink"></div>
 		{/if}
-		<button
-			class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning"
-			transition:fade
-			onclick={openSettings}
-		>
-			Settings
-		</button>
 	</div>
 </div>
 <Drawer>
-	{#if $drawerStore.id === 'history'}
+	{#if $drawerStore.id === 'navigation'}
+		{@render navigation({ isFromRoot: false })}
+	{:else if $drawerStore.id === 'history'}
 		<div class="p-2">
 			{@render historyList({ mobile: true })}
 		</div>

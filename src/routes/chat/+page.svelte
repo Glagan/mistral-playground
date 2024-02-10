@@ -12,6 +12,7 @@
 	import { onDestroy } from 'svelte';
 	import { current } from '$lib/stores/current.svelte';
 	import { v4 as uuid } from 'uuid';
+	import { Settings2Icon } from 'lucide-svelte';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -240,14 +241,6 @@
 		}
 	}
 
-	function resetSession(event: Event) {
-		event.preventDefault();
-		event.stopPropagation();
-		$current.reset();
-		showOptions = false;
-		promptText = '';
-	}
-
 	// * > Message events
 
 	function moveUp(message: Message) {
@@ -346,7 +339,10 @@
 	});
 </script>
 
-<div class="flex justify-center items-stretch flex-col gap-4 p-4 max-h-screen">
+<div
+	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4"
+	style="max-height: calc(100vh - 88px)"
+>
 	{#if $current.state.messages.length}
 		<Messages
 			bind:messages={$current.state.messages}
@@ -386,8 +382,7 @@
 			</aside>
 		{/if}
 		<label class="label">
-			<div class="flex justify-between items-center">
-				<span>Prompt</span>
+			<div class="flex justify-end items-center">
 				{#if tokens > 0}
 					<span class="text-xs" transition:fade>
 						~<span class="text-surface-300">{tokens}</span> tokens
@@ -397,7 +392,7 @@
 			<textarea
 				bind:value={promptText}
 				class="textarea"
-				rows="4"
+				rows="3"
 				placeholder="Type something..."
 				data-focusindex="0"
 			/>
@@ -412,17 +407,9 @@
 					return (showOptions = !showOptions);
 				}}
 			>
-				Options
+				<Settings2Icon size={20} />
+				<span>Options</span>
 			</button>
-			{#if $current.state.messages.length}
-				<button
-					class="btn variant-ghost-warning transition-all"
-					disabled={loading}
-					type="button"
-					transition:fade={{ duration: 200 }}
-					onclick={resetSession}>New session</button
-				>
-			{/if}
 			<button
 				type="submit"
 				class="btn variant-filled-primary transition-all"

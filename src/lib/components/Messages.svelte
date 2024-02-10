@@ -31,7 +31,7 @@
 	// TODO delayed fade-in per messages
 </script>
 
-<div id="messages-container" class="flex flex-col flex-grow gap-4 flex-shrink w-full overflow-auto">
+<div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id)}
 			<MessageSvelte

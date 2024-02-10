@@ -4,6 +4,15 @@
 	import { tick, unstate } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import hljs from 'highlight.js/lib/core';
+	import {
+		ArrowDownIcon,
+		ArrowUpIcon,
+		ChevronLeftIcon,
+		ChevronRightIcon,
+		PencilIcon,
+		RefreshCwIcon,
+		Trash2Icon
+	} from 'lucide-svelte';
 
 	let {
 		message,
@@ -140,7 +149,7 @@
 								disabled={loading || message.index === 0}
 								onclick={() => previousVersion(message)}
 							>
-								Previous
+								<ChevronLeftIcon size={16} />
 							</button>
 							<span> {message.index + 1} / {message.content.length}</span>
 							<button
@@ -149,7 +158,7 @@
 								disabled={loading || message.index >= message.content.length - 1}
 								onclick={() => nextVersion(message)}
 							>
-								Next
+								<ChevronRightIcon size={16} />
 							</button>
 							<button
 								type="button"
@@ -157,7 +166,7 @@
 								disabled={loading}
 								onclick={() => deleteVersion(message)}
 							>
-								Delete
+								<Trash2Icon size={16} />
 							</button>
 						</div>
 					{:else}
@@ -179,7 +188,7 @@
 								disabled={loading}
 								onclick={stopEditing}
 							>
-								Done
+								Save
 							</button>
 						{:else}
 							<button
@@ -188,7 +197,7 @@
 								disabled={loading || isFirst}
 								onclick={() => moveUp(message)}
 							>
-								Up
+								<ArrowUpIcon size={16} />
 							</button>
 							<button
 								type="button"
@@ -196,7 +205,7 @@
 								disabled={loading || isLast}
 								onclick={() => moveDown(message)}
 							>
-								Down
+								<ArrowDownIcon size={16} />
 							</button>
 							<button
 								type="button"
@@ -204,7 +213,7 @@
 								disabled={loading}
 								onclick={startEditing}
 							>
-								Edit
+								<PencilIcon size={16} />
 							</button>
 							{#if message.type === 'assistant'}
 								<button
@@ -213,7 +222,7 @@
 									disabled={loading}
 									onclick={() => refresh(message)}
 								>
-									Refresh
+									<RefreshCwIcon size={16} />
 								</button>
 							{/if}
 							<button
@@ -222,7 +231,7 @@
 								disabled={loading}
 								onclick={() => deleteMessage(message)}
 							>
-								Delete
+								<Trash2Icon size={16} />
 							</button>
 						{/if}
 					</div>
