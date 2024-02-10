@@ -7,11 +7,11 @@ export type Message = {
 };
 
 export type Question = Message & {
-	type: 'question' | 'system' | 'error';
+	type: 'user' | 'system' | 'error';
 };
 
 export type Answer = Message & {
-	type: 'answer';
+	type: 'assistant';
 	usage?: Usage;
 };
 
@@ -22,5 +22,4 @@ export type Options = {
 	maxTokens: undefined | number;
 	safePrompt: boolean;
 	randomSeed: undefined | number;
-	system: string;
 };

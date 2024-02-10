@@ -17,8 +17,7 @@ export function createCurrent() {
 			topP: 1,
 			maxTokens: undefined,
 			safePrompt: false,
-			randomSeed: get(settings).seed,
-			system: ''
+			randomSeed: get(settings).seed
 		};
 	}
 

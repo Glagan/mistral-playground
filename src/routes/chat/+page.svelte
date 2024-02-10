@@ -34,43 +34,22 @@
 		if (messages.length === 0) {
 			return true;
 		}
-		if (messages.length === 1) {
-			return messages[0].type === 'question';
-		}
 		return messages.every((message, index) => {
 			if (index === 0) {
-				return message.type === 'question' || message.type === 'system';
+				return message.type === 'user' || message.type === 'system';
 			}
 			return true;
 		});
 	}
 
 	const tokens = $derived(encoding.encode(promptText).length);
-	const systemPromptTokens = $derived(encoding.encode($current.state.options.system).length);
+	let systemPrompt = $state('');
+	const systemPromptTokens = $derived(encoding.encode(systemPrompt).length);
 	const stateIsValid = $derived(tokens <= 32000 && messageOrderIsValid($current.state.messages));
 
-	// Update messages to include or remove the system prompt while writing it
-	function onSystemPromptChange(
-		event: Event & { currentTarget: EventTarget & HTMLTextAreaElement }
-	) {
-		if (event.currentTarget.value.length > 0) {
-			const systemPrompt = $current.state.messages.find((message) => message.type === 'system');
-			if (systemPrompt) {
-				systemPrompt.content[0] = event.currentTarget.value;
-			} else {
-				$current.state.messages.unshift({
-					id: uuid(),
-					type: 'system',
-					index: 0,
-					content: [event.currentTarget.value]
-				});
-			}
-		} else {
-			$current.state.messages = $current.state.messages.filter(
-				(message) => message.type !== 'system'
-			);
-		}
-		updateOrInsertHistory();
+	function removeFromHistory() {
+		$history = $history.filter((e) => e.id !== $current.state.id);
+		$history = $history;
 	}
 
 	function updateOrInsertHistory() {
@@ -195,10 +174,18 @@
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
+		if (systemPrompt) {
+			$current.state.messages.push({
+				id: uuid(),
+				type: 'system',
+				index: 0,
+				content: [systemPrompt]
+			});
+		}
 		if (promptText.length) {
 			$current.state.messages.push({
 				id: uuid(),
-				type: 'question',
+				type: 'user',
 				index: 0,
 				content: [promptText]
 			});
@@ -210,7 +197,7 @@
 
 		const answer = $state<Question | Answer>({
 			id: uuid(),
-			type: 'answer',
+			type: 'assistant',
 			index: 0,
 			content: [''],
 			usage: undefined
@@ -218,6 +205,20 @@
 		$current.state.messages.push(answer);
 
 		await generate(messagesToSend, answer);
+	}
+
+	async function addSystemPrompt(event: Event) {
+		event.preventDefault();
+		if (systemPrompt) {
+			$current.state.messages.push({
+				id: uuid(),
+				type: 'system',
+				index: 0,
+				content: [systemPrompt]
+			});
+			systemPrompt = '';
+			showOptions = false;
+		}
 	}
 
 	async function stopGenerating(event: Event) {
@@ -318,9 +319,13 @@
 
 	function deleteMessage(message: Question | Answer) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
-		if (index > 0 || $current.state.messages.length > 1) {
+		if (index >= 0) {
 			$current.state.messages.splice(index, 1);
-			updateOrInsertHistory();
+			if ($current.state.messages.length === 0) {
+				removeFromHistory();
+			} else {
+				updateOrInsertHistory();
+			}
 		}
 	}
 
@@ -347,7 +352,7 @@
 		/>
 		{#if loading && keepGenerating}
 			<button
-				class="btn variant-ghost-error transition-all disabled:opacity-75 mx-auto"
+				class="btn variant-ghost-error transition-all mx-auto"
 				type="button"
 				transition:slide={{ axis: 'y' }}
 				onclick={stopGenerating}
@@ -402,7 +407,7 @@
 			</button>
 			{#if $current.state.messages.length}
 				<button
-					class="btn variant-ghost-warning transition-all disabled:opacity-75"
+					class="btn variant-ghost-warning transition-all"
 					disabled={loading}
 					type="button"
 					transition:fade={{ duration: 200 }}
@@ -411,10 +416,10 @@
 			{/if}
 			<button
 				type="submit"
-				class="btn variant-filled-primary transition-all disabled:opacity-75"
+				class="btn variant-filled-primary transition-all"
 				disabled={loading ||
 					(!promptText &&
-						$current.state.messages[$current.state.messages.length - 1]?.type !== 'question')}
+						$current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
 			>
 				Submit
 			</button>
@@ -495,15 +500,22 @@
 						{/if}
 					</div>
 					<textarea
-						bind:value={$current.state.options.system}
+						bind:value={systemPrompt}
 						class="textarea"
 						name="system"
 						id="system"
 						placeholder="System prompt"
 						rows="4"
-						oninput={onSystemPromptChange}
 					></textarea>
 				</label>
+				<button
+					type="button"
+					class="btn variant-filled-primary transition-all ml-auto"
+					disabled={loading || !systemPrompt}
+					onclick={addSystemPrompt}
+				>
+					Add system prompt
+				</button>
 			</div>
 		{/if}
 	</form>

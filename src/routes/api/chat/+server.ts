@@ -13,7 +13,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			messages: z
 				.array(
 					z.object({
-						type: z.enum(['question', 'answer', 'system']),
+						type: z.enum(['user', 'assistant', 'system']),
 						content: z.string()
 					})
 				)
@@ -25,8 +25,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					randomSeed: z.coerce.number().optional().default(0),
 					safePrompt: z.coerce.boolean().optional().default(false),
 					temperature: z.coerce.number().optional().default(0.7),
-					topP: z.coerce.number().optional().default(1),
-					system: z.string().optional().default('')
+					topP: z.coerce.number().optional().default(1)
 				})
 				.optional()
 		})
@@ -46,13 +45,10 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	const chatStreamResponse = client.chatStream({
 		model: body.options?.model ? body.options?.model : 'mistral-small',
-		messages: [
-			...(body.options?.system ? [{ role: 'system', content: body.options.system }] : []),
-			...body.messages.map((message) => ({
-				role: message.type === 'question' ? 'user' : 'assistant',
-				content: message.content
-			}))
-		],
+		messages: body.messages.map((message) => ({
+			role: message.type,
+			content: message.content
+		})),
 		maxTokens: maxTokens ? maxTokens : undefined,
 		randomSeed: randomSeed ? randomSeed : undefined,
 		safePrompt,

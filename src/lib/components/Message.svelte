@@ -93,7 +93,7 @@
 			>
 				Down
 			</button>
-			{#if message.type === 'answer'}
+			{#if message.type === 'assistant'}
 				<button
 					type="button"
 					class="btn btn-sm variant-soft-primary transition-all disabled:opacity-75"
@@ -105,7 +105,6 @@
 			<button
 				type="button"
 				class="btn btn-sm variant-soft-error transition-all disabled:opacity-75"
-				disabled={isFirst && isLast}
 				onclick={() => deleteMessage(message)}
 			>
 				Delete
@@ -115,8 +114,8 @@
 {/snippet}
 
 <div class="flex flex-row flex-nowrap">
-	{#if message.type === 'answer'}
-		<div class="flex-grow flex-shrink-0 w-[75%] max-w-[75%] ml-auto">
+	{#if message.type === 'assistant'}
+		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%] ml-auto">
 			<p class="text-xs opacity-75 text-right text-primary-500">Answer</p>
 			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
 				<div
@@ -138,8 +137,8 @@
 				</p>
 			{/if}
 		</div>
-	{:else if message.type === 'question'}
-		<div class="flex-grow flex-shrink-0 w-[75%] max-w-[75%]">
+	{:else if message.type === 'user'}
+		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%]">
 			<p class="text-xs opacity-75 text-secondary-300">Question</p>
 			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
 				<div
@@ -155,7 +154,7 @@
 			</div>
 		</div>
 	{:else if message.type === 'error'}
-		<div class="flex-grow flex-shrink-0 w-[75%] max-w-[75%] ml-auto">
+		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%] ml-auto">
 			<p class="text-xs opacity-75 text-error-300">Error</p>
 			<div class="card p-4 variant-ghost-error overflow-x-hidden">
 				<div

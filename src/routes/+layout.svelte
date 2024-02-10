@@ -73,7 +73,7 @@
 	<title>Mistral Playground</title>
 </svelte:head>
 
-<div class="grid grid-layout min-h-screen">
+<div class="flex flex-col lg:grid grid-layout min-h-screen">
 	<div class="flex h-full items-start justify-around p-4">
 		<img class="block" src="/logo.webp" alt="Mistral Playground" />
 	</div>
@@ -91,9 +91,17 @@
 								: 'border-transparent'}"
 							transition:slide={{ axis: 'y' }}
 						>
-							<span class="flex-grow flex-shrink truncate">
-								{entry.messages[0].content}
-							</span>
+							{#if entry.messages.length}
+								<span class="flex-grow flex-shrink truncate">
+									{entry.messages[0].content}
+								</span>
+							{:else}
+								<span
+									class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic"
+								>
+									Empty prompt
+								</span>
+							{/if}
 							{#if entry.id !== $current.state.id}
 								<button
 									class="flex-shrink-0 btn variant-ringed-secondary"
