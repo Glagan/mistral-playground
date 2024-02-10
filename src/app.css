@@ -1,3 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+code {
+	@apply text-base overflow-x-auto px-[3px] py-[3px] font-mono rounded;
+	font-feature-settings: normal;
+	font-variation-settings: normal;
+	color: #c9d1d9;
+	background: #0d1117;
+}
