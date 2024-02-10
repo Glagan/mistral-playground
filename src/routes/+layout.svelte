@@ -86,8 +86,7 @@
 		drawerStore.close();
 		const settingsModal: ModalSettings = {
 			type: 'component',
-			backdropClasses:
-				'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
+			backdropClasses: 'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
 			component: 'settings'
 		};
 		modalStore.trigger(settingsModal);
@@ -136,9 +135,9 @@
 
 {#snippet navigation({ isFromRoot }: { isFromRoot: boolean })}
 	<div
-		class="{isFromRoot
-			? 'hidden lg:flex'
-			: 'flex'} flex-col flex-grow justify-start gap-2 {isFromRoot ? 'px-4' : 'p-4 h-full'} w-full"
+		class="{isFromRoot ? 'hidden lg:flex' : 'flex'} flex-col flex-grow justify-start gap-2 {isFromRoot
+			? 'px-4'
+			: 'p-4 h-full'} w-full"
 	>
 		<a
 			href="/chat"
@@ -174,8 +173,7 @@
 		{/if}
 		<a
 			href="/embeddings"
-			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname ===
-			'/embeddings'
+			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/embeddings'
 				? 'variant-soft-primary'
 				: ' '} hover:variant-soft-primary"
 			onclick={() => drawerStore.close()}
@@ -206,10 +204,7 @@
 {/snippet}
 
 {#snippet historyList({ mobile }: { mobile: boolean })}
-	<div
-		class="w-full overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
-		transition:fade={{ duration: 200 }}
-	>
+	<div class="w-full overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}" transition:fade={{ duration: 200 }}>
 		<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
 			<GalleryHorizontalEndIcon />
 			<span>History</span>
@@ -228,31 +223,21 @@
 							{entry.messages[0].content}
 						</div>
 					{:else}
-						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">
-							Empty prompt
-						</div>
+						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
 					{/if}
 					<div class="flex flex-row gap-2 items-end justify-end">
 						{#if entry.id !== $current.state.id}
-							<button
-								class="flex-shrink-0 btn variant-ringed-secondary"
-								onclick={() => loadHistoryEntry(entry)}
-							>
+							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryEntry(entry)}>
 								Load
 							</button>
 						{/if}
-						<button
-							class="flex-shrink-0 btn variant-ringed-error"
-							onclick={() => deleteHistoryEntry(entry)}
-						>
+						<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryEntry(entry)}>
 							<Trash2Icon />
 						</button>
 					</div>
 				</div>
 			{:else}
-				<span class="text-sm text-surface-200 text-opacity-75 italic text-center">
-					Your history will appear here
-				</span>
+				<span class="text-sm text-surface-200 text-opacity-75 italic text-center"> Your history will appear here </span>
 			{/each}
 		</div>
 	</div>
@@ -262,11 +247,7 @@
 	<div
 		class="flex lg:flex-col flex-grow-0 flex-shrink-0 h-full justify-between lg:justify-normal items-center lg:items-start p-4 gap-4"
 	>
-		<img
-			class="block max-h-14 lg:max-h-max lg:mx-auto"
-			src="/logo-dark.webp"
-			alt="Mistral Playground"
-		/>
+		<img class="block max-h-14 lg:max-h-max lg:mx-auto" src="/logo-dark.webp" alt="Mistral Playground" />
 		<div class="flex lg:hidden flex-col items-center gap-2">
 			<button type="button" class="transition-all font-bold text-lg" onclick={openNavigationDrawer}>
 				<MenuIcon size={40} />

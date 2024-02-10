@@ -45,9 +45,7 @@
 	}>();
 
 	let currentMessage = $derived(message.content[message.index]);
-	const markdown = $derived(
-		(marked.parse(currentMessage.trim(), { async: false }) as string).trim()
-	);
+	const markdown = $derived((marked.parse(currentMessage.trim(), { async: false }) as string).trim());
 
 	$effect(() => {
 		message.content[message.index];
@@ -115,22 +113,18 @@
 
 <div class="flex flex-row flex-nowrap">
 	<div
-		class="flex-grow flex-shrink-0 {message.type === 'system'
-			? 'w-full'
-			: 'w-[75%] lg:max-w-[75%]'} {variants[message.type].blockMargin}"
+		class="flex-grow flex-shrink-0 {message.type === 'system' ? 'w-full' : 'w-[75%] lg:max-w-[75%]'} {variants[
+			message.type
+		].blockMargin}"
 	>
-		<p
-			class="text-xs opacity-75 {variants[message.type].titlePosition} {variants[message.type]
-				.titleVariant}"
-		>
+		<p class="text-xs opacity-75 {variants[message.type].titlePosition} {variants[message.type].titleVariant}">
 			{variants[message.type].title}
 		</p>
 		<div class="card p-4 {variants[message.type].style} overflow-x-hidden">
 			{#if currentMessage.length === 0}
 				<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
 			{:else if editing}
-				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"
-				></textarea>
+				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"></textarea>
 			{:else}
 				<div class="whitespace-pre-wrap">
 					{@html markdown}

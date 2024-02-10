@@ -151,19 +151,12 @@
 				<Settings2Icon size={20} />
 				<span>Options</span>
 			</button>
-			<button
-				type="submit"
-				class="btn variant-filled-primary transition-all"
-				disabled={loading || !promptText}
-			>
+			<button type="submit" class="btn variant-filled-primary transition-all" disabled={loading || !promptText}>
 				Submit
 			</button>
 		</div>
 		{#if showOptions}
-			<div
-				class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center"
-				transition:slide={{ axis: 'y' }}
-			>
+			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
 				<select bind:value={model} class="select flex-grow-0">
 					<option value="mistral-embed">Mistral Embed</option>
 				</select>

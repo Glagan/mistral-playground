@@ -8,10 +8,7 @@
 <div class="w-modal">
 	<h2 class="text-xl">Settings</h2>
 	<div class="card variant-filled-surface p-4 flex flex-col gap-4">
-		<div>
-			Default options replace the default Mistral defaults and are always applied in new chat
-			sessions.
-		</div>
+		<div>Default options replace the default Mistral defaults and are always applied in new chat sessions.</div>
 		<label>
 			<div class="flex items-center justify-between">
 				<span>Default temperature</span>
@@ -53,8 +50,6 @@
 		</label>
 	</div>
 	<div class="flex items-center justify-center mt-2">
-		<button class="flex-shrink-0 btn variant-filled-primary" onclick={() => modalStore.close()}>
-			Close
-		</button>
+		<button class="flex-shrink-0 btn variant-filled-primary" onclick={() => modalStore.close()}> Close </button>
 	</div>
 </div>

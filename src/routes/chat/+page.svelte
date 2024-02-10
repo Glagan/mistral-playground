@@ -122,8 +122,7 @@
 					}
 				}
 			} catch (error) {
-				answer.content[answer.index] =
-					`Failed to send request: ${response.status} ${response.statusText}`;
+				answer.content[answer.index] = `Failed to send request: ${response.status} ${response.statusText}`;
 			} finally {
 				currentStream = null;
 				loading = false;
@@ -288,10 +287,7 @@
 	async function nextVersion(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			if (
-				$current.state.messages[index].index <
-				$current.state.messages[index].content.length - 1
-			) {
+			if ($current.state.messages[index].index < $current.state.messages[index].content.length - 1) {
 				$current.state.messages[index].index = $current.state.messages[index].index + 1;
 				updateOrInsertHistory();
 			}
@@ -302,10 +298,7 @@
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages[index].content.splice($current.state.messages[index].index);
-			if (
-				$current.state.messages[index].index >=
-				$current.state.messages[index].content.length - 1
-			) {
+			if ($current.state.messages[index].index >= $current.state.messages[index].content.length - 1) {
 				$current.state.messages[index].index -= 1;
 			}
 			updateOrInsertHistory();
@@ -374,8 +367,8 @@
 			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 				<div class="alert-message">
 					<p>
-						Your input is invalid, the first message can only be a system prompt or a question and
-						the last message must be a question or system prompt.
+						Your input is invalid, the first message can only be a system prompt or a question and the last message must
+						be a question or system prompt.
 					</p>
 				</div>
 			</aside>
@@ -414,17 +407,13 @@
 				type="submit"
 				class="btn variant-filled-primary transition-all"
 				disabled={loading ||
-					(!promptText &&
-						$current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
+					(!promptText && $current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
 			>
 				Submit
 			</button>
 		</div>
 		{#if showOptions}
-			<div
-				class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center"
-				transition:slide={{ axis: 'y' }}
-			>
+			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
 				<select bind:value={$current.state.options.model} class="select flex-grow-0">
 					<option value="mistral-tiny">Mistral Tiny</option>
 					<option value="mistral-small">Mistral Small</option>
@@ -481,9 +470,7 @@
 					placeholder="Seed"
 				/>
 				<div class="flex-shrink-0 cursor-pointer">
-					<SlideToggle name="safePrompt" bind:checked={$current.state.options.safePrompt}>
-						Safe prompt
-					</SlideToggle>
+					<SlideToggle name="safePrompt" bind:checked={$current.state.options.safePrompt}>Safe prompt</SlideToggle>
 				</div>
 				<div class="flex flex-col gap-2 col-span-2 lg:col-span-3">
 					<label class="label">
