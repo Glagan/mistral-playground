@@ -1,5 +1,5 @@
 import { get, writable } from 'svelte/store';
-import type { Answer, Options, Question } from '../types';
+import type { Message, Options } from '../types';
 import { settings } from './settings';
 import { v4 as uuid } from 'uuid';
 
