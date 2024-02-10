@@ -121,7 +121,7 @@
 <div class="flex flex-row flex-nowrap">
 	{#if message.type === 'assistant'}
 		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%] ml-auto">
-			<p class="text-xs opacity-75 text-right text-primary-500">Answer</p>
+			<p class="text-xs opacity-75 text-right text-primary-500">Assistant</p>
 			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
 				{#if currentMessage.length === 0}
 					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
@@ -148,7 +148,7 @@
 		</div>
 	{:else if message.type === 'user'}
 		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%]">
-			<p class="text-xs opacity-75 text-secondary-300">Question</p>
+			<p class="text-xs opacity-75 text-secondary-300">User</p>
 			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
 				{#if currentMessage.length === 0}
 					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
