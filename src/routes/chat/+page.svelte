@@ -390,6 +390,7 @@
 			</div>
 			<textarea
 				bind:value={promptText}
+				disabled={loading}
 				class="textarea"
 				rows="3"
 				placeholder="Type something..."

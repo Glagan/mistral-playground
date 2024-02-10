@@ -83,6 +83,7 @@
 	}
 
 	function openSettings() {
+		drawerStore.close();
 		const settingsModal: ModalSettings = {
 			type: 'component',
 			backdropClasses:
@@ -90,7 +91,6 @@
 			component: 'settings'
 		};
 		modalStore.trigger(settingsModal);
-		drawerStore.close();
 	}
 
 	function openNavigationDrawer() {
@@ -172,6 +172,17 @@
 				<span>New Chat</span>
 			</button>
 		{/if}
+		<a
+			href="/embeddings"
+			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname ===
+			'/embeddings'
+				? 'variant-soft-primary'
+				: ' '} hover:variant-soft-primary"
+			onclick={() => drawerStore.close()}
+		>
+			<CandlestickChartIcon />
+			<span>Embeddings</span>
+		</a>
 		<div class="flex-grow"></div>
 		{#if $apiKey}
 			<button
@@ -267,7 +278,7 @@
 	<div
 		class="hidden lg:flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
 	>
-		{#if $apiKey}
+		{#if $page.url.pathname === '/chat' && $apiKey}
 			{@render historyList({ mobile: false })}
 		{/if}
 	</div>
