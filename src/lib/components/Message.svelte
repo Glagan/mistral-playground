@@ -47,10 +47,22 @@
 
 	let editing = $state(false);
 	let localCopy = $state('');
+	let textarea: HTMLTextAreaElement;
 
 	function startEditing() {
 		editing = true;
 		localCopy = unstate(currentMessage);
+		tick().then(() => {
+			if (textarea) {
+				textarea.focus();
+				textarea.selectionStart = textarea.value.length;
+			}
+		});
+	}
+
+	function cancelEdit() {
+		editing = false;
+		tick().then(() => hljs.highlightAll());
 	}
 
 	function stopEditing() {
@@ -108,7 +120,8 @@
 			{#if currentMessage.length === 0}
 				<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
 			{:else if editing}
-				<textarea bind:value={localCopy} class="textarea w-full" rows="10"></textarea>
+				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"
+				></textarea>
 			{:else}
 				<div class="whitespace-pre-wrap">
 					{@html markdown}
@@ -116,7 +129,7 @@
 			{/if}
 			{#if interactive}
 				<div
-					class="flex gap-2 flex-grow flex-shrink items-center pt-2 justify-between transition-all"
+					class="flex flex-col lg:flex-row gap-2 flex-grow flex-shrink items-start lg:items-center pt-2 justify-between transition-all"
 					transition:slide={{ axis: 'y' }}
 				>
 					{#if message.content.length > 1 && !editing}
@@ -150,8 +163,16 @@
 					{:else}
 						<div class="flex-grow flex-shrink"></div>
 					{/if}
-					<div class="flex flex-row gap-2 items-center flex-shrink-0">
+					<div class="flex flex-row gap-2 items-center flex-shrink-0 flex-wrap">
 						{#if editing}
+							<button
+								type="button"
+								class="btn btn-sm variant-soft-warning transition-all disabled:opacity-75"
+								disabled={loading}
+								onclick={cancelEdit}
+							>
+								Cancel
+							</button>
 							<button
 								type="button"
 								class="btn btn-sm variant-soft-tertiary transition-all disabled:opacity-75"

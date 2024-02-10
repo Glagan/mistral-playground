@@ -4,12 +4,14 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import { history } from '$lib/stores/history';
 	import {
+		Drawer,
 		initializeStores,
 		Modal,
+		type DrawerSettings,
 		type ModalComponent,
 		type ModalSettings
 	} from '@skeletonlabs/skeleton';
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import { getModalStore, getDrawerStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { current, type ChatState } from '$lib/stores/current.svelte';
 
@@ -41,6 +43,7 @@
 
 	initializeStores();
 	const modalStore = getModalStore();
+	const drawerStore = getDrawerStore();
 
 	const modalRegistry: Record<string, ModalComponent> = {
 		settings: { ref: SettingsModal }
@@ -52,6 +55,7 @@
 	}
 
 	function loadHistoryEntry(entry: ChatState) {
+		drawerStore.close();
 		$current.setFromEntry(entry);
 		tick().then(() => {
 			const outputNode = document.getElementById('messages-container')!;
@@ -70,9 +74,25 @@
 	function openSettings() {
 		const settingsModal: ModalSettings = {
 			type: 'component',
+			backdropClasses:
+				'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
 			component: 'settings'
 		};
 		modalStore.trigger(settingsModal);
+	}
+
+	function openHistoryDrawer() {
+		const drawerSettings: DrawerSettings = {
+			id: 'history',
+			// Provide your property overrides:
+			bgDrawer: 'bg-surface-900 text-white',
+			bgBackdrop: 'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
+			width: 'w-[320px] md:w-[540px]',
+			padding: 'p-4',
+			rounded: 'rounded-xl',
+			position: 'right'
+		};
+		drawerStore.open(drawerSettings);
 	}
 </script>
 
@@ -80,56 +100,75 @@
 	<title>Mistral Playground</title>
 </svelte:head>
 
-<div class="flex flex-col lg:grid grid-layout min-h-screen">
-	<div class="flex h-full items-start justify-around p-4">
-		<img class="block" src="/logo.webp" alt="Mistral Playground" />
-	</div>
-	<slot />
-	<div class="flex flex-col items-center h-full p-4 overflow-hidden max-h-screen">
-		{#if $apiKey}
-			<div class="w-full overflow-auto" transition:fade={{ duration: 200 }}>
-				<h2 class="text-lg font-bold mb-2">History</h2>
-				<div class="flex flex-col gap-2">
-					{#each $history as entry (entry.id)}
-						<div
-							class="flex flex-row items-center gap-2 border-2 py-1 px-2 rounded-md transition-all {entry.id ===
-							$current.state.id
-								? 'border-primary-700 bg-primary-700/20'
-								: 'border-transparent'}"
-							transition:slide={{ axis: 'y' }}
-						>
-							{#if entry.messages.length}
-								<span class="flex-grow flex-shrink truncate">
-									{entry.messages[0].content}
-								</span>
-							{:else}
-								<span
-									class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic"
-								>
-									Empty prompt
-								</span>
-							{/if}
-							{#if entry.id !== $current.state.id}
-								<button
-									class="flex-shrink-0 btn variant-ringed-secondary"
-									onclick={() => loadHistoryEntry(entry)}
-								>
-									Load
-								</button>
-							{/if}
-							<button
-								class="flex-shrink-0 btn variant-ringed-error"
-								onclick={() => deleteHistoryEntry(entry)}>Delete</button
-							>
+{#snippet historyList({ mobile }: { mobile: boolean })}
+	<div
+		class="w-full overflow-auto {!mobile ? 'hidden lg:block' : ''}"
+		transition:fade={{ duration: 200 }}
+	>
+		<h2 class="text-lg font-bold mb-2">History</h2>
+		<div class="flex flex-col gap-2">
+			{#each $history as entry (entry.id)}
+				<div
+					class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
+					$current.state.id
+						? 'border-primary-700 bg-primary-700/20 px-2'
+						: 'border-transparent lg:px-2'}"
+					transition:slide={{ axis: 'y' }}
+				>
+					{#if entry.messages.length}
+						<div class="flex-grow flex-shrink truncate">
+							{entry.messages[0].content}
 						</div>
 					{:else}
-						<span class="text-sm text-surface-200 text-opacity-75 italic text-center">
-							Your history will appear here
-						</span>
-					{/each}
+						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">
+							Empty prompt
+						</div>
+					{/if}
+					<div class="flex flex-row gap-2 items-end justify-end">
+						{#if entry.id !== $current.state.id}
+							<button
+								class="flex-shrink-0 btn variant-ringed-secondary"
+								onclick={() => loadHistoryEntry(entry)}
+							>
+								Load
+							</button>
+						{/if}
+						<button
+							class="flex-shrink-0 btn variant-ringed-error"
+							onclick={() => deleteHistoryEntry(entry)}>Delete</button
+						>
+					</div>
 				</div>
-			</div>
-			<div class="flex-grow flex-shrink"></div>
+			{:else}
+				<span class="text-sm text-surface-200 text-opacity-75 italic text-center">
+					Your history will appear here
+				</span>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
+<div class="flex flex-col lg:grid grid-layout min-h-screen">
+	<div class="flex h-full items-start justify-between lg:justify-around p-4">
+		<img class="block max-h-16 lg:max-h-max" src="/logo-dark.webp" alt="Mistral Playground" />
+		{#if $history.length}
+			<button
+				type="button"
+				class="lg:hidden btn variant-filled-primary"
+				onclick={openHistoryDrawer}
+			>
+				History
+			</button>
+		{/if}
+	</div>
+	<slot />
+	<span class="flex-grow lg:hidden"></span>
+	<div
+		class="flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
+	>
+		{#if $apiKey}
+			{@render historyList({ mobile: false })}
+			<div class="flex-grow flex-shrink hidden lg:block"></div>
 			<button
 				class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning"
 				transition:fade
@@ -138,10 +177,10 @@
 				Delete API key
 			</button>
 		{:else}
-			<div class="flex-grow flex-shrink"></div>
+			<div class="hidden lg:block flex-grow flex-shrink"></div>
 		{/if}
 		<button
-			class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning mt-2"
+			class="flex-grow-0 flex-shrink-0 btn variant-ringed-warning"
 			transition:fade
 			onclick={openSettings}
 		>
@@ -149,6 +188,13 @@
 		</button>
 	</div>
 </div>
+<Drawer>
+	{#if $drawerStore.id === 'history'}
+		<div class="p-2">
+			{@render historyList({ mobile: true })}
+		</div>
+	{/if}
+</Drawer>
 <Modal components={modalRegistry} />
 
 <style lang="postcss">

@@ -372,9 +372,7 @@
 			</button>
 		{/if}
 	{:else}
-		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto">
-			<span class="text-sm text-surface-200 text-opacity-75 italic">Messages will appear here</span>
-		</div>
+		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		{#if !stateIsValid}
@@ -436,97 +434,98 @@
 			</button>
 		</div>
 		{#if showOptions}
-			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
-				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
-					<select bind:value={$current.state.options.model} class="select flex-grow-0">
-						<option value="mistral-tiny">Mistral Tiny</option>
-						<option value="mistral-small">Mistral Small</option>
-						<option value="mistral-medium">Mistral Medium</option>
-					</select>
-					<label class="flex-shrink-0">
-						<div class="flex flex-row justify-between items-center">
-							<span>Temperature</span>
-							<span class="text-surface-300">{$current.state.options.temperature}</span>
-						</div>
-						<input
-							bind:value={$current.state.options.temperature}
-							type="range"
-							name="temperature"
-							id="temperature"
-							min="0"
-							max="1"
-							step="0.01"
-							placeholder="Temperature"
-						/>
-					</label>
-					<label class="flex-shrink-0">
-						<div class="flex flex-row justify-between items-center">
-							<span>Top P</span>
-							<span class="text-surface-300">{$current.state.options.topP}</span>
-						</div>
-						<input
-							bind:value={$current.state.options.topP}
-							type="range"
-							name="topP"
-							id="topP"
-							min="0"
-							max="1"
-							step="0.01"
-							placeholder="Top P"
-						/>
-					</label>
-				</div>
-				<div class="flex flex-row justify-between gap-2 items-center *:max-w-[30%]">
-					<input
-						bind:value={$current.state.options.maxTokens}
-						class="input"
-						type="number"
-						name="maxTokens"
-						id="maxTokens"
-						min="1"
-						max="32000"
-						placeholder="Max tokens"
-					/>
-					<input
-						bind:value={$current.state.options.randomSeed}
-						class="input"
-						type="number"
-						name="randomSeed"
-						id="randomSeed"
-						placeholder="Seed"
-					/>
-					<div class="flex-shrink-0 cursor-pointer">
-						<SlideToggle name="safePrompt" bind:checked={$current.state.options.safePrompt}>
-							Safe prompt
-						</SlideToggle>
+			<div
+				class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center"
+				transition:slide={{ axis: 'y' }}
+			>
+				<select bind:value={$current.state.options.model} class="select flex-grow-0">
+					<option value="mistral-tiny">Mistral Tiny</option>
+					<option value="mistral-small">Mistral Small</option>
+					<option value="mistral-medium">Mistral Medium</option>
+				</select>
+				<label class="flex-shrink-0">
+					<div class="flex flex-row justify-between items-center">
+						<span>Temperature</span>
+						<span class="text-surface-300">{$current.state.options.temperature}</span>
 					</div>
-				</div>
-				<label class="label">
-					<div class="flex justify-between items-center">
-						<span>System prompt</span>
-						{#if systemPromptTokens > 0}
-							<span class="text-xs" transition:fade>
-								~<span class="text-surface-300">{systemPromptTokens}</span> tokens
-							</span>
-						{/if}
-					</div>
-					<textarea
-						bind:value={systemPrompt}
-						class="textarea"
-						name="system"
-						id="system"
-						placeholder="System prompt"
-						rows="4"
-					></textarea>
+					<input
+						bind:value={$current.state.options.temperature}
+						type="range"
+						name="temperature"
+						id="temperature"
+						min="0"
+						max="1"
+						step="0.01"
+						placeholder="Temperature"
+					/>
 				</label>
-				<button
-					type="button"
-					class="btn variant-filled-primary transition-all ml-auto"
-					disabled={loading || !systemPrompt}
-					onclick={addSystemPrompt}
-				>
-					Add system prompt
-				</button>
+				<label class="flex-shrink-0">
+					<div class="flex flex-row justify-between items-center">
+						<span>Top P</span>
+						<span class="text-surface-300">{$current.state.options.topP}</span>
+					</div>
+					<input
+						bind:value={$current.state.options.topP}
+						type="range"
+						name="topP"
+						id="topP"
+						min="0"
+						max="1"
+						step="0.01"
+						placeholder="Top P"
+					/>
+				</label>
+				<input
+					bind:value={$current.state.options.maxTokens}
+					class="input"
+					type="number"
+					name="maxTokens"
+					id="maxTokens"
+					min="1"
+					max="32000"
+					placeholder="Max tokens"
+				/>
+				<input
+					bind:value={$current.state.options.randomSeed}
+					class="input"
+					type="number"
+					name="randomSeed"
+					id="randomSeed"
+					placeholder="Seed"
+				/>
+				<div class="flex-shrink-0 cursor-pointer">
+					<SlideToggle name="safePrompt" bind:checked={$current.state.options.safePrompt}>
+						Safe prompt
+					</SlideToggle>
+				</div>
+				<div class="flex flex-col gap-2 col-span-2 lg:col-span-3">
+					<label class="label">
+						<div class="flex justify-between items-center">
+							<span>System prompt</span>
+							{#if systemPromptTokens > 0}
+								<span class="text-xs" transition:fade>
+									~<span class="text-surface-300">{systemPromptTokens}</span> tokens
+								</span>
+							{/if}
+						</div>
+						<textarea
+							bind:value={systemPrompt}
+							class="textarea"
+							name="system"
+							id="system"
+							placeholder="System prompt"
+							rows="4"
+						></textarea>
+					</label>
+					<button
+						type="button"
+						class="btn variant-filled-primary transition-all ml-auto"
+						disabled={loading || !systemPrompt}
+						onclick={addSystemPrompt}
+					>
+						Add system prompt
+					</button>
+				</div>
 			</div>
 		{/if}
 	</form>
