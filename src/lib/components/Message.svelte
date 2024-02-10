@@ -138,7 +138,7 @@
 			{/if}
 			{#if interactive}
 				<div
-					class="flex flex-col lg:flex-row gap-2 flex-grow flex-shrink items-start lg:items-center pt-2 justify-between transition-all"
+					class="flex flex-col lg:flex-row gap-2 flex-grow flex-shrink items-end lg:items-center pt-2 justify-between transition-all"
 					transition:slide={{ axis: 'y' }}
 				>
 					{#if message.content.length > 1 && !editing}

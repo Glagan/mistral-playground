@@ -340,8 +340,7 @@
 </script>
 
 <div
-	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4"
-	style="max-height: calc(100vh - 88px)"
+	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
 >
 	{#if $current.state.messages.length}
 		<Messages
