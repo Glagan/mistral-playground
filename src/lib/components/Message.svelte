@@ -1,7 +1,9 @@
 <script lang="ts">
 	import type { Answer, Question } from '$lib/types';
 	import { marked } from 'marked';
+	import { tick, unstate } from 'svelte';
 	import { slide } from 'svelte/transition';
+	import hljs from 'highlight.js/lib/core';
 
 	let {
 		message,
@@ -33,19 +35,34 @@
 		deleteMessage: (message: Question | Answer) => void;
 	}>();
 
-	function onMessageChange(event: Event & { currentTarget: EventTarget & HTMLDivElement }) {
-		updateMessage(message, event.currentTarget.innerText);
-	}
-
 	let currentMessage = $derived(message.content[message.index]);
 	const markdown = $derived(
 		(marked.parse(currentMessage.trim(), { async: false }) as string).trim()
 	);
+
+	$effect(() => {
+		message.content[message.index];
+		hljs.highlightAll();
+	});
+
+	let editing = $state(false);
+	let localCopy = $state('');
+
+	function startEditing() {
+		editing = true;
+		localCopy = unstate(currentMessage);
+	}
+
+	function stopEditing() {
+		editing = false;
+		message.content[message.index] = unstate(localCopy);
+		tick().then(() => hljs.highlightAll());
+	}
 </script>
 
 {#snippet actions({ message }: { message: Question | Answer })}
 	<div
-		class="flex gap-2 flex-grow flex-shrink items-center pt-2 justify-between"
+		class="flex gap-2 flex-grow flex-shrink items-center pt-2 justify-between transition-all"
 		transition:slide={{ axis: 'y' }}
 	>
 		{#if message.content.length > 1}
@@ -80,40 +97,59 @@
 			<div class="flex-grow flex-shrink"></div>
 		{/if}
 		<div class="flex flex-row gap-2 items-center flex-shrink-0">
-			<button
-				type="button"
-				class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-				disabled={loading || isFirst}
-				onclick={() => moveUp(message)}
-			>
-				Up
-			</button>
-			<button
-				type="button"
-				class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-				disabled={loading || isLast}
-				onclick={() => moveDown(message)}
-			>
-				Down
-			</button>
-			{#if message.type === 'assistant'}
+			{#if editing}
 				<button
 					type="button"
-					class="btn btn-sm variant-soft-primary transition-all disabled:opacity-75"
+					class="btn btn-sm variant-soft-tertiary transition-all disabled:opacity-75"
 					disabled={loading}
-					onclick={() => refresh(message)}
+					onclick={stopEditing}
 				>
-					Refresh
+					Done
+				</button>
+			{:else}
+				<button
+					type="button"
+					class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
+					disabled={loading || isFirst}
+					onclick={() => moveUp(message)}
+				>
+					Up
+				</button>
+				<button
+					type="button"
+					class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
+					disabled={loading || isLast}
+					onclick={() => moveDown(message)}
+				>
+					Down
+				</button>
+				<button
+					type="button"
+					class="btn btn-sm variant-soft-tertiary transition-all disabled:opacity-75"
+					disabled={loading}
+					onclick={startEditing}
+				>
+					Edit
+				</button>
+				{#if message.type === 'assistant'}
+					<button
+						type="button"
+						class="btn btn-sm variant-soft-primary transition-all disabled:opacity-75"
+						disabled={loading}
+						onclick={() => refresh(message)}
+					>
+						Refresh
+					</button>
+				{/if}
+				<button
+					type="button"
+					class="btn btn-sm variant-soft-error transition-all disabled:opacity-75"
+					disabled={loading}
+					onclick={() => deleteMessage(message)}
+				>
+					Delete
 				</button>
 			{/if}
-			<button
-				type="button"
-				class="btn btn-sm variant-soft-error transition-all disabled:opacity-75"
-				disabled={loading}
-				onclick={() => deleteMessage(message)}
-			>
-				Delete
-			</button>
 		</div>
 	</div>
 {/snippet}
@@ -125,12 +161,17 @@
 			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
 				{#if currentMessage.length === 0}
 					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else if editing}
+					<textarea
+						bind:value={localCopy}
+						class="textarea w-full"
+						rows="10"
+						onfocusin={startEditing}
+						onfocusout={stopEditing}
+						onblur={stopEditing}
+					></textarea>
 				{:else}
-					<div
-						class="whitespace-pre-wrap cursor-pointer"
-						contenteditable="true"
-						oninput={onMessageChange}
-					>
+					<div class="whitespace-pre-wrap">
 						{@html markdown}
 					</div>
 				{/if}
@@ -152,12 +193,17 @@
 			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
 				{#if currentMessage.length === 0}
 					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else if editing}
+					<textarea
+						bind:value={localCopy}
+						class="textarea w-full"
+						rows="10"
+						onfocusin={startEditing}
+						onfocusout={stopEditing}
+						onblur={stopEditing}
+					></textarea>
 				{:else}
-					<div
-						class="whitespace-pre-wrap cursor-pointer"
-						contenteditable="true"
-						oninput={onMessageChange}
-					>
+					<div class="whitespace-pre-wrap">
 						{@html markdown}
 					</div>
 				{/if}
@@ -188,12 +234,17 @@
 			<div class="card p-4 variant-ghost-tertiary overflow-x-hidden">
 				{#if currentMessage.length === 0}
 					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else if editing}
+					<textarea
+						bind:value={localCopy}
+						class="textarea w-full"
+						rows="10"
+						onfocusin={startEditing}
+						onfocusout={stopEditing}
+						onblur={stopEditing}
+					></textarea>
 				{:else}
-					<div
-						class="whitespace-pre-wrap cursor-pointer"
-						contenteditable="true"
-						oninput={onMessageChange}
-					>
+					<div class="whitespace-pre-wrap">
 						{@html markdown}
 					</div>
 				{/if}

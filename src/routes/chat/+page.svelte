@@ -9,9 +9,8 @@
 	import { history } from '$lib/stores/history';
 	import Messages from '$lib/components/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
-	import { onDestroy, tick } from 'svelte';
+	import { onDestroy } from 'svelte';
 	import { current } from '$lib/stores/current.svelte';
-	import hljs from 'highlight.js/lib/core';
 	import { v4 as uuid } from 'uuid';
 
 	if (browser && !$apiKey) {
@@ -104,7 +103,7 @@
 				};
 				if (body.code === 'ERR_PARSING') {
 					answer.content[answer.index] =
-						`Failed to send request:\n${body.error.issues.map((issue: { message: string }) => issue.message).join('\n')}`;
+						`Failed to send request:\n${body.error.issues.map((issue: { message: string; path: string[] }) => `- ${issue.path.join('.')}: ${issue.message}`).join('\n')}`;
 				} else if (body.code === 'ERR_API_KEY') {
 					answer.content[answer.index] = 'Your API key is invalid.';
 				} else if (body.code === 'ERR_API_REQ') {
@@ -113,7 +112,6 @@
 							const asJson = JSON.parse(body.message);
 							answer.content[answer.index] =
 								`Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
-							tick().then(() => hljs.highlightAll());
 						} catch (error) {
 							answer.content[answer.index] = `Failed to generate output:\n${body.message}`;
 						}
@@ -150,7 +148,6 @@
 				if (outputNode) {
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
-				hljs.highlightAll();
 			}
 			// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
 			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
