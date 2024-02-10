@@ -1,17 +1,10 @@
 export type Usage = { prompt_tokens: number; total_tokens: number; completion_tokens: number };
 
 export type Message = {
+	type: 'user' | 'assistant' | 'system' | 'error';
 	id: string;
 	index: number;
 	content: string[];
-};
-
-export type Question = Message & {
-	type: 'user' | 'system' | 'error';
-};
-
-export type Answer = Message & {
-	type: 'assistant';
 	usage?: Usage;
 };
 

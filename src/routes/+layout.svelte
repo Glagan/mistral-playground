@@ -23,6 +23,8 @@
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import shell from 'highlight.js/lib/languages/shell';
+	import ruby from 'highlight.js/lib/languages/ruby';
+	import sql from 'highlight.js/lib/languages/sql';
 
 	hljs.registerLanguage('xml', xml); // for HTML
 	hljs.registerLanguage('css', css);
@@ -30,6 +32,9 @@
 	hljs.registerLanguage('javascript', javascript);
 	hljs.registerLanguage('typescript', typescript);
 	hljs.registerLanguage('shell', shell);
+	hljs.registerLanguage('bash', shell);
+	hljs.registerLanguage('ruby', ruby);
+	hljs.registerLanguage('sql', sql);
 
 	import 'highlight.js/styles/github-dark.css';
 	import { tick } from 'svelte';
@@ -49,6 +54,8 @@
 	function loadHistoryEntry(entry: ChatState) {
 		$current.setFromEntry(entry);
 		tick().then(() => {
+			const outputNode = document.getElementById('messages-container')!;
+			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			hljs.highlightAll();
 		});
 	}

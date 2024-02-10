@@ -3,7 +3,7 @@
 	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Answer, Question, Usage } from '$lib/types';
+	import type { Message, Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { history } from '$lib/stores/history';
@@ -29,7 +29,7 @@
 		}
 	});
 
-	function messageOrderIsValid(messages: (Question | Answer)[]) {
+	function messageOrderIsValid(messages: Message[]) {
 		if (messages.length === 0) {
 			return true;
 		}
@@ -65,7 +65,8 @@
 	let keepGenerating = $state(true);
 	let currentStream: ReadableStream | null = null;
 
-	async function generate(messages: (Question | Answer)[], answer: Question | Answer) {
+	async function generate(messages: Message[], answer: Message) {
+		const outputNode = document.getElementById('messages-container');
 		loading = true;
 		showOptions = false;
 		keepGenerating = true;
@@ -135,13 +136,12 @@
 			// Read each chunk and update the last response reference
 			currentStream = response.body;
 			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-			const outputNode = document.getElementById('messages-container');
 			while (reader && keepGenerating) {
 				const { value, done } = await reader.read();
 				if (done) break;
 				if (/^#/.test(value)) {
 					const usage = JSON.parse(value.slice(1)) as Usage;
-					(answer as Answer).usage = usage;
+					answer.usage = usage;
 				} else {
 					answer.content[answer.index] += value ?? '';
 				}
@@ -153,7 +153,7 @@
 			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
 			if (embeddedUsage) {
 				answer.content[answer.index] = answer.content[answer.index].replace(/#({.+?})$/, '');
-				(answer as Answer).usage = JSON.parse(embeddedUsage[1]) as Usage;
+				answer.usage = JSON.parse(embeddedUsage[1]) as Usage;
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -171,6 +171,7 @@
 	}
 
 	async function onSubmit(event: Event) {
+		const outputNode = document.getElementById('messages-container');
 		event.preventDefault();
 		if (systemPrompt) {
 			$current.state.messages.push({
@@ -179,6 +180,9 @@
 				index: 0,
 				content: [systemPrompt]
 			});
+			if (outputNode) {
+				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			}
 		}
 		if (promptText.length) {
 			$current.state.messages.push({
@@ -187,13 +191,16 @@
 				index: 0,
 				content: [promptText]
 			});
+			if (outputNode) {
+				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			}
 		}
 		promptText = '';
 
 		// Take the messages up to here for the next generation
 		const messagesToSend = JSON.parse(JSON.stringify($current.state.messages));
 
-		const answer = $state<Question | Answer>({
+		const answer = $state<Message>({
 			id: uuid(),
 			type: 'assistant',
 			index: 0,
@@ -201,6 +208,9 @@
 			usage: undefined
 		});
 		$current.state.messages.push(answer);
+		if (outputNode) {
+			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+		}
 
 		await generate(messagesToSend, answer);
 	}
@@ -222,9 +232,11 @@
 	async function stopGenerating(event: Event) {
 		event.preventDefault();
 		event.stopPropagation();
+		loading = false;
 		keepGenerating = false;
 		if (currentStream && !currentStream.locked) {
 			currentStream.cancel();
+			currentStream = null;
 		}
 	}
 
@@ -238,7 +250,7 @@
 
 	// * > Message events
 
-	function moveUp(message: Question | Answer) {
+	function moveUp(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
 			$current.state.messages.splice(index, 1);
@@ -247,7 +259,7 @@
 		}
 	}
 
-	function moveDown(message: Question | Answer) {
+	function moveDown(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0 && index < $current.state.messages.length - 1) {
 			$current.state.messages.splice(index, 1);
@@ -256,7 +268,7 @@
 		}
 	}
 
-	async function refresh(message: Question | Answer) {
+	async function refresh(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const message = $current.state.messages[index];
@@ -270,7 +282,7 @@
 		}
 	}
 
-	async function previousVersion(message: Question | Answer) {
+	async function previousVersion(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if ($current.state.messages[index].index > 0) {
@@ -280,7 +292,7 @@
 		}
 	}
 
-	async function nextVersion(message: Question | Answer) {
+	async function nextVersion(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if (
@@ -293,7 +305,7 @@
 		}
 	}
 
-	async function deleteVersion(message: Question | Answer) {
+	async function deleteVersion(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages[index].content.splice($current.state.messages[index].index);
@@ -307,7 +319,7 @@
 		}
 	}
 
-	function updateMessage(message: Question | Answer, content: string) {
+	function updateMessage(message: Message, content: string) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages[index].content[message.index] = content;
@@ -315,7 +327,7 @@
 		}
 	}
 
-	function deleteMessage(message: Question | Answer) {
+	function deleteMessage(message: Message) {
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages.splice(index, 1);

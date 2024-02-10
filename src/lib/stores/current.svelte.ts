@@ -5,7 +5,7 @@ import { v4 as uuid } from 'uuid';
 
 export type ChatState = {
 	id: string;
-	messages: (Question | Answer)[];
+	messages: Message[];
 	options: Options;
 };
 
