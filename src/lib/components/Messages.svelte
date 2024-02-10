@@ -4,6 +4,7 @@
 
 	const {
 		messages,
+		loading,
 		interactive,
 		moveUp,
 		moveDown,
@@ -15,6 +16,7 @@
 		deleteMessage
 	} = $props<{
 		messages: (Question | Answer)[];
+		loading: boolean;
 		interactive?: boolean;
 		moveUp: (message: Question | Answer) => void;
 		moveDown: (message: Question | Answer) => void;
@@ -36,6 +38,7 @@
 				bind:message
 				isFirst={index === 0}
 				isLast={index === messages.length - 1}
+				{loading}
 				{interactive}
 				{moveUp}
 				{moveDown}

@@ -8,6 +8,10 @@
 <div class="w-modal">
 	<h2 class="text-xl">Settings</h2>
 	<div class="card variant-filled-surface p-4 flex flex-col gap-4">
+		<div>
+			Default options replace the default Mistral defaults and are always applied in new chat
+			sessions.
+		</div>
 		<label>
 			<div class="flex items-center justify-between">
 				<span>Default temperature</span>
@@ -33,6 +37,18 @@
 				name="randomSeed"
 				id="randomSeed"
 				placeholder="Seed"
+			/>
+		</label>
+		<div class="h-[1px] bg-white w-full rounded"></div>
+		<label>
+			<div class="flex items-center justify-between">API endpoint</div>
+			<input
+				bind:value={$settings.endpoint}
+				class="input"
+				type="text"
+				name="endpoint"
+				id="endpoint"
+				placeholder="API endpoint"
 			/>
 		</label>
 	</div>

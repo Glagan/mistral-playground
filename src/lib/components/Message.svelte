@@ -5,6 +5,7 @@
 
 	let {
 		message,
+		loading,
 		isFirst,
 		isLast,
 		interactive,
@@ -18,6 +19,7 @@
 		deleteMessage
 	} = $props<{
 		message: Question | Answer;
+		loading: boolean;
 		isFirst: boolean;
 		isLast: boolean;
 		interactive?: boolean;
@@ -51,7 +53,7 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-					disabled={message.index === 0}
+					disabled={loading || message.index === 0}
 					onclick={() => previousVersion(message)}
 				>
 					Previous
@@ -60,7 +62,7 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-					disabled={message.index >= message.content.length - 1}
+					disabled={loading || message.index >= message.content.length - 1}
 					onclick={() => nextVersion(message)}
 				>
 					Next
@@ -68,6 +70,7 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-soft-warning transition-all disabled:opacity-75"
+					disabled={loading}
 					onclick={() => deleteVersion(message)}
 				>
 					Delete
@@ -80,7 +83,7 @@
 			<button
 				type="button"
 				class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-				disabled={isFirst}
+				disabled={loading || isFirst}
 				onclick={() => moveUp(message)}
 			>
 				Up
@@ -88,7 +91,7 @@
 			<button
 				type="button"
 				class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
-				disabled={isLast}
+				disabled={loading || isLast}
 				onclick={() => moveDown(message)}
 			>
 				Down
@@ -97,6 +100,7 @@
 				<button
 					type="button"
 					class="btn btn-sm variant-soft-primary transition-all disabled:opacity-75"
+					disabled={loading}
 					onclick={() => refresh(message)}
 				>
 					Refresh
@@ -105,6 +109,7 @@
 			<button
 				type="button"
 				class="btn btn-sm variant-soft-error transition-all disabled:opacity-75"
+				disabled={loading}
 				onclick={() => deleteMessage(message)}
 			>
 				Delete
@@ -118,13 +123,17 @@
 		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%] ml-auto">
 			<p class="text-xs opacity-75 text-right text-primary-500">Answer</p>
 			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
-				<div
-					class="whitespace-pre-wrap cursor-pointer"
-					contenteditable="true"
-					oninput={onMessageChange}
-				>
-					{@html markdown}
-				</div>
+				{#if currentMessage.length === 0}
+					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else}
+					<div
+						class="whitespace-pre-wrap cursor-pointer"
+						contenteditable="true"
+						oninput={onMessageChange}
+					>
+						{@html markdown}
+					</div>
+				{/if}
 				{#if interactive}
 					{@render actions({ message })}
 				{/if}
@@ -141,13 +150,17 @@
 		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%]">
 			<p class="text-xs opacity-75 text-secondary-300">Question</p>
 			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
-				<div
-					class="whitespace-pre-wrap cursor-pointer"
-					contenteditable="true"
-					oninput={onMessageChange}
-				>
-					{@html markdown}
-				</div>
+				{#if currentMessage.length === 0}
+					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else}
+					<div
+						class="whitespace-pre-wrap cursor-pointer"
+						contenteditable="true"
+						oninput={onMessageChange}
+					>
+						{@html markdown}
+					</div>
+				{/if}
 				{#if interactive}
 					{@render actions({ message })}
 				{/if}
@@ -157,13 +170,13 @@
 		<div class="flex-grow flex-shrink-0 w-[75%] lg:max-w-[75%] ml-auto">
 			<p class="text-xs opacity-75 text-error-300">Error</p>
 			<div class="card p-4 variant-ghost-error overflow-x-hidden">
-				<div
-					class="whitespace-pre-wrap cursor-pointer"
-					contenteditable="true"
-					oninput={onMessageChange}
-				>
-					{@html markdown}
-				</div>
+				{#if currentMessage.length === 0}
+					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else}
+					<div class="whitespace-pre-wrap">
+						{@html markdown}
+					</div>
+				{/if}
 				{#if interactive}
 					{@render actions({ message })}
 				{/if}
@@ -173,13 +186,17 @@
 		<div class="w-full">
 			<p class="text-xs opacity-75 text-tertiary-300">System</p>
 			<div class="card p-4 variant-ghost-tertiary overflow-x-hidden">
-				<div
-					class="whitespace-pre-wrap cursor-pointer"
-					contenteditable="true"
-					oninput={onMessageChange}
-				>
-					{@html markdown}
-				</div>
+				{#if currentMessage.length === 0}
+					<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
+				{:else}
+					<div
+						class="whitespace-pre-wrap cursor-pointer"
+						contenteditable="true"
+						oninput={onMessageChange}
+					>
+						{@html markdown}
+					</div>
+				{/if}
 				{#if interactive}
 					{@render actions({ message })}
 				{/if}

@@ -2,6 +2,7 @@ import type { Usage } from '$lib/types';
 import type { RequestHandler } from './$types';
 import MistralClient, { type ChatCompletionResponseChunk } from '@mistralai/mistralai';
 import { z } from 'zod';
+import { normalizeURL, withoutLeadingSlash } from 'ufo';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();
@@ -27,7 +28,8 @@ export const POST: RequestHandler = async ({ request }) => {
 					temperature: z.coerce.number().optional().default(0.7),
 					topP: z.coerce.number().optional().default(1)
 				})
-				.optional()
+				.optional(),
+			endpoint: z.string().url().optional().default('https://api.mistral.ai/v1')
 		})
 		.safeParse(unparsedBody);
 	if (!parsingResponse.success) {
@@ -40,7 +42,8 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 	const body = parsingResponse.data;
 
-	const client = new MistralClient(body.apiKey);
+	const cleanEndpoint = normalizeURL(body.endpoint).replace(/\/+$/, '');
+	const client = new MistralClient(body.apiKey, cleanEndpoint);
 	const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
 
 	const chatStreamResponse = client.chatStream({

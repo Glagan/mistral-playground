@@ -73,7 +73,7 @@
 
 		let response: Response;
 		try {
-			response = await fetch('/api/chat', {
+			response = await fetch('/api/chat/completions', {
 				method: 'POST',
 				headers: { 'Content-Type': 'application/json' },
 				body: JSON.stringify({
@@ -82,7 +82,8 @@
 						type: message.type,
 						content: message.content[message.index]
 					})),
-					options: $current.state.options
+					options: $current.state.options,
+					endpoint: $settings.endpoint
 				})
 			});
 		} catch (_error) {
@@ -114,7 +115,7 @@
 								`Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
 							tick().then(() => hljs.highlightAll());
 						} catch (error) {
-							answer.content[answer.index] = `Your request is invalid: ${body.message}`;
+							answer.content[answer.index] = `Failed to generate output:\n${body.message}`;
 						}
 					} else {
 						answer.content[answer.index] = 'Your request is invalid.';
@@ -341,6 +342,7 @@
 		<Messages
 			bind:messages={$current.state.messages}
 			interactive
+			{loading}
 			{moveUp}
 			{moveDown}
 			{refresh}
