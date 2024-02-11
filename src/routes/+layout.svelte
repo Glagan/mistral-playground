@@ -24,6 +24,9 @@
 	import PackagePlusIcon from 'lucide-svelte/icons/package-plus';
 	import SettingsIcon from 'lucide-svelte/icons/settings';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
+	import GithubIcon from 'lucide-svelte/icons/github';
+	import ArrowUpRightFromSquareIcon from 'lucide-svelte/icons/arrow-up-right-from-square';
+	import CoffeeIcon from 'lucide-svelte/icons/coffee';
 
 	import '../app.css';
 
@@ -195,6 +198,24 @@
 				<span>Delete API key</span>
 			</button>
 		{/if}
+		<a
+			href="https://ko-fi.com/glagan"
+			target="_blank"
+			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
+		>
+			<CoffeeIcon />
+			<span>Buy me a coffee</span>
+			<ArrowUpRightFromSquareIcon size={16} />
+		</a>
+		<a
+			href="https://github.com/Glagan/mistral-playground"
+			target="_blank"
+			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
+		>
+			<GithubIcon />
+			<span>Github</span>
+			<ArrowUpRightFromSquareIcon size={16} />
+		</a>
 		<button
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 			transition:fade
