@@ -1,10 +1,13 @@
 <script lang="ts">
 	import MessageSvelte from '$lib/components/Message.svelte';
 	import type { Message } from '$lib/types';
+	import { marked } from 'marked';
+	import { slide } from 'svelte/transition';
 
 	const {
 		messages,
 		loading,
+		error,
 		interactive,
 		moveUp,
 		moveDown,
@@ -17,6 +20,7 @@
 	} = $props<{
 		messages: Message[];
 		loading: boolean;
+		error: string;
 		interactive?: boolean;
 		moveUp: (message: Message) => void;
 		moveDown: (message: Message) => void;
@@ -28,7 +32,7 @@
 		deleteMessage: (message: Message) => void;
 	}>();
 
-	// TODO delayed fade-in per messages
+	let renderedError = $derived((marked.parse(error.trim(), { async: false }) as string).trim());
 </script>
 
 <div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
@@ -50,5 +54,12 @@
 				{deleteMessage}
 			/>
 		{/each}
+	{/if}
+	{#if error}
+		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
+			<div class="alert-message">
+				{@html renderedError}
+			</div>
+		</aside>
 	{/if}
 </div>

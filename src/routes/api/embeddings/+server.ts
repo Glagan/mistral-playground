@@ -46,11 +46,26 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		});
 	} catch (error) {
-		console.error(error);
+		if ((error as any).message.includes('Unauthorized')) {
+			return new Response(
+				JSON.stringify({
+					error: 'Invalid API key',
+					message: (error as any).message.replace(/.+?Response:\s+(.+)/i, '$1'),
+					code: 'ERR_API_KEY'
+				}),
+				{
+					headers: {
+						'Content-Type': 'application/json'
+					},
+					status: 400
+				}
+			);
+		}
 		return new Response(
 			JSON.stringify({
-				error: 'Failed to send request',
-				message: (error as any).message ?? error
+				error: 'Invalid Request',
+				message: (error as any).message ?? error,
+				code: 'ERR_API_REQ'
 			}),
 			{
 				headers: {

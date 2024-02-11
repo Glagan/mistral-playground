@@ -144,22 +144,14 @@
 			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/chat'
 				? 'variant-soft-primary'
 				: ' '} hover:variant-soft-primary"
-			onclick={() => drawerStore.close()}
+			onclick={(event) => {
+				resetSession(event);
+				drawerStore.close();
+			}}
 		>
 			<BotIcon />
 			<span>Chat</span>
 		</a>
-		{#if !isFromRoot}
-			<button
-				type="button"
-				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
-				transition:slide={{ axis: 'y' }}
-				onclick={openHistoryDrawer}
-			>
-				<GalleryHorizontalEndIcon />
-				<span>History</span>
-			</button>
-		{/if}
 		{#if $page.url.pathname === '/chat' && $current.state.messages.length}
 			<button
 				type="button"
@@ -169,6 +161,17 @@
 			>
 				<PackagePlusIcon />
 				<span>New Chat</span>
+			</button>
+		{/if}
+		{#if !isFromRoot}
+			<button
+				type="button"
+				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+				transition:slide={{ axis: 'y' }}
+				onclick={openHistoryDrawer}
+			>
+				<GalleryHorizontalEndIcon />
+				<span>History</span>
 			</button>
 		{/if}
 		<a

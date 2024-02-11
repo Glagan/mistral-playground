@@ -23,6 +23,13 @@
 	let showOptions = $state(false);
 	let promptText = $state('');
 
+	let error = $state('');
+
+	$effect(() => {
+		$current.state.id;
+		error = '';
+	});
+
 	const unsubscribe = settings.subscribe((value) => {
 		if ($current.state.messages.length === 0) {
 			$current.state.options.temperature = value.temperature;
@@ -89,14 +96,24 @@
 			});
 		} catch (_error) {
 			console.error(_error);
-			answer.type = 'error';
-			answer.content[answer.index] = `Failed to send request: ${_error}`;
+			if (answer.content.length === 1) {
+				$current.state.messages.pop();
+			} else {
+				answer.content.splice(answer.index, 1);
+				answer.index -= 1;
+			}
+			error = `Failed to send request: ${_error}`;
 			return;
 		}
 
 		if (!response.ok) {
 			const rawBody = await response.text();
-			answer.type = 'error';
+			if (answer.content.length === 1) {
+				$current.state.messages.pop();
+			} else {
+				answer.content.splice(answer.index, 1);
+				answer.index -= 1;
+			}
 			try {
 				const body = JSON.parse(rawBody) as {
 					error: any;
@@ -104,25 +121,23 @@
 					code: 'ERR_PARSING' | 'ERR_API_KEY' | 'ERR_API_REQ';
 				};
 				if (body.code === 'ERR_PARSING') {
-					answer.content[answer.index] =
-						`Failed to send request:\n${body.error.issues.map((issue: { message: string; path: string[] }) => `- ${issue.path.join('.')}: ${issue.message}`).join('\n')}`;
+					error = `Failed to send request:\n${body.error.issues.map((issue: { message: string; path: string[] }) => `- ${issue.path.join('.')}: ${issue.message}`).join('\n')}`;
 				} else if (body.code === 'ERR_API_KEY') {
-					answer.content[answer.index] = 'Your API key is invalid.';
+					error = 'Your API key is invalid.';
 				} else if (body.code === 'ERR_API_REQ') {
 					if (body.message) {
 						try {
 							const asJson = JSON.parse(body.message);
-							answer.content[answer.index] =
-								`Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
-						} catch (error) {
-							answer.content[answer.index] = `Failed to generate output:\n${body.message}`;
+							error = `Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
+						} catch (_error) {
+							error = `Failed to generate output:\n${body.message}`;
 						}
 					} else {
-						answer.content[answer.index] = 'Your request is invalid.';
+						error = 'Your request is invalid.';
 					}
 				}
-			} catch (error) {
-				answer.content[answer.index] = `Failed to send request: ${response.status} ${response.statusText}`;
+			} catch (_error) {
+				error = `Failed to send request: ${response.status} ${response.statusText}`;
 			} finally {
 				currentStream = null;
 				loading = false;
@@ -161,8 +176,13 @@
 			updateOrInsertHistory();
 		} catch (error) {
 			console.error(error);
-			answer.type = 'error';
-			answer.content[answer.index] = `Failed to generate: ${error}`;
+			if (answer.content.length === 1) {
+				$current.state.messages.pop();
+			} else {
+				answer.content.splice(answer.index, 1);
+				answer.index -= 1;
+			}
+			error = `Failed to generate: ${error}`;
 		} finally {
 			currentStream = null;
 			loading = false;
@@ -173,6 +193,7 @@
 	async function onSubmit(event: Event) {
 		const outputNode = document.getElementById('messages-container');
 		event.preventDefault();
+		error = '';
 		if (systemPrompt) {
 			$current.state.messages.push({
 				id: uuid(),
@@ -243,6 +264,7 @@
 	// * > Message events
 
 	function moveUp(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
 			$current.state.messages.splice(index, 1);
@@ -252,6 +274,7 @@
 	}
 
 	function moveDown(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0 && index < $current.state.messages.length - 1) {
 			$current.state.messages.splice(index, 1);
@@ -261,6 +284,7 @@
 	}
 
 	async function refresh(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const message = $current.state.messages[index];
@@ -275,6 +299,7 @@
 	}
 
 	async function previousVersion(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if ($current.state.messages[index].index > 0) {
@@ -285,6 +310,7 @@
 	}
 
 	async function nextVersion(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if ($current.state.messages[index].index < $current.state.messages[index].content.length - 1) {
@@ -295,6 +321,7 @@
 	}
 
 	async function deleteVersion(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages[index].content.splice($current.state.messages[index].index);
@@ -306,6 +333,7 @@
 	}
 
 	function updateMessage(message: Message, content: string) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages[index].content[message.index] = content;
@@ -314,6 +342,7 @@
 	}
 
 	function deleteMessage(message: Message) {
+		error = '';
 		const index = $current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			$current.state.messages.splice(index, 1);
@@ -340,6 +369,7 @@
 			bind:messages={$current.state.messages}
 			interactive
 			{loading}
+			{error}
 			{moveUp}
 			{moveDown}
 			{refresh}

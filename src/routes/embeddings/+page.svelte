@@ -8,6 +8,9 @@
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
 	import { Settings2Icon } from 'lucide-svelte';
+	import { marked } from 'marked';
+	import { tick } from 'svelte';
+	import hljs from 'highlight.js';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -24,6 +27,7 @@
 	let loading = $state(false);
 	let keepGenerating = $state(false);
 	let error = $state('');
+	let renderedError = $derived((marked.parse(error.trim(), { async: false }) as string).trim());
 
 	let embeddings = $state<number[]>([]);
 
@@ -69,8 +73,23 @@
 				const body = JSON.parse(rawBody) as {
 					error: any;
 					message?: string;
+					code: 'ERR_API_KEY' | 'ERR_API_REQ';
 				};
-				error = body.message ?? body.error;
+				if (body.code === 'ERR_API_KEY') {
+					error = 'Your API key is invalid.';
+				} else {
+					if (body.message) {
+						try {
+							const asJson = JSON.parse(body.message);
+							error = `Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
+						} catch (error) {
+							error = `Failed to generate output:\n${body.message}`;
+						}
+					} else {
+						error = 'Your request is invalid.';
+					}
+				}
+				tick().then(() => hljs.highlightAll());
 			} catch (error) {
 				error = `Failed to send request: ${response.status} ${response.statusText}`;
 			}
@@ -96,7 +115,7 @@
 		{#if error}
 			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 				<div class="alert-message">
-					<p>{error}</p>
+					{@html renderedError}
 				</div>
 			</aside>
 		{/if}
