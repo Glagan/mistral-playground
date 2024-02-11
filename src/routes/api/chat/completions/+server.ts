@@ -2,7 +2,7 @@ import type { Usage } from '$lib/types';
 import type { RequestHandler } from './$types';
 import MistralClient, { type ChatCompletionResponseChunk } from '@mistralai/mistralai';
 import { z } from 'zod';
-import { normalizeURL, parseURL, withoutLeadingSlash } from 'ufo';
+import { normalizeURL } from 'ufo';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();

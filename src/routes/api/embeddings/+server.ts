@@ -1,6 +1,5 @@
-import type { Usage } from '$lib/types';
 import type { RequestHandler } from './$types';
-import MistralClient, { type ChatCompletionResponseChunk } from '@mistralai/mistralai';
+import MistralClient from '@mistralai/mistralai';
 import { z } from 'zod';
 import { normalizeURL } from 'ufo';
 
