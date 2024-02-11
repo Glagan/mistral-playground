@@ -104,7 +104,7 @@
 	}
 
 	function openHistoryDrawer() {
-		drawerStore.close();
+		resetSession();
 		tick().then(() => {
 			const drawerSettings: DrawerSettings = {
 				id: 'history',
@@ -119,9 +119,11 @@
 		});
 	}
 
-	function resetSession(event: Event) {
-		event.preventDefault();
-		event.stopPropagation();
+	function resetSession(event?: Event) {
+		if (event) {
+			event.preventDefault();
+			event.stopPropagation();
+		}
 		$current.reset();
 		drawerStore.close();
 	}
@@ -142,8 +144,8 @@
 			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/chat'
 				? 'variant-soft-primary'
 				: ' '} hover:variant-soft-primary"
-			onclick={(event) => {
-				resetSession(event);
+			onclick={() => {
+				resetSession();
 				drawerStore.close();
 			}}
 		>
