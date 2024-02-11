@@ -124,7 +124,7 @@
 			{:else if editing}
 				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"></textarea>
 			{:else}
-				<div class="whitespace-pre-wrap">
+				<div class="space-y-2">
 					{@html markdown}
 				</div>
 			{/if}
