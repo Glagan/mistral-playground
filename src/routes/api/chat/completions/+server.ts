@@ -72,11 +72,12 @@ export const POST: RequestHandler = async ({ request }) => {
 	});
 	const response = new Response(stream, {
 		headers: {
-			'Cache-Control': 'no-store',
+			'Cache-Control': 'no-cache',
 			'Content-Type': 'text/event-stream',
 			Connection: 'keep-alive',
 			'Content-Encoding': 'none',
-			'Access-Control-Allow-Origin': '*'
+			'Access-Control-Allow-Origin': '*',
+			'X-Accel-Buffering': 'no'
 		}
 	});
 
