@@ -27,7 +27,9 @@
 	let loading = $state(false);
 	let keepGenerating = $state(false);
 	let error = $state('');
-	let renderedError = $derived((marked.parse(error.trim(), { async: false }) as string).trim());
+	let renderedError = $derived(
+		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
+	);
 
 	let embeddings = $state<number[]>([]);
 
@@ -114,7 +116,7 @@
 	<div class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
 		{#if error}
 			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-				<div class="alert-message">
+				<div class="alert-message space-y-4 rendered-markdown">
 					{@html renderedError}
 				</div>
 			</aside>

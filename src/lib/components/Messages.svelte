@@ -32,7 +32,9 @@
 		deleteMessage: (message: Message) => void;
 	}>();
 
-	let renderedError = $derived((marked.parse(error.trim(), { async: false }) as string).trim());
+	let renderedError = $derived(
+		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
+	);
 </script>
 
 <div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
@@ -57,7 +59,7 @@
 	{/if}
 	{#if error}
 		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-			<div class="alert-message">
+			<div class="alert-message space-y-4 rendered-markdown">
 				{@html renderedError}
 			</div>
 		</aside>

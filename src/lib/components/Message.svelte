@@ -43,7 +43,9 @@
 	}>();
 
 	let currentMessage = $derived(message.content[message.index]);
-	const markdown = $derived((marked.parse(currentMessage.trim(), { async: false }) as string).trim());
+	const markdown = $derived(
+		(marked.parse(currentMessage.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
+	);
 
 	$effect(() => {
 		message.content[message.index];
@@ -124,7 +126,7 @@
 			{:else if editing}
 				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"></textarea>
 			{:else}
-				<div class="space-y-2">
+				<div class="space-y-4 rendered-markdown">
 					{@html markdown}
 				</div>
 			{/if}

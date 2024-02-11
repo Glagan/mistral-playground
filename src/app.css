@@ -9,3 +9,12 @@ code {
 	color: #c9d1d9;
 	background: #0d1117;
 }
+
+.rendered-markdown ul {
+	list-style: disc;
+	margin-left: 1rem;
+}
+.rendered-markdown ol {
+	list-style: decimal;
+	margin-left: 1rem;
+}
