@@ -10,5 +10,5 @@ export type Settings = {
 export const settings: Writable<Settings> = localStorageStore('settings', {
 	temperature: 0.7,
 	seed: undefined,
-	endpoint: 'https://api.mistral.ai/v1'
+	endpoint: ''
 });

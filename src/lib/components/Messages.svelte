@@ -4,7 +4,7 @@
 	import { marked } from 'marked';
 	import { slide } from 'svelte/transition';
 
-	const {
+	let {
 		messages,
 		loading,
 		error,
@@ -39,7 +39,7 @@
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id)}
 			<MessageSvelte
-				bind:message
+				{message}
 				isFirst={index === 0}
 				isLast={index === messages.length - 1}
 				{loading}

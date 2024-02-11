@@ -43,7 +43,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const body = parsingResponse.data;
 
 	const useEndpoint = body.endpoint?.length ? body.endpoint : undefined;
-	const cleanEndpoint = useEndpoint ? normalizeURL(useEndpoint).replace(/\/+$/, '') : undefined;
+	const cleanEndpoint = useEndpoint ? normalizeURL(useEndpoint) : undefined;
 	const client = new MistralClient(body.apiKey, cleanEndpoint);
 	const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
 

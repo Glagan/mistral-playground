@@ -366,7 +366,7 @@
 >
 	{#if $current.state.messages.length}
 		<Messages
-			bind:messages={$current.state.messages}
+			messages={$current.state.messages}
 			interactive
 			{loading}
 			{error}
