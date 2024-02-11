@@ -12,7 +12,7 @@
 	import { onDestroy } from 'svelte';
 	import { current } from '$lib/stores/current.svelte';
 	import { v4 as uuid } from 'uuid';
-	import { Settings2Icon } from 'lucide-svelte';
+	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 
 	if (browser && !$apiKey) {
 		goto('/');

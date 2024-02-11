@@ -4,15 +4,13 @@
 	import { tick, unstate } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import hljs from 'highlight.js/lib/core';
-	import {
-		ArrowDownIcon,
-		ArrowUpIcon,
-		ChevronLeftIcon,
-		ChevronRightIcon,
-		PencilIcon,
-		RefreshCwIcon,
-		Trash2Icon
-	} from 'lucide-svelte';
+	import ArrowDownIcon from 'lucide-svelte/icons/arrow-down';
+	import ArrowUpIcon from 'lucide-svelte/icons/arrow-up';
+	import ChevronLeftIcon from 'lucide-svelte/icons/chevron-left';
+	import ChevronRightIcon from 'lucide-svelte/icons/chevron-right';
+	import PencilIcon from 'lucide-svelte/icons/pencil';
+	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
+	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 
 	let {
 		message,

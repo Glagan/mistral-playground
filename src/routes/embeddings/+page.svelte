@@ -7,7 +7,7 @@
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
-	import { Settings2Icon } from 'lucide-svelte';
+	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import { marked } from 'marked';
 	import { tick } from 'svelte';
 	import hljs from 'highlight.js';

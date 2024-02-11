@@ -16,16 +16,14 @@
 	import { current, type ChatState } from '$lib/stores/current.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/stores';
-	import {
-		BotIcon,
-		CandlestickChartIcon,
-		GalleryHorizontalEndIcon,
-		LogOutIcon,
-		MenuIcon,
-		PackagePlusIcon,
-		SettingsIcon,
-		Trash2Icon
-	} from 'lucide-svelte';
+	import BotIcon from 'lucide-svelte/icons/bot';
+	import CandlestickChartIcon from 'lucide-svelte/icons/candlestick-chart';
+	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
+	import LogOutIcon from 'lucide-svelte/icons/log-out';
+	import MenuIcon from 'lucide-svelte/icons/menu';
+	import PackagePlusIcon from 'lucide-svelte/icons/package-plus';
+	import SettingsIcon from 'lucide-svelte/icons/settings';
+	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 
 	import '../app.css';
 
