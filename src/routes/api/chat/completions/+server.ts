@@ -21,7 +21,8 @@ export const POST: RequestHandler = async ({ request }) => {
 				.min(0),
 			options: z
 				.object({
-					model: z.enum(['mistral-tiny', 'mistral-small', 'mistral-medium']),
+					// 'open-mistral-7b' | 'mistral-tiny-2312' | 'mistral-tiny' | 'open-mixtral-8x7b' | 'mistral-small-2312' | 'mistral-small' | 'mistral-small-2402' | 'mistral-small-latest' | 'mistral-medium-latest' | 'mistral-medium-2312' | 'mistral-medium' | 'mistral-large-latest' | 'mistral-large-2402' | 'mistral-embed'
+					model: z.string(),
 					maxTokens: z.coerce.number().optional().default(0),
 					randomSeed: z.coerce.number().optional().default(0),
 					safePrompt: z.coerce.boolean().optional().default(false),

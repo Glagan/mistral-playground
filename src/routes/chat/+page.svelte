@@ -9,10 +9,11 @@
 	import { history } from '$lib/stores/history';
 	import Messages from '$lib/components/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
-	import { onDestroy } from 'svelte';
+	import { onDestroy, onMount } from 'svelte';
 	import { current } from '$lib/stores/current.svelte';
 	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
+	import HelpCiclceIcon from 'lucide-svelte/icons/help-circle';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -67,6 +68,36 @@
 			options: JSON.parse(JSON.stringify($current.state.options))
 		});
 		$history = $history;
+	}
+
+	let loadingModels = $state(false);
+	let models = $state<
+		{
+			id: string;
+			object: 'model';
+			created: number;
+		}[]
+	>([]);
+
+	async function loadModels() {
+		try {
+			const response = await fetch('/api/models', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					apiKey: $apiKey,
+					endpoint: $settings.endpoint
+				})
+			});
+			const body: {
+				id: string;
+				object: 'model';
+				created: number;
+			}[] = await response.json();
+			models = body.filter((model) => model.id !== 'mistral-embed');
+		} catch (error) {
+			console.error('Failed to load models:', error);
+		}
 	}
 
 	let loading = $state(false);
@@ -356,6 +387,10 @@
 
 	// * < Message events
 
+	onMount(() => {
+		loadModels();
+	});
+
 	onDestroy(() => {
 		unsubscribe();
 	});
@@ -437,6 +472,7 @@
 				type="submit"
 				class="btn variant-filled-primary transition-all"
 				disabled={loading ||
+					loadingModels ||
 					(!promptText && $current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
 			>
 				Submit
@@ -444,11 +480,16 @@
 		</div>
 		{#if showOptions}
 			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
-				<select bind:value={$current.state.options.model} class="select flex-grow-0">
-					<option value="mistral-tiny">Mistral Tiny</option>
-					<option value="mistral-small">Mistral Small</option>
-					<option value="mistral-medium">Mistral Medium</option>
-				</select>
+				<div class="flex items-center gap-1">
+					<select bind:value={$current.state.options.model} class="select flex-grow-0" disabled={loadingModels}>
+						{#each models as item}
+							<option value={item.id}>{item.id}</option>
+						{/each}
+					</select>
+					<a href="https://docs.mistral.ai/guides/model-selection/" target="_blank" rel="noreferrer noopener">
+						<HelpCiclceIcon />
+					</a>
+				</div>
 				<label class="flex-shrink-0">
 					<div class="flex flex-row justify-between items-center">
 						<span>Temperature</span>

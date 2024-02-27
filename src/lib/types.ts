@@ -9,7 +9,7 @@ export type Message = {
 };
 
 export type Options = {
-	model: 'mistral-tiny' | 'mistral-small' | 'mistral-medium';
+	model: string;
 	temperature: number;
 	topP: number;
 	maxTokens: undefined | number;
