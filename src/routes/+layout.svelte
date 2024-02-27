@@ -152,8 +152,8 @@
 				drawerStore.close();
 			}}
 		>
-			<BotIcon />
-			<span>Chat</span>
+			<BotIcon class="flex-shrink-0" />
+			<span class="truncate">Chat</span>
 		</a>
 		{#if $page.url.pathname === '/chat' && $current.state.messages.length}
 			<button
@@ -162,8 +162,8 @@
 				transition:slide={{ axis: 'y' }}
 				onclick={resetSession}
 			>
-				<PackagePlusIcon />
-				<span>New Chat</span>
+				<PackagePlusIcon class="flex-shrink-0" />
+				<span class="truncate">New Chat</span>
 			</button>
 		{/if}
 		{#if !isFromRoot}
@@ -173,8 +173,8 @@
 				transition:slide={{ axis: 'y' }}
 				onclick={openHistoryDrawer}
 			>
-				<GalleryHorizontalEndIcon />
-				<span>History</span>
+				<GalleryHorizontalEndIcon class="flex-shrink-0" />
+				<span class="truncate">History</span>
 			</button>
 		{/if}
 		<a
@@ -184,8 +184,8 @@
 				: ' '} hover:variant-soft-primary"
 			onclick={() => drawerStore.close()}
 		>
-			<CandlestickChartIcon />
-			<span>Embeddings</span>
+			<CandlestickChartIcon class="flex-shrink-0" />
+			<span class="truncate">Embeddings</span>
 		</a>
 		<div class="flex-grow"></div>
 		{#if $apiKey}
@@ -194,8 +194,8 @@
 				transition:fade
 				onclick={deleteApiKey}
 			>
-				<LogOutIcon />
-				<span>Delete API key</span>
+				<LogOutIcon class="flex-shrink-0" />
+				<span class="truncate">Delete API key</span>
 			</button>
 		{/if}
 		<a
@@ -203,32 +203,35 @@
 			target="_blank"
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 		>
-			<CoffeeIcon />
-			<span>Buy me a coffee</span>
-			<ArrowUpRightFromSquareIcon size={16} />
+			<CoffeeIcon class="flex-shrink-0" />
+			<span class="truncate">Buy me a coffee</span>
+			<ArrowUpRightFromSquareIcon size={16} class="flex-shrink-0" />
 		</a>
 		<a
 			href="https://github.com/Glagan/mistral-playground"
 			target="_blank"
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 		>
-			<GithubIcon />
-			<span>Github</span>
-			<ArrowUpRightFromSquareIcon size={16} />
+			<GithubIcon class="flex-shrink-0" />
+			<span class="truncate">Github</span>
+			<ArrowUpRightFromSquareIcon size={16} class="flex-shrink-0" />
 		</a>
 		<button
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 			transition:fade
 			onclick={openSettings}
 		>
-			<SettingsIcon />
-			<span>Settings</span>
+			<SettingsIcon class="flex-shrink-0" />
+			<span class="truncate">Settings</span>
 		</button>
 	</div>
 {/snippet}
 
 {#snippet historyList({ mobile }: { mobile: boolean })}
-	<div class="w-full overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}" transition:fade={{ duration: 200 }}>
+	<div
+		class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
+		transition:fade={{ duration: 200 }}
+	>
 		<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
 			<GalleryHorizontalEndIcon />
 			<span>History</span>
@@ -269,7 +272,7 @@
 
 <div class="flex flex-col flex-nowrap lg:grid grid-layout min-h-screen max-h-screen">
 	<div
-		class="flex lg:flex-col flex-grow-0 flex-shrink-0 h-full justify-between lg:justify-normal items-center lg:items-start p-4 gap-4"
+		class="flex lg:flex-col flex-grow-0 flex-shrink-0 h-full justify-between lg:justify-normal items-center lg:items-start p-4 gap-4 max-h-screen overflow-auto"
 	>
 		<img class="block max-h-14 lg:max-h-max lg:mx-auto" src="/logo-dark.webp" alt="Mistral Playground" />
 		<div class="flex lg:hidden flex-col items-center gap-2">
@@ -301,7 +304,7 @@
 
 <style lang="postcss">
 	.grid-layout {
-		grid-template-columns: 2fr 4fr 2fr;
+		grid-template-columns: 25% 50% 25%;
 		grid-auto-rows: minmax(50pc, auto);
 	}
 </style>
