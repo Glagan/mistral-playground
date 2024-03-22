@@ -25,7 +25,7 @@
 	import SettingsIcon from 'lucide-svelte/icons/settings';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import GithubIcon from 'lucide-svelte/icons/github';
-	import ArrowUpRightFromSquareIcon from 'lucide-svelte/icons/arrow-up-right-from-square';
+	import SquareArrowOutUpRightIcon from 'lucide-svelte/icons/square-arrow-out-up-right';
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
 
 	import '../app.css';
@@ -52,17 +52,15 @@
 	hljs.registerLanguage('sql', sql);
 
 	import 'highlight.js/styles/github-dark.css';
+	import { modelError } from '$lib/stores/modelError';
 
 	initializeStores();
 	const modalStore = getModalStore();
 	const drawerStore = getDrawerStore();
 
-	const modalRegistry: Record<string, ModalComponent> = {
-		settings: { ref: SettingsModal }
-	};
-
 	function deleteApiKey() {
 		apiKey.set('');
+		modelError.set(null);
 		goto('/');
 	}
 
@@ -84,11 +82,11 @@
 	}
 
 	function openSettings() {
-		drawerStore.close();
+		const modalComponent: ModalComponent = { ref: SettingsModal };
 		const settingsModal: ModalSettings = {
 			type: 'component',
 			backdropClasses: 'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
-			component: 'settings'
+			component: modalComponent
 		};
 		modalStore.trigger(settingsModal);
 	}
@@ -205,7 +203,7 @@
 		>
 			<CoffeeIcon />
 			<span>Buy me a coffee</span>
-			<ArrowUpRightFromSquareIcon size={16} />
+			<SquareArrowOutUpRightIcon size={16} />
 		</a>
 		<a
 			href="https://github.com/Glagan/mistral-playground"
@@ -214,7 +212,7 @@
 		>
 			<GithubIcon />
 			<span>Github</span>
-			<ArrowUpRightFromSquareIcon size={16} />
+			<SquareArrowOutUpRightIcon size={16} />
 		</a>
 		<button
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
@@ -297,7 +295,7 @@
 		</div>
 	{/if}
 </Drawer>
-<Modal components={modalRegistry} />
+<Modal />
 
 <style lang="postcss">
 	.grid-layout {
