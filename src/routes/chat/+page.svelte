@@ -439,6 +439,7 @@
 			{deleteVersion}
 			{updateMessage}
 			{deleteMessage}
+			generate={onSubmit}
 		/>
 		{#if loading && keepGenerating}
 			<button

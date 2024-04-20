@@ -1,6 +1,7 @@
 <script lang="ts">
 	import MessageSvelte from '$lib/components/Message.svelte';
 	import type { Message } from '$lib/types';
+	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
 	import { marked } from 'marked';
 	import { slide } from 'svelte/transition';
 
@@ -16,7 +17,8 @@
 		nextVersion,
 		deleteVersion,
 		updateMessage,
-		deleteMessage
+		deleteMessage,
+		generate
 	} = $props<{
 		messages: Message[];
 		loading: boolean;
@@ -30,6 +32,7 @@
 		deleteVersion: (message: Message) => void;
 		updateMessage: (message: Message, content: string) => void;
 		deleteMessage: (message: Message) => void;
+		generate: (event: Event) => void;
 	}>();
 
 	let renderedError = $derived(
@@ -56,6 +59,21 @@
 				{deleteMessage}
 			/>
 		{/each}
+	{/if}
+	{#if messages.length && messages[messages.length - 1].type === 'user'}
+		<div class="flex flex-row flex-nowrap">
+			<div class="flex items-center justify-center flex-grow flex-shrink-0 w-full">
+				<button
+					type="button"
+					class="btn btn-lg variant-soft-primary transition-all disabled:opacity-75"
+					disabled={loading}
+					on:click={generate}
+				>
+					<RefreshCwIcon size={16} />
+					<span>Generate response</span>
+				</button>
+			</div>
+		</div>
 	{/if}
 	{#if error}
 		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>

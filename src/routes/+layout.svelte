@@ -40,6 +40,7 @@
 	import shell from 'highlight.js/lib/languages/shell';
 	import ruby from 'highlight.js/lib/languages/ruby';
 	import sql from 'highlight.js/lib/languages/sql';
+	import python from 'highlight.js/lib/languages/python';
 
 	hljs.registerLanguage('xml', xml); // for HTML
 	hljs.registerLanguage('css', css);
@@ -50,6 +51,7 @@
 	hljs.registerLanguage('bash', shell);
 	hljs.registerLanguage('ruby', ruby);
 	hljs.registerLanguage('sql', sql);
+	hljs.registerLanguage('python', python);
 
 	import 'highlight.js/styles/github-dark.css';
 	import { modelError } from '$lib/stores/modelError';
