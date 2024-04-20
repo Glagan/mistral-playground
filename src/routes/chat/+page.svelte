@@ -67,6 +67,7 @@
 		$history.splice(0, 0, {
 			id: $current.state.id,
 			messages: JSON.parse(JSON.stringify($current.state.messages)),
+			usage: JSON.parse(JSON.stringify($current.state.usage)),
 			options: JSON.parse(JSON.stringify($current.state.options))
 		});
 		$history = $history;
@@ -213,7 +214,7 @@
 				if (done) break;
 				if (/^#/.test(value)) {
 					const usage = JSON.parse(value.slice(1)) as Usage;
-					answer.usage = usage;
+					$current.state.usage = usage;
 				} else {
 					answer.content[answer.index] += value ?? '';
 				}
@@ -225,7 +226,7 @@
 			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
 			if (embeddedUsage) {
 				answer.content[answer.index] = answer.content[answer.index].replace(/#({.+?})$/, '');
-				answer.usage = JSON.parse(embeddedUsage[1]) as Usage;
+				$current.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -282,8 +283,7 @@
 			id: uuid(),
 			type: 'assistant',
 			index: 0,
-			content: [''],
-			usage: undefined
+			content: ['']
 		});
 		$current.state.messages.push(answer);
 		if (outputNode) {
@@ -477,7 +477,26 @@
 			</div>
 		{/if}
 		<label class="label">
-			<div class="flex justify-end items-center">
+			<div class="flex justify-between items-center">
+				{#if $current.state.usage}
+					<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
+						<span class="badge variant-soft-secondary">Tokens</span>
+						<div>
+							Prompt: <span class="text-primary-400">{$current.state.usage.prompt_tokens}</span> / Completion:
+							<span class="text-primary-400">{$current.state.usage.completion_tokens}</span>
+							/ Total: <span class="text-primary-400">{$current.state.usage.total_tokens}</span>
+						</div>
+						{#if $current.state.usage.tps}
+							<div>
+								<span class="text-primary-400">(</span>{$current.state.usage.tps}
+								<span class="text-primary-400">tk/s</span><span class="text-primary-400">)</span>
+							</div>
+						{/if}
+						<span></span>
+					</div>
+				{:else}
+					<span></span>
+				{/if}
 				{#if tokens > 0}
 					<span class="text-xs" transition:fade>
 						~<span class="text-surface-300">{tokens}</span> tokens

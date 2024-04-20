@@ -3,6 +3,7 @@ import type { RequestHandler } from './$types';
 import MistralClient, { type ChatCompletionResponseChunk } from '@mistralai/mistralai';
 import { z } from 'zod';
 import { normalizeURL } from 'ufo';
+import { performance } from 'perf_hooks';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();
@@ -83,6 +84,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	});
 
 	let usage: Usage | null = null;
+	const startedAt = performance.now();
 
 	function handleChunk(chunk: ChatCompletionResponseChunk) {
 		if (chunk.choices[0].delta.content !== undefined) {
@@ -139,11 +141,12 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	(async () => {
 		try {
-			let usage: Usage | null = null;
 			for await (const chunk of chatStreamResponse) {
 				handleChunk(chunk);
 			}
 			if (usage) {
+				const completionTime = performance.now() - startedAt;
+				(usage as Usage).tps = Math.round(Number((usage as Usage).completion_tokens / (completionTime / 1000)));
 				controller!.enqueue(`#${JSON.stringify(usage)}`);
 			}
 		} catch (_error) {

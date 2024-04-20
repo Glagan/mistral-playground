@@ -1,11 +1,12 @@
 import { get, writable } from 'svelte/store';
-import type { Message, Options } from '../types';
+import type { Message, Options, Usage } from '../types';
 import { settings } from './settings';
 import { v4 as uuid } from 'uuid';
 
 export type ChatState = {
 	id: string;
 	messages: Message[];
+	usage?: Usage;
 	options: Options;
 };
 

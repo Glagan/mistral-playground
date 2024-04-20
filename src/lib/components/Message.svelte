@@ -232,12 +232,5 @@
 				</div>
 			{/if}
 		</div>
-		{#if message.usage}
-			<p class="text-xs opacity-75 text-right text-primary-500">
-				Prompt: <span class="text-primary-400">{message.usage.prompt_tokens}</span> / Completion:
-				<span class="text-primary-400">{message.usage.completion_tokens}</span>
-				/ Total: <span class="text-primary-400">{message.usage.total_tokens}</span>
-			</p>
-		{/if}
 	</div>
 </div>
