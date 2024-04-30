@@ -13,7 +13,7 @@ export type ChatState = {
 export function createCurrent() {
 	function defaultOptions(): Options {
 		return {
-			model: 'mistral-small-latest',
+			model: get(settings).model ?? 'open-mixtral-8x22b',
 			temperature: get(settings).temperature,
 			topP: 1,
 			maxTokens: undefined,

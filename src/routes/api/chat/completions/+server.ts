@@ -50,7 +50,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
 
 	const chatStreamResponse = client.chatStream({
-		model: body.options?.model ? body.options?.model : 'mistral-small',
+		model: body.options?.model ? body.options?.model : 'open-mixtral-8x22b',
 		messages: body.messages.map((message) => ({
 			role: message.type,
 			content: message.content

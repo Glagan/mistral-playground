@@ -2,10 +2,24 @@
 	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { settings } from '$lib/stores/settings';
+	import { loadedModels, loadingModels, models } from '$lib/stores/models';
+	import { apiKey } from '$lib/stores/apiKey';
+	import { current } from '$lib/stores/current.svelte';
 
 	const { parent } = $props<{ parent: SvelteComponent }>();
 
 	const modalStore = getModalStore();
+
+	let previous = $settings.model;
+	function onModelChange(event: Event) {
+		const target = event.target as HTMLSelectElement;
+		$settings.model = target.value;
+		if ($current && $current.state.options.model === previous) {
+			$current.state.options.model = target.value;
+			$current = $current;
+		}
+		previous = target.value;
+	}
 </script>
 
 {#if $modalStore[0]}
@@ -13,6 +27,36 @@
 		<h2 class="text-xl">Settings</h2>
 		<div class="card variant-filled-surface p-4 flex flex-col gap-4">
 			<div>Default options replace the default Mistral defaults and are always applied in new chat sessions.</div>
+			{#if $apiKey}
+				<label>
+					<div class="flex items-center justify-between">
+						<span>Default model</span>
+						<span>{$settings.model}</span>
+					</div>
+					<select
+						bind:value={$settings.model}
+						class="select flex-grow-0"
+						disabled={$loadingModels || !$loadedModels}
+						onchange={onModelChange}
+					>
+						{#each $models as item}
+							<option value={item.id}>{item.id}</option>
+						{/each}
+					</select>
+				</label>
+			{:else}
+				<label>
+					<div class="flex items-center justify-between">
+						<span>Default model</span>
+						<span>{$settings.model ?? ''}</span>
+					</div>
+					<select bind:value={$settings.model} class="select flex-grow-0" disabled={$loadingModels}>
+						{#if $settings.model}
+							<option value={$settings.model}>{$settings.model}</option>
+						{/if}
+					</select>
+				</label>
+			{/if}
 			<label>
 				<div class="flex items-center justify-between">
 					<span>Default temperature</span>
@@ -40,7 +84,6 @@
 					placeholder="Seed"
 				/>
 			</label>
-			<div class="h-[1px] bg-white w-full rounded"></div>
 			<label>
 				<div class="flex items-center justify-between">API endpoint</div>
 				<input

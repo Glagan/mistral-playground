@@ -16,6 +16,7 @@
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import { modelError } from '$lib/stores/modelError';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
+	import { loadModels, loadingModels, models } from '$lib/stores/models';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -71,60 +72,6 @@
 			options: JSON.parse(JSON.stringify($current.state.options))
 		});
 		$history = $history;
-	}
-
-	let loadingModels = $state(false);
-	let models = $state<
-		{
-			id: string;
-			object: 'model';
-			created: number;
-		}[]
-	>([]);
-
-	async function loadModels() {
-		try {
-			const response = await fetch('/api/models', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: $apiKey,
-					endpoint: $settings.endpoint
-				})
-			});
-			if (!response.ok) {
-				const rawBody = await response.text();
-				const body = JSON.parse(rawBody) as {
-					error: any;
-					message?: string;
-					code: 'ERR_API_KEY' | 'ERR_API_REQ';
-				};
-				if (body.code === 'ERR_API_KEY') {
-					$modelError = {
-						title: 'Failed to load models',
-						message: 'Your API key is invalid.'
-					};
-				} else if (body.code === 'ERR_API_REQ') {
-					$modelError = {
-						title: 'Failed to load models',
-						message: 'The Mistral API is down or there is a problem with your API key.'
-					};
-				}
-				return;
-			}
-			const body: {
-				id: string;
-				object: 'model';
-				created: number;
-			}[] = await response.json();
-			models = body.filter((model) => model.id !== 'mistral-embed');
-		} catch (error) {
-			console.error('Failed to load models:', error);
-			$modelError = {
-				title: 'Failed to load models',
-				message: 'The Mistral API is down or there is a problem with your API key.'
-			};
-		}
 	}
 
 	let loading = $state(false);
@@ -529,7 +476,7 @@
 				type="submit"
 				class="btn variant-filled-primary transition-all"
 				disabled={loading ||
-					loadingModels ||
+					$loadingModels ||
 					!!$modelError ||
 					(!promptText && $current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
 			>
@@ -539,8 +486,8 @@
 		{#if showOptions}
 			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
 				<div class="flex items-center gap-1">
-					<select bind:value={$current.state.options.model} class="select flex-grow-0" disabled={loadingModels}>
-						{#each models as item}
+					<select bind:value={$current.state.options.model} class="select flex-grow-0" disabled={$loadingModels}>
+						{#each $models as item}
 							<option value={item.id}>{item.id}</option>
 						{/each}
 					</select>
