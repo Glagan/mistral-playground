@@ -1,7 +1,6 @@
 import type { RequestHandler } from './$types';
-import MistralClient from '@mistralai/mistralai';
 import { z } from 'zod';
-import { normalizeURL } from 'ufo';
+import { getClientForRequest } from '$lib/server/getClient';
 
 export const POST: RequestHandler = async ({ request }) => {
 	const rawBody = await request.text();
@@ -29,10 +28,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		});
 	}
 	const body = parsingResponse.data;
-
-	const useEndpoint = body.endpoint?.length ? body.endpoint : undefined;
-	const cleanEndpoint = useEndpoint ? normalizeURL(useEndpoint).replace(/\/+$/, '') : undefined;
-	const client = new MistralClient(body.apiKey, cleanEndpoint);
+	const client = getClientForRequest(body);
 
 	try {
 		const embeddingResponse = await client.embeddings({
