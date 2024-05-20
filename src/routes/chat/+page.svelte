@@ -17,6 +17,7 @@
 	import { modelError } from '$lib/stores/modelError';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
 	import { loadModels, loadingModels, models } from '$lib/stores/models';
+	import { specificModelsTokenLimit } from '$lib/const';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -56,7 +57,10 @@
 	const tokens = $derived(encoding.encode(promptText).length);
 	let systemPrompt = $state('');
 	const systemPromptTokens = $derived(encoding.encode(systemPrompt).length);
-	const stateIsValid = $derived(tokens <= 32000 && messageOrderIsValid($current.state.messages));
+	const stateIsValid = $derived(
+		tokens <= (specificModelsTokenLimit[$current.state.options.model] ?? 32000) &&
+			messageOrderIsValid($current.state.messages)
+	);
 
 	function removeFromHistory() {
 		$history = $history.filter((e) => e.id !== $current.state.id);
@@ -534,7 +538,7 @@
 					name="maxTokens"
 					id="maxTokens"
 					min="1"
-					max="32000"
+					max={specificModelsTokenLimit[$current.state.options.model] ?? 32000}
 					placeholder="Max tokens"
 				/>
 				<input
