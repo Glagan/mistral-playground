@@ -19,7 +19,7 @@
 		updateMessage,
 		deleteMessage,
 		generate
-	} = $props<{
+	}: {
 		messages: Message[];
 		loading: boolean;
 		error: string;
@@ -33,7 +33,7 @@
 		updateMessage: (message: Message, content: string) => void;
 		deleteMessage: (message: Message) => void;
 		generate: (event: Event) => void;
-	}>();
+	} = $props();
 
 	let renderedError = $derived(
 		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
@@ -67,7 +67,7 @@
 					type="button"
 					class="btn btn-lg variant-soft-primary transition-all disabled:opacity-75"
 					disabled={loading}
-					on:click={generate}
+					onclick={generate}
 				>
 					<RefreshCwIcon size={16} />
 					<span>Generate response</span>

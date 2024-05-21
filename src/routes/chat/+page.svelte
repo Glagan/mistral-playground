@@ -38,7 +38,7 @@
 	const unsubscribe = settings.subscribe((value) => {
 		if ($current.state.messages.length === 0) {
 			$current.state.options.temperature = value.temperature;
-			$current.state.options.randomSeed = value.seed;
+			$current.state.options.randomSeed = value.seed ? Number(value.seed) : undefined;
 		}
 	});
 
@@ -461,7 +461,7 @@
 				rows="3"
 				placeholder="Type something..."
 				data-focusindex="0"
-			/>
+			></textarea>
 		</label>
 		<div class="flex flex-row justify-between">
 			<button

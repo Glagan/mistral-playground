@@ -1,32 +1,39 @@
 <script lang="ts">
-	import type { SvelteComponent } from 'svelte';
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import { settings } from '$lib/stores/settings';
 	import { loadedModels, loadingModels, models } from '$lib/stores/models';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { current } from '$lib/stores/current.svelte';
-
-	const { parent } = $props<{ parent: SvelteComponent }>();
+	import { defaultModel, defaultTemperature, settings, settingsSchema, type Settings } from '$lib/stores/settings';
+	import { createForm } from 'felte';
+	import { validateSchema } from '@felte/validator-zod';
+	import { slide } from 'svelte/transition';
 
 	const modalStore = getModalStore();
 
-	let previous = $settings.model;
-	function onModelChange(event: Event) {
-		const target = event.target as HTMLSelectElement;
-		$settings.model = target.value;
-		if ($current && $current.state.options.model === previous) {
-			$current.state.options.model = target.value;
-			$current = $current;
+	const { form, errors } = createForm<Settings>({
+		initialValues: {
+			model: $settings.model ?? defaultModel,
+			temperature: $settings.temperature ?? defaultTemperature,
+			seed: $settings.seed ?? undefined,
+			endpoint: $settings.endpoint ?? undefined
+		},
+		validate: validateSchema(settingsSchema),
+		onSubmit: async (values) => {
+			if ($current && $current.state.options.model === $settings.model) {
+				$current.state.options.model = values.model;
+				$current = $current;
+			}
+			settings.set(values);
+			modalStore.close();
 		}
-		previous = target.value;
-	}
+	});
 </script>
 
 {#if $modalStore[0]}
-	<div class="w-modal">
+	<form class="w-modal" use:form>
 		<h2 class="text-xl">Settings</h2>
 		<div class="card variant-filled-surface p-4 flex flex-col gap-4">
-			<div>Default options replace the default Mistral defaults and are always applied in new chat sessions.</div>
+			<div>Default options replace the Mistral default values and are always applied in new chat sessions.</div>
 			{#if $apiKey}
 				<label>
 					<div class="flex items-center justify-between">
@@ -34,15 +41,20 @@
 						<span>{$settings.model}</span>
 					</div>
 					<select
-						bind:value={$settings.model}
+						name="model"
 						class="select flex-grow-0"
+						class:input-warning={$errors.model}
 						disabled={$loadingModels || !$loadedModels}
-						onchange={onModelChange}
 					>
 						{#each $models as item}
 							<option value={item.id}>{item.id}</option>
 						{/each}
 					</select>
+					{#if $errors.model}
+						<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
+							{$errors.model}
+						</span>
+					{/if}
 				</label>
 			{:else}
 				<label>
@@ -50,7 +62,7 @@
 						<span>Default model</span>
 						<span>{$settings.model ?? ''}</span>
 					</div>
-					<select bind:value={$settings.model} class="select flex-grow-0" disabled={$loadingModels}>
+					<select class="select flex-grow-0" disabled={$loadingModels}>
 						{#if $settings.model}
 							<option value={$settings.model}>{$settings.model}</option>
 						{/if}
@@ -63,7 +75,6 @@
 					<span>{$settings.temperature}</span>
 				</div>
 				<input
-					bind:value={$settings.temperature}
 					type="range"
 					name="temperature"
 					id="temperature"
@@ -71,33 +82,52 @@
 					max="1"
 					step="0.01"
 					placeholder="Temperature"
+					class:input-warning={$errors.temperature}
 				/>
+				{#if $errors.temperature}
+					<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
+						{$errors.temperature}
+					</span>
+				{/if}
 			</label>
 			<label>
 				<div class="flex items-center justify-between">Default seed</div>
 				<input
-					bind:value={$settings.seed}
 					class="input"
+					class:input-warning={$errors.seed}
 					type="number"
-					name="randomSeed"
-					id="randomSeed"
+					name="seed"
+					id="seed"
 					placeholder="Seed"
 				/>
+				{#if $errors.seed}
+					<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
+						{$errors.seed}
+					</span>
+				{/if}
 			</label>
 			<label>
 				<div class="flex items-center justify-between">API endpoint</div>
 				<input
-					bind:value={$settings.endpoint}
 					class="input"
+					class:input-warning={$errors.endpoint}
 					type="text"
 					name="endpoint"
 					id="endpoint"
 					placeholder="API endpoint"
 				/>
+				{#if $errors.endpoint}
+					<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
+						{$errors.endpoint}
+					</span>
+				{/if}
 			</label>
 		</div>
-		<div class="flex items-center justify-center mt-2">
-			<button class="flex-shrink-0 btn variant-filled-primary" onclick={() => modalStore.close()}> Close </button>
+		<div class="flex items-center justify-end gap-4 mt-2">
+			<button type="button" class="flex-shrink-0 btn variant-ghost-primary" onclick={() => modalStore.close()}>
+				Close
+			</button>
+			<button type="submit" class="flex-shrink-0 btn variant-filled-success"> Save </button>
 		</div>
-	</div>
+	</form>
 {/if}

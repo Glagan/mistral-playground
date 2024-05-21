@@ -42,6 +42,8 @@
 	import sql from 'highlight.js/lib/languages/sql';
 	import python from 'highlight.js/lib/languages/python';
 
+	const { children } = $props();
+
 	hljs.registerLanguage('xml', xml); // for HTML
 	hljs.registerLanguage('css', css);
 	hljs.registerLanguage('json', json);
@@ -282,7 +284,7 @@
 		</div>
 		{@render navigation({ isFromRoot: true })}
 	</div>
-	<slot />
+	{@render children()}
 	<div
 		class="hidden lg:flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
 	>

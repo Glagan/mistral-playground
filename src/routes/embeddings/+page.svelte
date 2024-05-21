@@ -157,7 +157,7 @@
 				rows="3"
 				placeholder="Type something..."
 				data-focusindex="0"
-			/>
+			></textarea>
 		</label>
 		<div class="flex flex-row justify-between">
 			<button

@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Message } from '$lib/types';
 	import { marked } from 'marked';
-	import { tick, unstate } from 'svelte';
+	import { tick } from 'svelte';
 	import { slide } from 'svelte/transition';
 	import hljs from 'highlight.js/lib/core';
 	import ArrowDownIcon from 'lucide-svelte/icons/arrow-down';
@@ -26,7 +26,7 @@
 		deleteVersion,
 		updateMessage,
 		deleteMessage
-	} = $props<{
+	}: {
 		message: Message;
 		loading: boolean;
 		isFirst: boolean;
@@ -40,7 +40,7 @@
 		deleteVersion: (message: Message) => void;
 		updateMessage: (message: Message, content: string) => void;
 		deleteMessage: (message: Message) => void;
-	}>();
+	} = $props();
 
 	let currentMessage = $derived(message.content[message.index]);
 	const markdown = $derived(
@@ -54,11 +54,12 @@
 
 	let editing = $state(false);
 	let localCopy = $state('');
+	// svelte-ignore non_reactive_update
 	let textarea: HTMLTextAreaElement;
 
 	function startEditing() {
 		editing = true;
-		localCopy = unstate(currentMessage);
+		localCopy = $state.snapshot(currentMessage);
 		tick().then(() => {
 			if (textarea) {
 				textarea.focus();
@@ -74,7 +75,7 @@
 
 	function stopEditing() {
 		editing = false;
-		message.content[message.index] = unstate(localCopy);
+		message.content[message.index] = $state.snapshot(localCopy);
 		updateMessage(message, message.content[message.index]);
 		tick().then(() => hljs.highlightAll());
 	}
