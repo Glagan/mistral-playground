@@ -31,7 +31,7 @@
 		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
 	);
 
-	let embeddings = $state<number[]>([]);
+	let embeddings: number[] = $state([]);
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();

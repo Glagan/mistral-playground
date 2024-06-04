@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import { loadedModels, loadingModels, models } from '$lib/stores/models';
+	import { models } from '$lib/stores/models.svelte';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { current } from '$lib/stores/current.svelte';
 	import { defaultModel, defaultTemperature, settings, settingsSchema, type Settings } from '$lib/stores/settings';
@@ -19,9 +19,8 @@
 		},
 		validate: validateSchema(settingsSchema),
 		onSubmit: async (values) => {
-			if ($current && $current.state.options.model === $settings.model) {
-				$current.state.options.model = values.model;
-				$current = $current;
+			if (current && current.state.options.model === $settings.model) {
+				current.state.options.model = values.model;
 			}
 			settings.set(values);
 			modalStore.close();
@@ -44,9 +43,9 @@
 						name="model"
 						class="select flex-grow-0"
 						class:input-warning={$errors.model}
-						disabled={$loadingModels || !$loadedModels}
+						disabled={models.loading || !models.loaded}
 					>
-						{#each $models as item}
+						{#each models.list as item}
 							<option value={item.id}>{item.id}</option>
 						{/each}
 					</select>
@@ -62,7 +61,7 @@
 						<span>Default model</span>
 						<span>{$settings.model ?? ''}</span>
 					</div>
-					<select class="select flex-grow-0" disabled={$loadingModels}>
+					<select class="select flex-grow-0" disabled={models.loading}>
 						{#if $settings.model}
 							<option value={$settings.model}>{$settings.model}</option>
 						{/if}

@@ -10,49 +10,45 @@ export type ChatState = {
 	options: Options;
 };
 
-export function createCurrent() {
-	function defaultOptions(): Options {
-		return {
-			model: get(settings).model ?? 'open-mixtral-8x22b',
-			temperature: get(settings).temperature,
-			topP: 1,
-			maxTokens: undefined,
-			safePrompt: false,
-			randomSeed: get(settings).seed
-		};
-	}
+function defaultOptions(): Options {
+	const seed = get(settings).seed;
+	return {
+		model: get(settings).model ?? 'open-mixtral-8x22b',
+		temperature: get(settings).temperature,
+		topP: 1,
+		maxTokens: undefined,
+		json: false,
+		safePrompt: false,
+		randomSeed: isNaN(Number(seed)) ? undefined : Number(seed)
+	};
+}
 
-	let state = $state<ChatState>({
+export function createCurrent() {
+	const state: ChatState = $state({
 		id: uuid(),
 		messages: [],
 		options: defaultOptions()
 	});
 
 	function reset() {
-		state = {
-			id: uuid(),
-			messages: [],
-			options: defaultOptions()
-		};
+		state.options = defaultOptions();
+		state.id = uuid();
+		state.messages = [];
 	}
 
 	function setFromEntry(entry: ChatState) {
-		state = entry;
+		state.id = entry.id;
+		state.options = entry.options;
+		state.usage = entry.usage;
+		state.messages = entry.messages;
 	}
 
 	return {
-		get state() {
-			return state;
-		},
+		state,
 		defaultOptions,
 		setFromEntry,
 		reset
 	};
 }
 
-export const current = writable<{
-	readonly state: ChatState;
-	defaultOptions: () => Options;
-	setFromEntry: (entry: ChatState) => void;
-	reset: () => void;
-}>(createCurrent());
+export const current = createCurrent();

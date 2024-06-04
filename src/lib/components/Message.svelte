@@ -13,7 +13,7 @@
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 
 	let {
-		message,
+		message = $bindable(),
 		loading,
 		isFirst,
 		isLast,
@@ -55,7 +55,7 @@
 	let editing = $state(false);
 	let localCopy = $state('');
 	// svelte-ignore non_reactive_update
-	let textarea: HTMLTextAreaElement;
+	let textarea: HTMLTextAreaElement | null = $state(null);
 
 	function startEditing() {
 		editing = true;

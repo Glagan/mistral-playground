@@ -27,6 +27,7 @@
 	import GithubIcon from 'lucide-svelte/icons/github';
 	import SquareArrowOutUpRightIcon from 'lucide-svelte/icons/square-arrow-out-up-right';
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
+	import { models } from '$lib/stores/models.svelte';
 
 	import '../app.css';
 
@@ -56,7 +57,6 @@
 	hljs.registerLanguage('python', python);
 
 	import 'highlight.js/styles/github-dark.css';
-	import { modelError } from '$lib/stores/modelError';
 
 	initializeStores();
 	const modalStore = getModalStore();
@@ -64,24 +64,26 @@
 
 	function deleteApiKey() {
 		apiKey.set('');
-		modelError.set(null);
+		models.error = null;
 		goto('/');
 	}
 
 	function loadHistoryEntry(entry: ChatState) {
 		drawerStore.close();
-		$current.setFromEntry(entry);
+		current.setFromEntry(entry);
 		tick().then(() => {
 			const outputNode = document.getElementById('messages-container')!;
-			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			if (outputNode) {
+				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			}
 			hljs.highlightAll();
 		});
 	}
 
 	function deleteHistoryEntry(entry: ChatState) {
 		$history = $history.filter((e) => e.id !== entry.id);
-		if ($current.state.id === entry.id) {
-			$current.reset();
+		if (current.state.id === entry.id) {
+			current.reset();
 		}
 	}
 
@@ -129,7 +131,7 @@
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		$current.reset();
+		current.reset();
 		drawerStore.close();
 	}
 </script>
@@ -157,7 +159,7 @@
 			<BotIcon class="flex-shrink-0" />
 			<span class="truncate">Chat</span>
 		</a>
-		{#if $page.url.pathname === '/chat' && $current.state.messages.length}
+		{#if $page.url.pathname === '/chat' && current.state.messages.length}
 			<button
 				type="button"
 				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
@@ -242,7 +244,7 @@
 			{#each $history as entry (entry.id)}
 				<div
 					class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
-					$current.state.id
+					current.state.id
 						? 'border-primary-700 bg-primary-700/20 px-2'
 						: 'border-transparent lg:px-2'}"
 					transition:slide={{ axis: 'y' }}
@@ -255,7 +257,7 @@
 						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
 					{/if}
 					<div class="flex flex-row gap-2 items-end justify-end">
-						{#if entry.id !== $current.state.id}
+						{#if entry.id !== current.state.id}
 							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryEntry(entry)}>
 								Load
 							</button>

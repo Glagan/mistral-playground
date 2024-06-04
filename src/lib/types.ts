@@ -2,7 +2,7 @@ export type Usage = {
 	prompt_tokens: number;
 	total_tokens: number;
 	completion_tokens: number;
-	tps?: number
+	tps?: number;
 };
 
 export type Message = {
@@ -17,6 +17,7 @@ export type Options = {
 	temperature: number;
 	topP: number;
 	maxTokens: undefined | number;
+	json?: boolean;
 	safePrompt: boolean;
 	randomSeed: undefined | number;
 };

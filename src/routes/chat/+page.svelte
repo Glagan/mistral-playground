@@ -14,9 +14,8 @@
 	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
-	import { modelError } from '$lib/stores/modelError';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
-	import { loadModels, loadingModels, models } from '$lib/stores/models';
+	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { specificModelsTokenLimit } from '$lib/const';
 
 	if (browser && !$apiKey) {
@@ -31,14 +30,14 @@
 	let error = $state('');
 
 	$effect(() => {
-		$current.state.id;
+		current.state.id;
 		error = '';
 	});
 
 	const unsubscribe = settings.subscribe((value) => {
-		if ($current.state.messages.length === 0) {
-			$current.state.options.temperature = value.temperature;
-			$current.state.options.randomSeed = value.seed ? Number(value.seed) : undefined;
+		if (current.state.messages.length === 0) {
+			current.state.options.temperature = value.temperature;
+			current.state.options.randomSeed = value.seed ? Number(value.seed) : undefined;
 		}
 	});
 
@@ -58,22 +57,22 @@
 	let systemPrompt = $state('');
 	const systemPromptTokens = $derived(encoding.encode(systemPrompt).length);
 	const stateIsValid = $derived(
-		tokens <= (specificModelsTokenLimit[$current.state.options.model] ?? 32000) &&
-			messageOrderIsValid($current.state.messages)
+		tokens <= (specificModelsTokenLimit[current.state.options.model] ?? 32000) &&
+			messageOrderIsValid(current.state.messages)
 	);
 
 	function removeFromHistory() {
-		$history = $history.filter((e) => e.id !== $current.state.id);
+		$history = $history.filter((e) => e.id !== current.state.id);
 		$history = $history;
 	}
 
 	function updateOrInsertHistory() {
-		$history = $history.filter((e) => e.id !== $current.state.id);
+		$history = $history.filter((e) => e.id !== current.state.id);
 		$history.splice(0, 0, {
-			id: $current.state.id,
-			messages: JSON.parse(JSON.stringify($current.state.messages)),
-			usage: JSON.parse(JSON.stringify($current.state.usage)),
-			options: JSON.parse(JSON.stringify($current.state.options))
+			id: current.state.id,
+			messages: JSON.parse(JSON.stringify(current.state.messages)),
+			usage: JSON.parse(JSON.stringify(current.state.usage)),
+			options: JSON.parse(JSON.stringify(current.state.options))
 		});
 		$history = $history;
 	}
@@ -99,14 +98,14 @@
 						type: message.type,
 						content: message.content[message.index]
 					})),
-					options: $current.state.options,
+					options: current.state.options,
 					endpoint: $settings.endpoint
 				})
 			});
 		} catch (_error) {
 			console.error(_error);
 			if (answer.content.length === 1) {
-				$current.state.messages.pop();
+				current.state.messages.pop();
 			} else {
 				answer.content.splice(answer.index, 1);
 				answer.index -= 1;
@@ -118,7 +117,7 @@
 		if (!response.ok) {
 			const rawBody = await response.text();
 			if (answer.content.length === 1) {
-				$current.state.messages.pop();
+				current.state.messages.pop();
 			} else {
 				answer.content.splice(answer.index, 1);
 				answer.index -= 1;
@@ -165,7 +164,7 @@
 				if (done) break;
 				if (/^#/.test(value)) {
 					const usage = JSON.parse(value.slice(1)) as Usage;
-					$current.state.usage = usage;
+					current.state.usage = usage;
 				} else {
 					answer.content[answer.index] += value ?? '';
 				}
@@ -177,7 +176,10 @@
 			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
 			if (embeddedUsage) {
 				answer.content[answer.index] = answer.content[answer.index].replace(/#({.+?})$/, '');
-				$current.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
+				current.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
+			}
+			if (current.state.options.json) {
+				answer.content[answer.index] = `\`\`\`json\n${JSON.stringify(JSON.parse(answer.content[answer.index]), undefined, 4)}\n\`\`\``;
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -186,7 +188,7 @@
 		} catch (error) {
 			console.error(error);
 			if (answer.content.length === 1) {
-				$current.state.messages.pop();
+				current.state.messages.pop();
 			} else {
 				answer.content.splice(answer.index, 1);
 				answer.index -= 1;
@@ -204,7 +206,7 @@
 		event.preventDefault();
 		error = '';
 		if (systemPrompt) {
-			$current.state.messages.push({
+			current.state.messages.push({
 				id: uuid(),
 				type: 'system',
 				index: 0,
@@ -215,7 +217,7 @@
 			}
 		}
 		if (promptText.length) {
-			$current.state.messages.push({
+			current.state.messages.push({
 				id: uuid(),
 				type: 'user',
 				index: 0,
@@ -228,15 +230,15 @@
 		promptText = '';
 
 		// Take the messages up to here for the next generation
-		const messagesToSend = JSON.parse(JSON.stringify($current.state.messages));
+		const messagesToSend = JSON.parse(JSON.stringify(current.state.messages));
 
-		const answer = $state<Message>({
+		const answer: Message = $state({
 			id: uuid(),
 			type: 'assistant',
 			index: 0,
 			content: ['']
 		});
-		$current.state.messages.push(answer);
+		current.state.messages.push(answer);
 		if (outputNode) {
 			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 		}
@@ -247,7 +249,7 @@
 	async function addSystemPrompt(event: Event) {
 		event.preventDefault();
 		if (systemPrompt) {
-			$current.state.messages.push({
+			current.state.messages.push({
 				id: uuid(),
 				type: 'system',
 				index: 0,
@@ -273,34 +275,34 @@
 
 	function moveUp(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
-			$current.state.messages.splice(index, 1);
-			$current.state.messages.splice(index - 1, 0, message);
+			current.state.messages.splice(index, 1);
+			current.state.messages.splice(index - 1, 0, message);
 			updateOrInsertHistory();
 		}
 	}
 
 	function moveDown(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
-		if (index >= 0 && index < $current.state.messages.length - 1) {
-			$current.state.messages.splice(index, 1);
-			$current.state.messages.splice(index + 1, 0, message);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
+		if (index >= 0 && index < current.state.messages.length - 1) {
+			current.state.messages.splice(index, 1);
+			current.state.messages.splice(index + 1, 0, message);
 			updateOrInsertHistory();
 		}
 	}
 
 	async function refresh(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			const message = $current.state.messages[index];
+			const message = current.state.messages[index];
 			message.content.push('');
 			message.index = message.content.length - 1;
 
 			// Take the messages up to the answer we need to re-generate
-			const messagesToSend = JSON.parse(JSON.stringify($current.state.messages.slice(0, index)));
+			const messagesToSend = JSON.parse(JSON.stringify(current.state.messages.slice(0, index)));
 
 			await generate(messagesToSend, message);
 		}
@@ -308,10 +310,10 @@
 
 	async function previousVersion(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			if ($current.state.messages[index].index > 0) {
-				$current.state.messages[index].index = $current.state.messages[index].index - 1;
+			if (current.state.messages[index].index > 0) {
+				current.state.messages[index].index = current.state.messages[index].index - 1;
 				updateOrInsertHistory();
 			}
 		}
@@ -319,10 +321,10 @@
 
 	async function nextVersion(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			if ($current.state.messages[index].index < $current.state.messages[index].content.length - 1) {
-				$current.state.messages[index].index = $current.state.messages[index].index + 1;
+			if (current.state.messages[index].index < current.state.messages[index].content.length - 1) {
+				current.state.messages[index].index = current.state.messages[index].index + 1;
 				updateOrInsertHistory();
 			}
 		}
@@ -330,11 +332,11 @@
 
 	async function deleteVersion(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			$current.state.messages[index].content.splice($current.state.messages[index].index);
-			if ($current.state.messages[index].index >= $current.state.messages[index].content.length - 1) {
-				$current.state.messages[index].index -= 1;
+			current.state.messages[index].content.splice(current.state.messages[index].index);
+			if (current.state.messages[index].index >= current.state.messages[index].content.length - 1) {
+				current.state.messages[index].index -= 1;
 			}
 			updateOrInsertHistory();
 		}
@@ -342,19 +344,19 @@
 
 	function updateMessage(message: Message, content: string) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			$current.state.messages[index].content[message.index] = content;
+			current.state.messages[index].content[message.index] = content;
 			updateOrInsertHistory();
 		}
 	}
 
 	function deleteMessage(message: Message) {
 		error = '';
-		const index = $current.state.messages.findIndex((m) => m.id === message.id);
+		const index = current.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			$current.state.messages.splice(index, 1);
-			if ($current.state.messages.length === 0) {
+			current.state.messages.splice(index, 1);
+			if (current.state.messages.length === 0) {
 				removeFromHistory();
 			} else {
 				updateOrInsertHistory();
@@ -376,9 +378,9 @@
 <div
 	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
 >
-	{#if $current.state.messages.length}
+	{#if current.state.messages.length}
 		<Messages
-			messages={$current.state.messages}
+			bind:messages={current.state.messages}
 			interactive
 			{loading}
 			{error}
@@ -416,30 +418,30 @@
 				</div>
 			</aside>
 		{/if}
-		{#if $modelError}
+		{#if models.error}
 			<div class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 				<div>
 					<TriangleAlertIcon size={24} />
 				</div>
 				<div class="alert-message">
-					<h3 class="text-xl">{$modelError.title}</h3>
-					<p>{$modelError.message}</p>
+					<h3 class="text-xl">{models.error.title}</h3>
+					<p>{models.error.message}</p>
 				</div>
 			</div>
 		{/if}
 		<label class="label">
 			<div class="flex justify-between items-center">
-				{#if $current.state.usage}
+				{#if current.state.usage}
 					<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
 						<span class="badge variant-soft-secondary">Tokens</span>
 						<div>
-							Prompt: <span class="text-primary-400">{$current.state.usage.prompt_tokens}</span> / Completion:
-							<span class="text-primary-400">{$current.state.usage.completion_tokens}</span>
-							/ Total: <span class="text-primary-400">{$current.state.usage.total_tokens}</span>
+							Prompt: <span class="text-primary-400">{current.state.usage.prompt_tokens}</span> / Completion:
+							<span class="text-primary-400">{current.state.usage.completion_tokens}</span>
+							/ Total: <span class="text-primary-400">{current.state.usage.total_tokens}</span>
 						</div>
-						{#if $current.state.usage.tps}
+						{#if current.state.usage.tps}
 							<div>
-								<span class="text-primary-400">(</span>{$current.state.usage.tps}
+								<span class="text-primary-400">(</span>{current.state.usage.tps}
 								<span class="text-primary-400">tk/s</span><span class="text-primary-400">)</span>
 							</div>
 						{/if}
@@ -456,7 +458,7 @@
 			</div>
 			<textarea
 				bind:value={promptText}
-				disabled={loading || !!$modelError}
+				disabled={loading || !!models.error}
 				class="textarea"
 				rows="3"
 				placeholder="Type something..."
@@ -467,7 +469,7 @@
 			<button
 				class="btn variant-ghost-surface"
 				type="button"
-				disabled={loading || !!$modelError}
+				disabled={loading || !!models.error}
 				onclick={(event) => {
 					event.preventDefault();
 					return (showOptions = !showOptions);
@@ -480,77 +482,84 @@
 				type="submit"
 				class="btn variant-filled-primary transition-all"
 				disabled={loading ||
-					$loadingModels ||
-					!!$modelError ||
-					(!promptText && $current.state.messages[$current.state.messages.length - 1]?.type !== 'user')}
+					models.loading ||
+					!!models.error ||
+					(!promptText && current.state.messages[current.state.messages.length - 1]?.type !== 'user')}
 			>
 				Submit
 			</button>
 		</div>
 		{#if showOptions}
-			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
-				<div class="flex items-center gap-1">
-					<select bind:value={$current.state.options.model} class="select flex-grow-0" disabled={$loadingModels}>
-						{#each $models as item}
-							<option value={item.id}>{item.id}</option>
-						{/each}
-					</select>
-					<a href="https://docs.mistral.ai/guides/model-selection/" target="_blank" rel="noreferrer noopener">
-						<CircleHelpIcon />
-					</a>
+			<div class="flex flex-col gap-2 " transition:slide={{ axis: 'y' }}>
+				<div class="grid grid-cols-3 gap-2">
+					<div class="flex items-center gap-1">
+						<select bind:value={current.state.options.model} class="select flex-grow-0" disabled={models.loading}>
+							{#each models.list as item}
+								<option value={item.id}>{item.id}</option>
+							{/each}
+						</select>
+						<a href="https://docs.mistral.ai/guides/model-selection/" target="_blank" rel="noreferrer noopener">
+							<CircleHelpIcon />
+						</a>
+					</div>
+					<label class="flex-shrink-0">
+						<div class="flex flex-row justify-between items-center">
+							<span>Temperature</span>
+							<span class="text-surface-300">{current.state.options.temperature}</span>
+						</div>
+						<input
+							bind:value={current.state.options.temperature}
+							type="range"
+							name="temperature"
+							id="temperature"
+							min="0"
+							max="1"
+							step="0.01"
+							placeholder="Temperature"
+						/>
+					</label>
+					<label class="flex-shrink-0">
+						<div class="flex flex-row justify-between items-center">
+							<span>Top P</span>
+							<span class="text-surface-300">{current.state.options.topP}</span>
+						</div>
+						<input
+							bind:value={current.state.options.topP}
+							type="range"
+							name="topP"
+							id="topP"
+							min="0"
+							max="1"
+							step="0.01"
+							placeholder="Top P"
+						/>
+					</label>
 				</div>
-				<label class="flex-shrink-0">
-					<div class="flex flex-row justify-between items-center">
-						<span>Temperature</span>
-						<span class="text-surface-300">{$current.state.options.temperature}</span>
+				<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 items-center">
+					<div class="flex-shrink-0 cursor-pointer">
+						<SlideToggle name="json" bind:checked={current.state.options.json}>JSON</SlideToggle>
 					</div>
 					<input
-						bind:value={$current.state.options.temperature}
-						type="range"
-						name="temperature"
-						id="temperature"
-						min="0"
-						max="1"
-						step="0.01"
-						placeholder="Temperature"
+						bind:value={current.state.options.maxTokens}
+						class="input"
+						type="number"
+						name="maxTokens"
+						id="maxTokens"
+						min="1"
+						max={specificModelsTokenLimit[current.state.options.model] ?? 32000}
+						placeholder="Max tokens"
 					/>
-				</label>
-				<label class="flex-shrink-0">
-					<div class="flex flex-row justify-between items-center">
-						<span>Top P</span>
-						<span class="text-surface-300">{$current.state.options.topP}</span>
-					</div>
 					<input
-						bind:value={$current.state.options.topP}
-						type="range"
-						name="topP"
-						id="topP"
-						min="0"
-						max="1"
-						step="0.01"
-						placeholder="Top P"
+						bind:value={current.state.options.randomSeed}
+						class="input"
+						type="number"
+						name="randomSeed"
+						id="randomSeed"
+						placeholder="Seed"
 					/>
-				</label>
-				<input
-					bind:value={$current.state.options.maxTokens}
-					class="input"
-					type="number"
-					name="maxTokens"
-					id="maxTokens"
-					min="1"
-					max={specificModelsTokenLimit[$current.state.options.model] ?? 32000}
-					placeholder="Max tokens"
-				/>
-				<input
-					bind:value={$current.state.options.randomSeed}
-					class="input"
-					type="number"
-					name="randomSeed"
-					id="randomSeed"
-					placeholder="Seed"
-				/>
-				<div class="flex-shrink-0 cursor-pointer">
-					<SlideToggle name="safePrompt" bind:checked={$current.state.options.safePrompt}>Safe prompt</SlideToggle>
+					<div class="flex-shrink-0 cursor-pointer">
+						<SlideToggle name="safePrompt" bind:checked={current.state.options.safePrompt}>Safe prompt</SlideToggle>
+					</div>
 				</div>
 				<div class="flex flex-col gap-2 col-span-2 lg:col-span-3">
 					<label class="label">

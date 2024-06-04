@@ -26,6 +26,7 @@ export const POST: RequestHandler = async ({ request }) => {
 					model: z.string(),
 					maxTokens: z.coerce.number().optional().default(0),
 					randomSeed: z.coerce.number().optional().default(0),
+					json: z.coerce.boolean().optional().default(false),
 					safePrompt: z.coerce.boolean().optional().default(false),
 					temperature: z.coerce.number().optional().default(0.7),
 					topP: z.coerce.number().optional().default(1)
@@ -44,7 +45,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	}
 	const body = parsingResponse.data;
 	const client = getClientForRequest(body);
-	const { maxTokens, randomSeed, safePrompt, temperature, topP } = body.options ?? {};
+	const { maxTokens, randomSeed, json, safePrompt, temperature, topP } = body.options ?? {};
 
 	const chatStreamResponse = client.chatStream({
 		model: body.options?.model ? body.options?.model : 'open-mixtral-8x22b',
@@ -54,6 +55,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		})),
 		maxTokens: maxTokens ? maxTokens : undefined,
 		randomSeed: randomSeed ? randomSeed : undefined,
+		responseFormat: json ? { type: 'json_object' } : undefined,
 		safePrompt,
 		temperature,
 		topP
