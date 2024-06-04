@@ -2,25 +2,37 @@
 	import { getModalStore } from '@skeletonlabs/skeleton';
 	import { models } from '$lib/stores/models.svelte';
 	import { apiKey } from '$lib/stores/apiKey';
-	import { current } from '$lib/stores/current.svelte';
-	import { defaultModel, defaultTemperature, settings, settingsSchema, type Settings } from '$lib/stores/settings';
+	import { chat } from '$lib/stores/chat.svelte';
+	import {
+		defaultCodeModel,
+		defaultModel,
+		defaultTemperature,
+		settings,
+		settingsSchema,
+		type Settings
+	} from '$lib/stores/settings';
 	import { createForm } from 'felte';
 	import { validateSchema } from '@felte/validator-zod';
 	import { slide } from 'svelte/transition';
+	import { code } from '$lib/stores/code.svelte';
 
 	const modalStore = getModalStore();
 
 	const { form, errors } = createForm<Settings>({
 		initialValues: {
 			model: $settings.model ?? defaultModel,
+			codeModel: $settings.codeModel ?? defaultCodeModel,
 			temperature: $settings.temperature ?? defaultTemperature,
 			seed: $settings.seed ?? undefined,
 			endpoint: $settings.endpoint ?? undefined
 		},
 		validate: validateSchema(settingsSchema),
 		onSubmit: async (values) => {
-			if (current && current.state.options.model === $settings.model) {
-				current.state.options.model = values.model;
+			if (chat && chat.state.options.model === $settings.model) {
+				chat.state.options.model = values.model;
+			}
+			if (code && code.state.options.model === $settings.codeModel) {
+				code.state.options.model = values.codeModel;
 			}
 			settings.set(values);
 			modalStore.close();
@@ -64,6 +76,41 @@
 					<select class="select flex-grow-0" disabled={models.loading}>
 						{#if $settings.model}
 							<option value={$settings.model}>{$settings.model}</option>
+						{/if}
+					</select>
+				</label>
+			{/if}
+			{#if $apiKey}
+				<label>
+					<div class="flex items-center justify-between">
+						<span>Default code model</span>
+						<span>{$settings.codeModel}</span>
+					</div>
+					<select
+						name="codeModel"
+						class="select flex-grow-0"
+						class:input-warning={$errors.codeModel}
+						disabled={models.loading || !models.loaded}
+					>
+						{#each models.list.filter((model) => /codestral/.test(model.id)) as item}
+							<option value={item.id}>{item.id}</option>
+						{/each}
+					</select>
+					{#if $errors.codeModel}
+						<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
+							{$errors.codeModel}
+						</span>
+					{/if}
+				</label>
+			{:else}
+				<label>
+					<div class="flex items-center justify-between">
+						<span>Default code codeModel</span>
+						<span>{$settings.codeModel ?? ''}</span>
+					</div>
+					<select class="select flex-grow-0" disabled={models.loading}>
+						{#if $settings.codeModel}
+							<option value={$settings.codeModel}>{$settings.codeModel}</option>
 						{/if}
 					</select>
 				</label>

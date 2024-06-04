@@ -1,5 +1,5 @@
-import { get, writable } from 'svelte/store';
-import type { Message, Options, Usage } from '../types';
+import { get } from 'svelte/store';
+import type { Message, ChatOptions, Usage } from '../types';
 import { settings } from './settings';
 import { v4 as uuid } from 'uuid';
 
@@ -7,10 +7,10 @@ export type ChatState = {
 	id: string;
 	messages: Message[];
 	usage?: Usage;
-	options: Options;
+	options: ChatOptions;
 };
 
-function defaultOptions(): Options {
+function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {
 		model: get(settings).model ?? 'open-mixtral-8x22b',
@@ -51,4 +51,4 @@ export function createCurrent() {
 	};
 }
 
-export const current = createCurrent();
+export const chat = createCurrent();

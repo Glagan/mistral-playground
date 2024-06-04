@@ -13,7 +13,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { getModalStore, getDrawerStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
-	import { current, type ChatState } from '$lib/stores/current.svelte';
+	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/stores';
 	import { models } from '$lib/stores/models.svelte';
@@ -71,7 +71,7 @@
 
 	function loadHistoryEntry(entry: ChatState) {
 		drawerStore.close();
-		current.setFromEntry(entry);
+		chat.setFromEntry(entry);
 		tick().then(() => {
 			const outputNode = document.getElementById('messages-container')!;
 			if (outputNode) {
@@ -83,8 +83,8 @@
 
 	function deleteHistoryEntry(entry: ChatState) {
 		$history = $history.filter((e) => e.id !== entry.id);
-		if (current.state.id === entry.id) {
-			current.reset();
+		if (chat.state.id === entry.id) {
+			chat.reset();
 		}
 	}
 
@@ -132,7 +132,7 @@
 			event.preventDefault();
 			event.stopPropagation();
 		}
-		current.reset();
+		chat.reset();
 		drawerStore.close();
 	}
 </script>
@@ -160,7 +160,7 @@
 			<BotIcon class="flex-shrink-0" />
 			<span class="truncate">Chat</span>
 		</a>
-		{#if $page.url.pathname === '/chat' && current.state.messages.length}
+		{#if $page.url.pathname === '/chat' && chat.state.messages.length}
 			<button
 				type="button"
 				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
@@ -258,7 +258,7 @@
 			{#each $history as entry (entry.id)}
 				<div
 					class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
-					current.state.id
+					chat.state.id
 						? 'border-primary-700 bg-primary-700/20 px-2'
 						: 'border-transparent lg:px-2'}"
 					transition:slide={{ axis: 'y' }}
@@ -271,7 +271,7 @@
 						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
 					{/if}
 					<div class="flex flex-row gap-2 items-end justify-end">
-						{#if entry.id !== current.state.id}
+						{#if entry.id !== chat.state.id}
 							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryEntry(entry)}>
 								Load
 							</button>
