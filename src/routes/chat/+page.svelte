@@ -179,7 +179,8 @@
 				current.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
 			}
 			if (current.state.options.json) {
-				answer.content[answer.index] = `\`\`\`json\n${JSON.stringify(JSON.parse(answer.content[answer.index]), undefined, 4)}\n\`\`\``;
+				answer.content[answer.index] =
+					`\`\`\`json\n${JSON.stringify(JSON.parse(answer.content[answer.index]), undefined, 4)}\n\`\`\``;
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -380,7 +381,7 @@
 >
 	{#if current.state.messages.length}
 		<Messages
-			bind:messages={current.state.messages}
+			messages={current.state.messages}
 			interactive
 			{loading}
 			{error}
@@ -490,7 +491,7 @@
 			</button>
 		</div>
 		{#if showOptions}
-			<div class="flex flex-col gap-2 " transition:slide={{ axis: 'y' }}>
+			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={current.state.options.model} class="select flex-grow-0" disabled={models.loading}>

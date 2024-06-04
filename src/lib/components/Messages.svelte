@@ -6,7 +6,7 @@
 	import { slide } from 'svelte/transition';
 
 	let {
-		messages = $bindable(),
+		messages,
 		loading,
 		error,
 		interactive,
@@ -44,7 +44,7 @@
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id)}
 			<MessageSvelte
-				bind:message={messages[index]}
+				message={messages[index]}
 				isFirst={index === 0}
 				isLast={index === messages.length - 1}
 				{loading}

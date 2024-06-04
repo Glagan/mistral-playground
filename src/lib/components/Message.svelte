@@ -11,9 +11,10 @@
 	import PencilIcon from 'lucide-svelte/icons/pencil';
 	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
+	import { RadioGroup, RadioItem } from '@skeletonlabs/skeleton';
 
 	let {
-		message = $bindable(),
+		message,
 		loading,
 		isFirst,
 		isLast,
@@ -42,10 +43,11 @@
 		deleteMessage: (message: Message) => void;
 	} = $props();
 
-	let currentMessage = $derived(message.content[message.index]);
-	const markdown = $derived(
-		(marked.parse(currentMessage.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
-	);
+	const markdown = $derived.by(() => {
+		return (
+			marked.parse(message.content[message.index].trim(), { async: false, gfm: true, breaks: true }) as string
+		).trim();
+	});
 
 	$effect(() => {
 		message.content[message.index];
@@ -53,13 +55,14 @@
 	});
 
 	let editing = $state(false);
+	let localType: 'user' | 'assistant' | 'system' = $state('user');
 	let localCopy = $state('');
-	// svelte-ignore non_reactive_update
 	let textarea: HTMLTextAreaElement | null = $state(null);
 
 	function startEditing() {
 		editing = true;
-		localCopy = $state.snapshot(currentMessage);
+		localType = $state.snapshot(message.type);
+		localCopy = $state.snapshot(message.content[message.index]);
 		tick().then(() => {
 			if (textarea) {
 				textarea.focus();
@@ -75,6 +78,7 @@
 
 	function stopEditing() {
 		editing = false;
+		message.type = $state.snapshot(localType);
 		message.content[message.index] = $state.snapshot(localCopy);
 		updateMessage(message, message.content[message.index]);
 		tick().then(() => hljs.highlightAll());
@@ -122,7 +126,14 @@
 			{variants[message.type].title}
 		</p>
 		<div class="card p-4 {variants[message.type].style} overflow-x-hidden">
-			{#if currentMessage.length === 0}
+			{#if editing}
+				<RadioGroup class="mb-2">
+					<RadioItem bind:group={localType} name="justify" value="system">System</RadioItem>
+					<RadioItem bind:group={localType} name="justify" value="user">User</RadioItem>
+					<RadioItem bind:group={localType} name="justify" value="assistant">Assistant</RadioItem>
+				</RadioGroup>
+			{/if}
+			{#if message.content[message.index].length === 0}
 				<div class="text-surface-200 text-opacity-75 italic">Loading...</div>
 			{:else if editing}
 				<textarea bind:this={textarea} bind:value={localCopy} class="textarea w-full" rows="10"></textarea>
