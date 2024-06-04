@@ -16,6 +16,7 @@
 	import { current, type ChatState } from '$lib/stores/current.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/stores';
+	import { models } from '$lib/stores/models.svelte';
 	import BotIcon from 'lucide-svelte/icons/bot';
 	import CandlestickChartIcon from 'lucide-svelte/icons/candlestick-chart';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
@@ -27,7 +28,7 @@
 	import GithubIcon from 'lucide-svelte/icons/github';
 	import SquareArrowOutUpRightIcon from 'lucide-svelte/icons/square-arrow-out-up-right';
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
-	import { models } from '$lib/stores/models.svelte';
+	import BracesIcon from 'lucide-svelte/icons/braces';
 
 	import '../app.css';
 
@@ -181,6 +182,19 @@
 				<span class="truncate">History</span>
 			</button>
 		{/if}
+		<a
+			href="/code"
+			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/code'
+				? 'variant-soft-primary'
+				: ' '} hover:variant-soft-primary"
+			onclick={() => {
+				resetSession();
+				drawerStore.close();
+			}}
+		>
+			<BracesIcon class="flex-shrink-0" />
+			<span class="truncate">Code</span>
+		</a>
 		<a
 			href="/embeddings"
 			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/embeddings'
