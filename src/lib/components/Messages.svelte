@@ -1,7 +1,7 @@
 <script lang="ts">
 	import MessageSvelte from '$lib/components/Message.svelte';
 	import type { Message } from '$lib/types';
-	import hljs from 'highlight.js/lib/core';
+	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
 	import { slide } from 'svelte/transition';
 
@@ -34,13 +34,6 @@
 		deleteMessage: (message: Message) => void;
 		generate: (event: Event) => void;
 	} = $props();
-
-	let renderedError = $derived(
-		error && error.body ? hljs.highlight('json', JSON.stringify(error.body, null, 4)).value : null
-	);
-
-	$inspect(error);
-	$inspect(renderedError);
 </script>
 
 <div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
@@ -79,12 +72,12 @@
 		</div>
 	{/if}
 	{#if error}
-		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
+		<aside class="flex flex-col gap-2 items-start alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 			<div class="alert-message space-y-4 rendered-markdown">
 				{error.text}
 			</div>
-			{#if renderedError}
-				<div>{@html renderedError}</div>
+			{#if error.body}
+				<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} class="!ml-0 w-full"></CodeBlock>
 			{/if}
 		</aside>
 	{/if}

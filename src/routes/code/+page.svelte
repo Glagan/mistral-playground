@@ -5,10 +5,8 @@
 	import type { Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	// import { history } from '$lib/stores/history';
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount } from 'svelte';
-	// import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
@@ -18,8 +16,6 @@
 	import { specificModelsTokenLimit } from '$lib/const';
 	import { code } from '$lib/stores/code.svelte';
 	import { getClientForRequest } from '$lib/mistral';
-	import hljs from 'highlight.js/lib/core';
-	// import hljs from 'highlight.js/lib/core';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -28,9 +24,7 @@
 	let showOptions = $state(false);
 
 	let error = $state<{ text: string; body?: object } | null>(null);
-	let renderedError = $derived(
-		error && error.body ? hljs.highlight('json', JSON.stringify(error.body, null, 4)).value : null
-	);
+	let response = $state<{ prompt: string; response: string } | null>(null);
 
 	$effect(() => {
 		code.state.id;
@@ -84,11 +78,12 @@
 				},
 				{ signal: abortController.signal }
 			);
+			response = { prompt: $state.snapshot(code.state.prompt), response: '' };
 			for await (const message of chatStreamResponse) {
 				// console.log(message);
 				if (message.choices[0].delta.content !== undefined) {
 					const text = message.choices[0].delta.content;
-					code.state.response += text ?? '';
+					response.response += text ?? '';
 				}
 				if (message.usage) {
 					const completionTime = performance.now() - startedAt;
@@ -105,9 +100,7 @@
 			const _error = __error as Error;
 			// Ignore abort errors
 			if (_error.name !== 'AbortError') {
-				// console.error(_error.name, _error);
-				// TODO Fix error match
-				const responseBody = _error.message.match(/([\s\S]+?)Response:[\s\n]+(.+)$/gis);
+				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
 				if (responseBody) {
 					try {
 						const body = JSON.parse(responseBody[2].trim());
@@ -130,7 +123,7 @@
 	async function onSubmit(event: Event) {
 		event.preventDefault();
 		error = null;
-		code.state.response = '';
+		response = null;
 		await generate();
 	}
 
@@ -141,12 +134,7 @@
 		abortController?.abort();
 	}
 
-	const out = $derived(`${code.state.prompt}${code.state.response}`.trim());
-
-	/* $effect(() => {
-		code.state.response;
-		hljs.highlightAll();
-	}); */
+	const out = $derived(response ? `${response.prompt}${response.response}`.trim() : '');
 
 	function deleteApiKey() {
 		apiKey.set('');
@@ -166,10 +154,10 @@
 <div
 	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
 >
-	{#if code.state.response}
+	{#if response}
 		<div class="flex flex-col flex-grow flex-shrink gap-2 w-full overflow-auto">
 			<div class="card overflow-x-hidden">
-				<CodeBlock language="txt" code={`${code.state.prompt}${code.state.response}`.trim()}></CodeBlock>
+				<CodeBlock language="txt" code={out}></CodeBlock>
 			</div>
 			{#if loading}
 				<button
@@ -186,12 +174,12 @@
 		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 	{/if}
 	{#if error}
-		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
+		<aside class="flex flex-col gap-2 items-start alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 			<div class="alert-message space-y-4 rendered-markdown">
 				{error.text}
 			</div>
-			{#if renderedError}
-				<div>{@html renderedError}</div>
+			{#if error.body}
+				<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} class="!ml-0 w-full"></CodeBlock>
 			{/if}
 		</aside>
 	{/if}
@@ -375,8 +363,8 @@
 						/>
 					</label>
 				</div>
-				<div class="grid grid-cols-2 lg:grid-cols-4 gap-2 items-center">
-					<input
+				<div class="grid grid-cols-1 lg:grid-cols-2 gap-2 items-center">
+					<!-- <input
 						bind:value={code.state.options.minTokens}
 						class="input"
 						type="number"
@@ -385,7 +373,7 @@
 						min="1"
 						max={specificModelsTokenLimit[code.state.options.model] ?? 32000}
 						placeholder="Min tokens"
-					/>
+					/> -->
 					<input
 						bind:value={code.state.options.maxTokens}
 						class="input"

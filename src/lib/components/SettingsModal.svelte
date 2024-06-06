@@ -153,7 +153,10 @@
 				{/if}
 			</label>
 			<label>
-				<div class="flex items-center justify-between">API endpoint</div>
+				<div class="flex items-center justify-between">
+					<span>API endpoint</span>
+					<span class="text-xs text-surface-400">Leave empty to use the default Mistral endpoint</span>
+				</div>
 				<input
 					class="input"
 					class:input-warning={$errors.endpoint}

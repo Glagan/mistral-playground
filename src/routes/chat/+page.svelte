@@ -141,8 +141,7 @@
 					answer.content.splice(answer.index, 1);
 					answer.index -= 1;
 				}
-				// TODO Fix error match
-				const responseBody = _error.message.match(/([\s\S]+?)Response:[\s\n]+(.+)$/gis);
+				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
 				if (responseBody) {
 					try {
 						const body = JSON.parse(responseBody[2].trim());
