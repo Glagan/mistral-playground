@@ -1,6 +1,6 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
-	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { fade, slide } from 'svelte/transition';
+	import { CodeBlock, focusTrap } from '@skeletonlabs/skeleton';
 	import { apiKey } from '$lib/stores/apiKey';
 	import type { Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
@@ -13,10 +13,12 @@
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
+	import LogOutIcon from 'lucide-svelte/icons/log-out';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { specificModelsTokenLimit } from '$lib/const';
 	import { code } from '$lib/stores/code.svelte';
-	import { marked } from 'marked';
+	import { getClientForRequest } from '$lib/mistral';
+	import hljs from 'highlight.js/lib/core';
 	// import hljs from 'highlight.js/lib/core';
 
 	if (browser && !$apiKey) {
@@ -25,11 +27,14 @@
 
 	let showOptions = $state(false);
 
-	let error = $state('');
+	let error = $state<{ text: string; body?: object } | null>(null);
+	let renderedError = $derived(
+		error && error.body ? hljs.highlight('json', JSON.stringify(error.body, null, 4)).value : null
+	);
 
 	$effect(() => {
 		code.state.id;
-		error = '';
+		error = null;
 	});
 
 	const unsubscribe = settings.subscribe((value) => {
@@ -54,111 +59,77 @@
 	} */
 
 	let loading = $state(false);
-	let keepGenerating = $state(true);
-	let currentStream: ReadableStream | null = null;
+	let abortController: AbortController | null = null;
 
 	async function generate() {
 		const outputNode = document.getElementById('messages-container');
 		loading = true;
 		showOptions = false;
-		keepGenerating = true;
 
-		let response: Response;
+		abortController = new AbortController();
+		const startedAt = performance.now();
 		try {
-			response = await fetch('/api/fim/completions', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: $apiKey,
+			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
+			const chatStreamResponse = client.completionStream(
+				{
+					model: code.state.options.model,
+					// minTokens: code.state.options.minTokens,
+					maxTokens: code.state.options.maxTokens,
+					temperature: code.state.options.temperature,
+					topP: code.state.options.topP,
 					prompt: code.state.prompt,
 					suffix: code.state.suffix,
 					// Delete default empty stop token and replace "\n" with actual new line
-					stop: code.state.stop.filter((s) => s).map((s) => s.replace(/\\r\\n?|\\n/g, '\n')),
-					options: code.state.options,
-					endpoint: $settings.endpoint
-				})
-			});
-		} catch (_error) {
-			console.error(_error);
-			error = `Failed to send request: ${_error}`;
-			return;
-		}
-
-		if (!response.ok) {
-			const rawBody = await response.text();
-			try {
-				const body = JSON.parse(rawBody) as {
-					error: any;
-					message?: string;
-					code: 'ERR_PARSING' | 'ERR_API_KEY' | 'ERR_API_REQ';
-				};
-				if (body.code === 'ERR_PARSING') {
-					error = `Failed to send request:\n${body.error.issues.map((issue: { message: string; path: string[] }) => `- ${issue.path.join('.')}: ${issue.message}`).join('\n')}`;
-				} else if (body.code === 'ERR_API_KEY') {
-					error = 'Your API key is invalid.';
-				} else if (body.code === 'ERR_API_REQ') {
-					if (body.message) {
-						try {
-							const asJson = JSON.parse(body.message);
-							error = `Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
-						} catch (_error) {
-							error = `Failed to generate output:\n${body.message}`;
-						}
-					} else {
-						error = 'Your request is invalid.';
-					}
+					stop: code.state.stop.filter((s) => s).map((s) => s.replace(/\\r\\n?|\\n/g, '\n'))
+				},
+				{ signal: abortController.signal }
+			);
+			for await (const message of chatStreamResponse) {
+				// console.log(message);
+				if (message.choices[0].delta.content !== undefined) {
+					const text = message.choices[0].delta.content;
+					code.state.response += text ?? '';
 				}
-			} catch (_error) {
-				error = `Failed to send request: ${response.status} ${response.statusText}`;
-			} finally {
-				currentStream = null;
-				loading = false;
-				keepGenerating = false;
-			}
-			// updateOrInsertHistory();
-			return;
-		}
-
-		try {
-			// Read each chunk and update the last response reference
-			currentStream = response.body;
-			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-			while (reader && keepGenerating) {
-				const { value, done } = await reader.read();
-				if (done) break;
-				if (/^#/.test(value)) {
-					const usage = JSON.parse(value.slice(1)) as Usage;
-					code.state.usage = usage;
-				} else {
-					code.state.response += value ?? '';
+				if (message.usage) {
+					const completionTime = performance.now() - startedAt;
+					code.state.usage = message.usage;
+					code.state.usage.tps = Math.round(
+						Number((message.usage as Usage).completion_tokens / (completionTime / 1000))
+					);
 				}
 				if (outputNode) {
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
 			}
-			// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
-			const embeddedUsage = code.state.response.match(/#({.+?})$/);
-			if (embeddedUsage) {
-				code.state.response = code.state.response.replace(/#({.+?})$/, '');
-				code.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
+		} catch (__error) {
+			const _error = __error as Error;
+			// Ignore abort errors
+			if (_error.name !== 'AbortError') {
+				// console.error(_error.name, _error);
+				// TODO Fix error match
+				const responseBody = _error.message.match(/([\s\S]+?)Response:[\s\n]+(.+)$/gis);
+				if (responseBody) {
+					try {
+						const body = JSON.parse(responseBody[2].trim());
+						error = {
+							text: `Failed to generate: ${responseBody[1].trim()}`,
+							body
+						};
+					} catch (jsonError) {
+						error = { text: `Failed to generate: ${_error.message}` };
+					}
+				} else {
+					error = { text: `Failed to generate: ${_error.message}` };
+				}
 			}
-			if (outputNode) {
-				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-			}
-			// updateOrInsertHistory();
-		} catch (error) {
-			console.error(error);
-			error = `Failed to generate: ${error}`;
 		} finally {
-			currentStream = null;
 			loading = false;
-			keepGenerating = false;
 		}
 	}
 
 	async function onSubmit(event: Event) {
 		event.preventDefault();
-		error = '';
+		error = null;
 		code.state.response = '';
 		await generate();
 	}
@@ -167,25 +138,21 @@
 		event.preventDefault();
 		event.stopPropagation();
 		loading = false;
-		keepGenerating = false;
-		if (currentStream && !currentStream.locked) {
-			currentStream.cancel();
-			currentStream = null;
-		}
+		abortController?.abort();
 	}
 
-	const markdown = $derived.by(() => {
-		return marked.parse(`${code.state.prompt}${code.state.response}`.trim(), {
-			async: false,
-			gfm: true,
-			breaks: true
-		}) as string;
-	});
+	const out = $derived(`${code.state.prompt}${code.state.response}`.trim());
 
 	/* $effect(() => {
 		code.state.response;
 		hljs.highlightAll();
 	}); */
+
+	function deleteApiKey() {
+		apiKey.set('');
+		models.error = null;
+		goto('/');
+	}
 
 	onMount(() => {
 		loadModels();
@@ -201,12 +168,10 @@
 >
 	{#if code.state.response}
 		<div class="flex flex-col flex-grow flex-shrink gap-2 w-full overflow-auto">
-			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
-				<div class="space-y-4 rendered-markdown">
-					{@html markdown}
-				</div>
+			<div class="card overflow-x-hidden">
+				<CodeBlock language="txt" code={`${code.state.prompt}${code.state.response}`.trim()}></CodeBlock>
 			</div>
-			{#if loading && keepGenerating}
+			{#if loading}
 				<button
 					class="btn variant-ghost-error transition-all mx-auto"
 					type="button"
@@ -220,6 +185,16 @@
 	{:else}
 		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 	{/if}
+	{#if error}
+		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
+			<div class="alert-message space-y-4 rendered-markdown">
+				{error.text}
+			</div>
+			{#if renderedError}
+				<div>{@html renderedError}</div>
+			{/if}
+		</aside>
+	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		{#if models.error}
 			<div class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
@@ -229,6 +204,14 @@
 				<div class="alert-message">
 					<h3 class="text-xl">{models.error.title}</h3>
 					<p>{models.error.message}</p>
+					<button
+						class="btn transition-all justify-start font-bold variant-ringed-primary"
+						transition:fade
+						onclick={deleteApiKey}
+					>
+						<LogOutIcon class="flex-shrink-0" />
+						<span class="truncate">Delete API key</span>
+					</button>
 				</div>
 			</div>
 		{/if}

@@ -15,8 +15,10 @@
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
+	import LogOutIcon from 'lucide-svelte/icons/log-out';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { specificModelsTokenLimit } from '$lib/const';
+	import { getClientForRequest } from '$lib/mistral';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -27,11 +29,11 @@
 	let showOptions = $state(false);
 	let promptText = $state('');
 
-	let error = $state('');
+	let error: { text: string; body?: object } | null = $state(null);
 
 	$effect(() => {
 		chat.state.id;
-		error = '';
+		error = null;
 	});
 
 	const unsubscribe = settings.subscribe((value) => {
@@ -77,105 +79,49 @@
 	}
 
 	let loading = $state(false);
-	let keepGenerating = $state(true);
-	let currentStream: ReadableStream | null = null;
+	let abortController: AbortController | null = null;
 
 	async function generate(messages: Message[], answer: Message) {
 		const outputNode = document.getElementById('messages-container');
 		loading = true;
 		showOptions = false;
-		keepGenerating = true;
 
-		let response: Response;
+		abortController = new AbortController();
+		const startedAt = performance.now();
 		try {
-			response = await fetch('/api/chat/completions', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: $apiKey,
+			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
+			const chatStreamResponse = client.chatStream(
+				{
+					model: chat.state.options.model ? chat.state.options.model : 'open-mixtral-8x22b',
 					messages: messages.map((message) => ({
-						type: message.type,
+						role: message.type,
 						content: message.content[message.index]
 					})),
-					options: chat.state.options,
-					endpoint: $settings.endpoint
-				})
-			});
-		} catch (_error) {
-			console.error(_error);
-			if (answer.content.length === 1) {
-				chat.state.messages.pop();
-			} else {
-				answer.content.splice(answer.index, 1);
-				answer.index -= 1;
-			}
-			error = `Failed to send request: ${_error}`;
-			return;
-		}
-
-		if (!response.ok) {
-			const rawBody = await response.text();
-			if (answer.content.length === 1) {
-				chat.state.messages.pop();
-			} else {
-				answer.content.splice(answer.index, 1);
-				answer.index -= 1;
-			}
-			try {
-				const body = JSON.parse(rawBody) as {
-					error: any;
-					message?: string;
-					code: 'ERR_PARSING' | 'ERR_API_KEY' | 'ERR_API_REQ';
-				};
-				if (body.code === 'ERR_PARSING') {
-					error = `Failed to send request:\n${body.error.issues.map((issue: { message: string; path: string[] }) => `- ${issue.path.join('.')}: ${issue.message}`).join('\n')}`;
-				} else if (body.code === 'ERR_API_KEY') {
-					error = 'Your API key is invalid.';
-				} else if (body.code === 'ERR_API_REQ') {
-					if (body.message) {
-						try {
-							const asJson = JSON.parse(body.message);
-							error = `Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
-						} catch (_error) {
-							error = `Failed to generate output:\n${body.message}`;
-						}
-					} else {
-						error = 'Your request is invalid.';
-					}
+					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
+					randomSeed: typeof chat.state.options.randomSeed === 'number' ? chat.state.options.randomSeed : undefined,
+					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
+					safePrompt: chat.state.options.safePrompt,
+					temperature: chat.state.options.temperature,
+					topP: chat.state.options.topP
+				},
+				{ signal: abortController.signal }
+			);
+			for await (const message of chatStreamResponse) {
+				// console.log(message);
+				if (message.choices[0].delta.content !== undefined) {
+					const text = message.choices[0].delta.content;
+					answer.content[answer.index] += text ?? '';
 				}
-			} catch (_error) {
-				error = `Failed to send request: ${response.status} ${response.statusText}`;
-			} finally {
-				currentStream = null;
-				loading = false;
-				keepGenerating = false;
-			}
-			updateOrInsertHistory();
-			return;
-		}
-
-		try {
-			// Read each chunk and update the last response reference
-			currentStream = response.body;
-			const reader = response.body?.pipeThrough(new TextDecoderStream()).getReader();
-			while (reader && keepGenerating) {
-				const { value, done } = await reader.read();
-				if (done) break;
-				if (/^#/.test(value)) {
-					const usage = JSON.parse(value.slice(1)) as Usage;
-					chat.state.usage = usage;
-				} else {
-					answer.content[answer.index] += value ?? '';
+				if (message.usage) {
+					const completionTime = performance.now() - startedAt;
+					chat.state.usage = message.usage;
+					chat.state.usage.tps = Math.round(
+						Number((message.usage as Usage).completion_tokens / (completionTime / 1000))
+					);
 				}
 				if (outputNode) {
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
-			}
-			// Remove embedded usage that's stuck to the end if the string was received in a single event or was attached to another one
-			const embeddedUsage = answer.content[answer.index].match(/#({.+?})$/);
-			if (embeddedUsage) {
-				answer.content[answer.index] = answer.content[answer.index].replace(/#({.+?})$/, '');
-				chat.state.usage = JSON.parse(embeddedUsage[1]) as Usage;
 			}
 			if (chat.state.options.json) {
 				answer.content[answer.index] =
@@ -185,26 +131,41 @@
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
 			updateOrInsertHistory();
-		} catch (error) {
-			console.error(error);
-			if (answer.content.length === 1) {
-				chat.state.messages.pop();
-			} else {
-				answer.content.splice(answer.index, 1);
-				answer.index -= 1;
+		} catch (__error) {
+			const _error = __error as Error;
+			// Ignore abort errors
+			if (_error.name !== 'AbortError') {
+				if (answer.content.length === 1) {
+					chat.state.messages.pop();
+				} else {
+					answer.content.splice(answer.index, 1);
+					answer.index -= 1;
+				}
+				// TODO Fix error match
+				const responseBody = _error.message.match(/([\s\S]+?)Response:[\s\n]+(.+)$/gis);
+				if (responseBody) {
+					try {
+						const body = JSON.parse(responseBody[2].trim());
+						error = {
+							text: `Failed to generate: ${responseBody[1].trim()}`,
+							body
+						};
+					} catch (jsonError) {
+						error = { text: `Failed to generate: ${_error.message}` };
+					}
+				} else {
+					error = { text: `Failed to generate: ${_error.message}` };
+				}
 			}
-			error = `Failed to generate: ${error}`;
 		} finally {
-			currentStream = null;
 			loading = false;
-			keepGenerating = false;
 		}
 	}
 
 	async function onSubmit(event: Event) {
 		const outputNode = document.getElementById('messages-container');
 		event.preventDefault();
-		error = '';
+		error = null;
 		if (systemPrompt) {
 			chat.state.messages.push({
 				id: uuid(),
@@ -264,17 +225,13 @@
 		event.preventDefault();
 		event.stopPropagation();
 		loading = false;
-		keepGenerating = false;
-		if (currentStream && !currentStream.locked) {
-			currentStream.cancel();
-			currentStream = null;
-		}
+		abortController?.abort();
 	}
 
 	// * > Message events
 
 	function moveUp(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
 			chat.state.messages.splice(index, 1);
@@ -284,7 +241,7 @@
 	}
 
 	function moveDown(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0 && index < chat.state.messages.length - 1) {
 			chat.state.messages.splice(index, 1);
@@ -294,7 +251,7 @@
 	}
 
 	async function refresh(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const message = chat.state.messages[index];
@@ -309,7 +266,7 @@
 	}
 
 	async function previousVersion(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if (chat.state.messages[index].index > 0) {
@@ -320,7 +277,7 @@
 	}
 
 	async function nextVersion(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			if (chat.state.messages[index].index < chat.state.messages[index].content.length - 1) {
@@ -331,7 +288,7 @@
 	}
 
 	async function deleteVersion(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			chat.state.messages[index].content.splice(chat.state.messages[index].index);
@@ -343,7 +300,7 @@
 	}
 
 	function updateMessage(message: Message, content: string) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			chat.state.messages[index].content[message.index] = content;
@@ -352,7 +309,7 @@
 	}
 
 	function deleteMessage(message: Message) {
-		error = '';
+		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			chat.state.messages.splice(index, 1);
@@ -365,6 +322,12 @@
 	}
 
 	// * < Message events
+
+	function deleteApiKey() {
+		apiKey.set('');
+		models.error = null;
+		goto('/');
+	}
 
 	onMount(() => {
 		loadModels();
@@ -394,7 +357,7 @@
 			{deleteMessage}
 			generate={onSubmit}
 		/>
-		{#if loading && keepGenerating}
+		{#if loading}
 			<button
 				class="btn variant-ghost-error transition-all mx-auto"
 				type="button"
@@ -426,6 +389,14 @@
 				<div class="alert-message">
 					<h3 class="text-xl">{models.error.title}</h3>
 					<p>{models.error.message}</p>
+					<button
+						class="btn transition-all justify-start font-bold variant-ringed-primary"
+						transition:fade
+						onclick={deleteApiKey}
+					>
+						<LogOutIcon class="flex-shrink-0" />
+						<span class="truncate">Delete API key</span>
+					</button>
 				</div>
 			</div>
 		{/if}

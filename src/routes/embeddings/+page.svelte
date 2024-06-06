@@ -1,16 +1,14 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { focusTrap } from '@skeletonlabs/skeleton';
+	import { CodeBlock, focusTrap } from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Usage } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import { marked } from 'marked';
-	import { tick } from 'svelte';
-	import hljs from 'highlight.js';
+	import { getClientForRequest } from '$lib/mistral';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -25,7 +23,6 @@
 	const tokens = $derived(encoding.encode(promptText).length);
 
 	let loading = $state(false);
-	let keepGenerating = $state(false);
 	let error = $state('');
 	let renderedError = $derived(
 		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
@@ -38,75 +35,24 @@
 
 		loading = true;
 		showOptions = false;
-		keepGenerating = true;
 		embeddings = [];
 		error = '';
 
-		let response: Response;
 		try {
-			response = await fetch('/api/embeddings', {
-				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
-				body: JSON.stringify({
-					apiKey: $apiKey,
-					input: [promptText],
-					options: { model },
-					endpoint: $settings.endpoint
-				})
+			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
+			const body = await client.embeddings({
+				model,
+				input: [promptText]
 			});
+			console.log(body);
+			embeddings = body.data[0].embedding;
 		} catch (_error) {
 			console.error(_error);
 			error = `Failed to send request: ${error}`;
 			return;
+		} finally {
+			loading = false;
 		}
-		const rawBody = await response.text();
-
-		if (response.ok) {
-			const body = JSON.parse(rawBody) as {
-				id: string;
-				object: 'list';
-				data: { object: 'embedding'; embedding: number[]; index: number }[];
-				model: string;
-				usage: Usage;
-			};
-			embeddings = body.data[0].embedding;
-		} else {
-			try {
-				const body = JSON.parse(rawBody) as {
-					error: any;
-					message?: string;
-					code: 'ERR_API_KEY' | 'ERR_API_REQ';
-				};
-				if (body.code === 'ERR_API_KEY') {
-					error = 'Your API key is invalid.';
-				} else {
-					if (body.message) {
-						try {
-							const asJson = JSON.parse(body.message);
-							error = `Request failed:\n\`\`\`json\n${JSON.stringify(asJson, undefined, 4)}\n\`\`\``;
-						} catch (error) {
-							error = `Failed to generate output:\n${body.message}`;
-						}
-					} else {
-						error = 'Your request is invalid.';
-					}
-				}
-				tick().then(() => hljs.highlightAll());
-			} catch (error) {
-				error = `Failed to send request: ${response.status} ${response.statusText}`;
-			}
-		}
-
-		loading = false;
-		keepGenerating = false;
-	}
-
-	async function stopGenerating(event: Event) {
-		event.preventDefault();
-		event.stopPropagation();
-
-		loading = false;
-		keepGenerating = false;
 	}
 </script>
 
@@ -122,19 +68,9 @@
 			</aside>
 		{/if}
 		{#if embeddings.length > 0}
-			<div class="card p-4 variant-ghost-primary overflow-x-hidden">
-				{embeddings.join(', ')}
+			<div class="card overflow-x-hidden">
+				<CodeBlock language="txt" code={embeddings.join(', ')}></CodeBlock>
 			</div>
-			{#if loading && keepGenerating}
-				<button
-					class="btn variant-ghost-error transition-all mx-auto"
-					type="button"
-					transition:slide={{ axis: 'y' }}
-					onclick={stopGenerating}
-				>
-					Stop
-				</button>
-			{/if}
 		{:else if loading}
 			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
 				<span class="text-surface-200 italic">Loading...</span>

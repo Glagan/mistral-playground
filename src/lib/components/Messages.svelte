@@ -1,8 +1,8 @@
 <script lang="ts">
 	import MessageSvelte from '$lib/components/Message.svelte';
 	import type { Message } from '$lib/types';
+	import hljs from 'highlight.js/lib/core';
 	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
-	import { marked } from 'marked';
 	import { slide } from 'svelte/transition';
 
 	let {
@@ -22,7 +22,7 @@
 	}: {
 		messages: Message[];
 		loading: boolean;
-		error: string;
+		error: { text: string; body?: object } | null;
 		interactive?: boolean;
 		moveUp: (message: Message) => void;
 		moveDown: (message: Message) => void;
@@ -36,8 +36,11 @@
 	} = $props();
 
 	let renderedError = $derived(
-		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
+		error && error.body ? hljs.highlight('json', JSON.stringify(error.body, null, 4)).value : null
 	);
+
+	$inspect(error);
+	$inspect(renderedError);
 </script>
 
 <div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
@@ -78,8 +81,11 @@
 	{#if error}
 		<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 			<div class="alert-message space-y-4 rendered-markdown">
-				{@html renderedError}
+				{error.text}
 			</div>
+			{#if renderedError}
+				<div>{@html renderedError}</div>
+			{/if}
 		</aside>
 	{/if}
 </div>

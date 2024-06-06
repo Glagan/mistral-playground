@@ -30,7 +30,7 @@ export function createCurrent() {
         id: uuid(),
         prompt: '',
         suffix: undefined,
-        stop: [''],
+        stop: ['\n\n'],
         response: '',
         usage: undefined,
         options: defaultOptions()
@@ -43,7 +43,7 @@ export function createCurrent() {
         state.suffix = undefined;
         state.response = '';
         state.usage = undefined;
-        state.stop = [''];
+        state.stop = ['\n\n'];
     }
 
     function setFromEntry(entry: CodeState) {
