@@ -62,19 +62,19 @@
 	);
 
 	function removeFromHistory() {
-		$history = $history.filter((e) => e.id !== chat.state.id);
-		$history = $history;
+		$history.chat = $history.chat.filter((e) => e.id !== chat.state.id);
+		$history.chat = $history.chat;
 	}
 
 	function updateOrInsertHistory() {
-		$history = $history.filter((e) => e.id !== chat.state.id);
-		$history.splice(0, 0, {
+		$history.chat = $history.chat.filter((e) => e.id !== chat.state.id);
+		$history.chat.splice(0, 0, {
 			id: chat.state.id,
 			messages: JSON.parse(JSON.stringify(chat.state.messages)),
 			usage: JSON.parse(JSON.stringify(chat.state.usage)),
 			options: JSON.parse(JSON.stringify(chat.state.options))
 		});
-		$history = $history;
+		$history.chat = $history.chat;
 	}
 
 	let loading = $state(false);

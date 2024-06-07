@@ -14,6 +14,7 @@
 	import { getModalStore, getDrawerStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { chat, type ChatState } from '$lib/stores/chat.svelte';
+	import { code, type CodeState } from '$lib/stores/code.svelte';
 	import { tick } from 'svelte';
 	import { page } from '$app/stores';
 	import { models } from '$lib/stores/models.svelte';
@@ -69,7 +70,7 @@
 		goto('/');
 	}
 
-	function loadHistoryEntry(entry: ChatState) {
+	function loadHistoryChatEntry(entry: ChatState) {
 		drawerStore.close();
 		chat.setFromEntry(entry);
 		tick().then(() => {
@@ -81,10 +82,29 @@
 		});
 	}
 
-	function deleteHistoryEntry(entry: ChatState) {
-		$history = $history.filter((e) => e.id !== entry.id);
+	function deleteHistoryChatEntry(entry: ChatState) {
+		$history.chat = $history.chat.filter((e) => e.id !== entry.id);
 		if (chat.state.id === entry.id) {
 			chat.reset();
+		}
+	}
+
+	function loadHistoryCodeEntry(entry: CodeState) {
+		drawerStore.close();
+		code.setFromEntry(entry);
+		tick().then(() => {
+			const outputNode = document.getElementById('messages-container')!;
+			if (outputNode) {
+				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			}
+			hljs.highlightAll();
+		});
+	}
+
+	function deleteHistoryCodeEntry(entry: CodeState) {
+		$history.code = $history.code.filter((e) => e.id !== entry.id);
+		if (code.state.id === entry.id) {
+			code.reset();
 		}
 	}
 
@@ -133,6 +153,7 @@
 			event.stopPropagation();
 		}
 		chat.reset();
+		code.reset();
 		drawerStore.close();
 	}
 </script>
@@ -195,6 +216,17 @@
 			<BracesIcon class="flex-shrink-0" />
 			<span class="truncate">Code</span>
 		</a>
+		{#if $page.url.pathname === '/code' && code.state.response.length}
+			<button
+				type="button"
+				class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+				transition:slide={{ axis: 'y' }}
+				onclick={resetSession}
+			>
+				<PackagePlusIcon class="flex-shrink-0" />
+				<span class="truncate">New code generation</span>
+			</button>
+		{/if}
 		<a
 			href="/embeddings"
 			class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/embeddings'
@@ -245,7 +277,7 @@
 	</div>
 {/snippet}
 
-{#snippet historyList({ mobile }: { mobile: boolean })}
+{#snippet chatHistoryList({ mobile }: { mobile: boolean })}
 	<div
 		class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
 		transition:fade={{ duration: 200 }}
@@ -255,7 +287,7 @@
 			<span>History</span>
 		</h2>
 		<div class="flex flex-col gap-2">
-			{#each $history as entry (entry.id)}
+			{#each $history.chat as entry (entry.id)}
 				<div
 					class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
 					chat.state.id
@@ -272,11 +304,54 @@
 					{/if}
 					<div class="flex flex-row gap-2 items-end justify-end">
 						{#if entry.id !== chat.state.id}
-							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryEntry(entry)}>
+							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryChatEntry(entry)}>
 								Load
 							</button>
 						{/if}
-						<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryEntry(entry)}>
+						<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryChatEntry(entry)}>
+							<Trash2Icon />
+						</button>
+					</div>
+				</div>
+			{:else}
+				<span class="text-sm text-surface-200 text-opacity-75 italic text-center"> Your history will appear here </span>
+			{/each}
+		</div>
+	</div>
+{/snippet}
+
+{#snippet codeHistoryList({ mobile }: { mobile: boolean })}
+	<div
+		class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
+		transition:fade={{ duration: 200 }}
+	>
+		<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
+			<GalleryHorizontalEndIcon />
+			<span>History</span>
+		</h2>
+		<div class="flex flex-col gap-2">
+			{#each $history.code as entry (entry.id)}
+				<div
+					class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
+					code.state.id
+						? 'border-primary-700 bg-primary-700/20 px-2'
+						: 'border-transparent lg:px-2'}"
+					transition:slide={{ axis: 'y' }}
+				>
+					{#if entry.prompt.length}
+						<div class="flex-grow flex-shrink truncate">
+							{entry.prompt}
+						</div>
+					{:else}
+						<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
+					{/if}
+					<div class="flex flex-row gap-2 items-end justify-end">
+						{#if entry.id !== code.state.id}
+							<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryCodeEntry(entry)}>
+								Load
+							</button>
+						{/if}
+						<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryCodeEntry(entry)}>
 							<Trash2Icon />
 						</button>
 					</div>
@@ -305,7 +380,9 @@
 		class="hidden lg:flex flex-row lg:flex-col items-center justify-end lg:justify-normal h-full gap-2 p-4 overflow-hidden max-h-screen"
 	>
 		{#if $page.url.pathname === '/chat' && $apiKey}
-			{@render historyList({ mobile: false })}
+			{@render chatHistoryList({ mobile: false })}
+		{:else if $page.url.pathname === '/code' && $apiKey}
+			{@render codeHistoryList({ mobile: false })}
 		{/if}
 	</div>
 </div>
@@ -313,9 +390,15 @@
 	{#if $drawerStore.id === 'navigation'}
 		{@render navigation({ isFromRoot: false })}
 	{:else if $drawerStore.id === 'history'}
-		<div class="p-2">
-			{@render historyList({ mobile: true })}
-		</div>
+		{#if $page.url.pathname === '/chat' && $apiKey}
+			<div class="p-2">
+				{@render chatHistoryList({ mobile: true })}
+			</div>
+		{:else if $page.url.pathname === '/code' && $apiKey}
+			<div class="p-2">
+				{@render codeHistoryList({ mobile: true })}
+			</div>
+		{/if}
 	{/if}
 </Drawer>
 <Modal />

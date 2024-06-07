@@ -15,6 +15,7 @@
 	import { code } from '$lib/stores/code.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
+	import { history } from '$lib/stores/history';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -27,6 +28,11 @@
 
 	$effect(() => {
 		code.state.id;
+		if (code.state.prompt) {
+			response = { prompt: code.state.prompt, response: code.state.response };
+		} else {
+			response = null;
+		}
 		error = null;
 	});
 
@@ -35,21 +41,19 @@
 		code.state.options.randomSeed = value.seed ? Number(value.seed) : undefined;
 	});
 
-	/* function removeFromHistory() {
-		$history = $history.filter((e) => e.id !== code.state.id);
-		$history = $history;
-	}
-
 	function updateOrInsertHistory() {
-		$history = $history.filter((e) => e.id !== code.state.id);
-		$history.splice(0, 0, {
+		$history.code = $history.code.filter((e) => e.id !== code.state.id);
+		$history.code.splice(0, 0, {
 			id: code.state.id,
-			messages: JSON.parse(JSON.stringify(code.state.messages)),
-			usage: JSON.parse(JSON.stringify(code.state.usage)),
-			options: JSON.parse(JSON.stringify(code.state.options))
+			prompt: $state.snapshot(code.state.prompt),
+			suffix: $state.snapshot(code.state.suffix),
+			usage: $state.snapshot(code.state.usage),
+			stop: $state.snapshot(code.state.stop),
+			response: $state.snapshot(response?.response ?? ''),
+			options: $state.snapshot(code.state.options)
 		});
-		$history = $history;
-	} */
+		$history.code = $history.code;
+	}
 
 	let loading = $state(false);
 	let abortController: AbortController | null = null;
@@ -95,6 +99,7 @@
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
 			}
+			updateOrInsertHistory();
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors
@@ -156,7 +161,7 @@
 	{#if response}
 		<div class="flex flex-col flex-grow flex-shrink gap-2 w-full overflow-auto">
 			<div class="card overflow-x-hidden">
-				<CodeBlock language="txt" code={out}></CodeBlock>
+				<CodeBlock language="plain" code={out}></CodeBlock>
 			</div>
 			{#if loading}
 				<button
