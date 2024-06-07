@@ -14,11 +14,10 @@
 	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
-	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
-	import LogOutIcon from 'lucide-svelte/icons/log-out';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { specificModelsTokenLimit } from '$lib/const';
 	import { getClientForRequest } from '$lib/mistral';
+	import ModelError from '$lib/components/ModelError.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -322,12 +321,6 @@
 
 	// * < Message events
 
-	function deleteApiKey() {
-		apiKey.set('');
-		models.error = null;
-		goto('/');
-	}
-
 	onMount(() => {
 		loadModels();
 	});
@@ -380,25 +373,7 @@
 				</div>
 			</aside>
 		{/if}
-		{#if models.error}
-			<div class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-				<div>
-					<TriangleAlertIcon size={24} />
-				</div>
-				<div class="alert-message">
-					<h3 class="text-xl">{models.error.title}</h3>
-					<p>{models.error.message}</p>
-					<button
-						class="btn transition-all justify-start font-bold variant-ringed-primary"
-						transition:fade
-						onclick={deleteApiKey}
-					>
-						<LogOutIcon class="flex-shrink-0" />
-						<span class="truncate">Delete API key</span>
-					</button>
-				</div>
-			</div>
-		{/if}
+		<ModelError />
 		<label class="label">
 			<div class="flex justify-between items-center">
 				{#if chat.state.usage}

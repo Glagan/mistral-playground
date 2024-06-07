@@ -9,13 +9,12 @@
 	import { onDestroy, onMount } from 'svelte';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
-	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
-	import LogOutIcon from 'lucide-svelte/icons/log-out';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { specificModelsTokenLimit } from '$lib/const';
 	import { code } from '$lib/stores/code.svelte';
 	import { getClientForRequest } from '$lib/mistral';
+	import ModelError from '$lib/components/ModelError.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/');
@@ -184,25 +183,7 @@
 		</aside>
 	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
-		{#if models.error}
-			<div class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-				<div>
-					<TriangleAlertIcon size={24} />
-				</div>
-				<div class="alert-message">
-					<h3 class="text-xl">{models.error.title}</h3>
-					<p>{models.error.message}</p>
-					<button
-						class="btn transition-all justify-start font-bold variant-ringed-primary"
-						transition:fade
-						onclick={deleteApiKey}
-					>
-						<LogOutIcon class="flex-shrink-0" />
-						<span class="truncate">Delete API key</span>
-					</button>
-				</div>
-			</div>
-		{/if}
+		<ModelError />
 		<div class="alert variant-ghost-tertiary" transition:slide={{ axis: 'y' }}>
 			<div>
 				<CircleHelpIcon size={24} />

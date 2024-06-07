@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { getModalStore } from '@skeletonlabs/skeleton';
-	import { models } from '$lib/stores/models.svelte';
+	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { chat } from '$lib/stores/chat.svelte';
 	import {
@@ -34,7 +34,11 @@
 			if (code && code.state.options.model === $settings.codeModel) {
 				code.state.options.model = values.codeModel;
 			}
+			const reloadModels = values.endpoint !== $settings.endpoint;
 			settings.set(values);
+			if (reloadModels) {
+				loadModels();
+			}
 			modalStore.close();
 		}
 	});

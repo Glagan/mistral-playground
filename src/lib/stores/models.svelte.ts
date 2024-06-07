@@ -22,19 +22,24 @@ export const models: {
 export async function loadModels() {
 	try {
 		models.loading = true;
-		models.error = null;
 		const client = getClientForRequest({ apiKey: get(apiKey), endpoint: get(settings).endpoint });
 		const response = await client.listModels();
 		models.list = response.data.filter((model) => model.id !== 'mistral-embed');
-		models.loading = false;
 		models.loaded = true;
+		models.error = null;
 	} catch (_error) {
 		const error = _error as Error;
-		console.error('Failed to load models:', error);
-		if (error.message.indexOf('Unauthorized')) {
+		const status = error.message.match(/status: (\d+)/)?.[1];
+		console.error('Failed to load models:', status, error);
+		if (status === '401' || status === '403') {
 			models.error = {
 				title: 'Failed to load models',
 				message: 'Unauthorized, invalid or expired API key.'
+			};
+		} else if (status === '404') {
+			models.error = {
+				title: 'Failed to load models',
+				message: 'Not found, check if your endpoint is correctly set.'
 			};
 		} else {
 			models.error = {
@@ -42,5 +47,7 @@ export async function loadModels() {
 				message: 'The Mistral API is down or there is a problem with your API key.'
 			};
 		}
+	} finally {
+		models.loading = false;
 	}
 }
