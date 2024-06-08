@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
+	import { focusTrap } from '@skeletonlabs/skeleton';
 	import { goto } from '$app/navigation';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { browser } from '$app/environment';

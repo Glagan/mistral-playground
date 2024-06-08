@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, slide } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import TriangleAlertIcon from 'lucide-svelte/icons/triangle-alert';
 	import LogOutIcon from 'lucide-svelte/icons/log-out';
