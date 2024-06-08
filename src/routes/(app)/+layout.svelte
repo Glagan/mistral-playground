@@ -9,9 +9,10 @@
 		Modal,
 		type DrawerSettings,
 		type ModalComponent,
-		type ModalSettings
+		type ModalSettings,
+		getModalStore,
+		getDrawerStore
 	} from '@skeletonlabs/skeleton';
-	import { getModalStore, getDrawerStore } from '@skeletonlabs/skeleton';
 	import SettingsModal from '$lib/components/SettingsModal.svelte';
 	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import { code, type CodeState } from '$lib/stores/code.svelte';
@@ -31,7 +32,7 @@
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
 	import BracesIcon from 'lucide-svelte/icons/braces';
 
-	import '../app.css';
+	import '../../app.css';
 
 	import hljs from 'highlight.js/lib/core';
 	// hljs

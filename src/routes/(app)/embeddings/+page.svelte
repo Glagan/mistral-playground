@@ -11,7 +11,7 @@
 	import { getClientForRequest } from '$lib/mistral';
 
 	if (browser && !$apiKey) {
-		goto('/');
+		goto('/', { replaceState: true });
 	}
 
 	const encoding = get_encoding('cl100k_base');

@@ -10,6 +10,22 @@ export type ChatState = {
 	options: ChatOptions;
 };
 
+export type SharedChatState = {
+	m: {
+		t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
+		c: string; // content
+	}[];
+	o: {
+		m: string; // model
+		t?: number | undefined; // temperature
+		tP?: number | undefined; // topP
+		mT?: number | undefined; // maxTokens
+		r?: number | undefined; // randomSeed
+		j?: boolean | undefined; // json
+		s?: boolean | undefined; // safePrompt
+	}
+}
+
 function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {
@@ -32,6 +48,7 @@ export function createCurrent() {
 
 	function reset() {
 		state.options = defaultOptions();
+		state.usage = undefined;
 		state.id = uuid();
 		state.messages = [];
 	}

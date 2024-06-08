@@ -18,29 +18,22 @@
 		loading,
 		isFirst,
 		isLast,
-		interactive,
-		moveUp,
-		moveDown,
-		refresh,
-		previousVersion,
-		nextVersion,
-		deleteVersion,
-		updateMessage,
-		deleteMessage
+		interact
 	}: {
 		message: Message;
 		loading: boolean;
 		isFirst: boolean;
 		isLast: boolean;
-		interactive?: boolean;
-		moveUp: (message: Message) => void;
-		moveDown: (message: Message) => void;
-		refresh: (message: Message) => void;
-		previousVersion: (message: Message) => void;
-		nextVersion: (message: Message) => void;
-		deleteVersion: (message: Message) => void;
-		updateMessage: (message: Message, content: string) => void;
-		deleteMessage: (message: Message) => void;
+		interact?: {
+			moveUp: (message: Message) => void;
+			moveDown: (message: Message) => void;
+			refresh: (message: Message) => void;
+			previousVersion: (message: Message) => void;
+			nextVersion: (message: Message) => void;
+			deleteVersion: (message: Message) => void;
+			updateMessage: (message: Message, content: string) => void;
+			deleteMessage: (message: Message) => void;
+		};
 	} = $props();
 
 	const markdown = $derived.by(() => {
@@ -80,7 +73,7 @@
 		editing = false;
 		message.type = $state.snapshot(localType);
 		message.content[message.index] = $state.snapshot(localCopy);
-		updateMessage(message, message.content[message.index]);
+		interact?.updateMessage(message, message.content[message.index]);
 		tick().then(() => hljs.highlightAll());
 	}
 
@@ -142,7 +135,7 @@
 					{@html markdown}
 				</div>
 			{/if}
-			{#if interactive}
+			{#if interact}
 				<div
 					class="flex flex-col lg:flex-row gap-2 flex-grow flex-shrink items-end lg:items-center pt-2 justify-between transition-all"
 					transition:slide={{ axis: 'y' }}
@@ -153,7 +146,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
 								disabled={loading || message.index === 0}
-								onclick={() => previousVersion(message)}
+								onclick={() => interact.previousVersion(message)}
 							>
 								<ChevronLeftIcon size={16} />
 							</button>
@@ -162,7 +155,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
 								disabled={loading || message.index >= message.content.length - 1}
-								onclick={() => nextVersion(message)}
+								onclick={() => interact.nextVersion(message)}
 							>
 								<ChevronRightIcon size={16} />
 							</button>
@@ -170,7 +163,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-warning transition-all disabled:opacity-75"
 								disabled={loading}
-								onclick={() => deleteVersion(message)}
+								onclick={() => interact.deleteVersion(message)}
 							>
 								<Trash2Icon size={16} />
 							</button>
@@ -201,7 +194,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
 								disabled={loading || isFirst}
-								onclick={() => moveUp(message)}
+								onclick={() => interact.moveUp(message)}
 							>
 								<ArrowUpIcon size={16} />
 							</button>
@@ -209,7 +202,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-secondary transition-all disabled:opacity-75"
 								disabled={loading || isLast}
-								onclick={() => moveDown(message)}
+								onclick={() => interact.moveDown(message)}
 							>
 								<ArrowDownIcon size={16} />
 							</button>
@@ -226,7 +219,7 @@
 									type="button"
 									class="btn btn-sm variant-soft-primary transition-all disabled:opacity-75"
 									disabled={loading}
-									onclick={() => refresh(message)}
+									onclick={() => interact.refresh(message)}
 								>
 									<RefreshCwIcon size={16} />
 								</button>
@@ -235,7 +228,7 @@
 								type="button"
 								class="btn btn-sm variant-soft-error transition-all disabled:opacity-75"
 								disabled={loading}
-								onclick={() => deleteMessage(message)}
+								onclick={() => interact.deleteMessage(message)}
 							>
 								<Trash2Icon size={16} />
 							</button>

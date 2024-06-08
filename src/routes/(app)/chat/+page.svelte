@@ -1,6 +1,12 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { SlideToggle, focusTrap } from '@skeletonlabs/skeleton';
+	import {
+		SlideToggle,
+		focusTrap,
+		type ModalComponent,
+		type ModalSettings,
+		getModalStore
+	} from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
 	import type { Message, Usage } from '$lib/types';
@@ -18,12 +24,14 @@
 	import { specificModelsTokenLimit } from '$lib/const';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
+	import ShareModal from '$lib/components/ShareModal.svelte';
 
 	if (browser && !$apiKey) {
-		goto('/');
+		goto('/', { replaceState: true });
 	}
 
 	const encoding = get_encoding('cl100k_base');
+	const modalStore = getModalStore();
 
 	let showOptions = $state(false);
 	let promptText = $state('');
@@ -321,6 +329,16 @@
 
 	// * < Message events
 
+	function openShare() {
+		const modalComponent: ModalComponent = { ref: ShareModal };
+		const settingsModal: ModalSettings = {
+			type: 'component',
+			backdropClasses: 'bg-gradient-to-tr from-surface-800/50 via-primary-800/50 to-secondary-800/50',
+			component: modalComponent
+		};
+		modalStore.trigger(settingsModal);
+	}
+
 	onMount(() => {
 		loadModels();
 	});
@@ -336,18 +354,19 @@
 	{#if chat.state.messages.length}
 		<Messages
 			messages={chat.state.messages}
-			interactive
+			interact={{
+				moveUp,
+				moveDown,
+				refresh,
+				previousVersion,
+				nextVersion,
+				deleteVersion,
+				updateMessage,
+				deleteMessage,
+				generate: onSubmit
+			}}
 			{loading}
 			{error}
-			{moveUp}
-			{moveDown}
-			{refresh}
-			{previousVersion}
-			{nextVersion}
-			{deleteVersion}
-			{updateMessage}
-			{deleteMessage}
-			generate={onSubmit}
 		/>
 		{#if loading}
 			<button
@@ -423,16 +442,21 @@
 				<Settings2Icon size={20} />
 				<span>Options</span>
 			</button>
-			<button
-				type="submit"
-				class="btn variant-filled-primary transition-all"
-				disabled={loading ||
-					models.loading ||
-					!!models.error ||
-					(!promptText && chat.state.messages[chat.state.messages.length - 1]?.type !== 'user')}
-			>
-				Submit
-			</button>
+			<div class="flex flex-row gap-2">
+				{#if chat.state.messages.length}
+					<button type="button" class="btn variant-ghost-secondary mx-auto" onclick={() => openShare()}>Share</button>
+				{/if}
+				<button
+					type="submit"
+					class="btn variant-filled-primary transition-all"
+					disabled={loading ||
+						models.loading ||
+						!!models.error ||
+						(!promptText && chat.state.messages[chat.state.messages.length - 1]?.type !== 'user')}
+				>
+					Submit
+				</button>
+			</div>
 		</div>
 		{#if showOptions}
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>

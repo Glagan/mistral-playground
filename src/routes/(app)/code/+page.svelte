@@ -18,7 +18,7 @@
 	import { history } from '$lib/stores/history';
 
 	if (browser && !$apiKey) {
-		goto('/');
+		goto('/', { replaceState: true });
 	}
 
 	let showOptions = $state(false);
@@ -189,11 +189,14 @@
 	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		<ModelError />
-		<div class="alert variant-ghost-tertiary" transition:slide={{ axis: 'y' }}>
+		<div
+			class="alert flex-row items-center gap-3 variant-ghost-tertiary text-sm p-2 lg:p-4"
+			transition:slide={{ axis: 'y' }}
+		>
 			<div>
 				<CircleHelpIcon size={24} />
 			</div>
-			<div class="alert-message">
+			<div class="alert-message !mt-0">
 				<p>
 					Check the Mistral documentation to find how this works, you can find it <a
 						href="https://docs.mistral.ai/capabilities/code_generation/"

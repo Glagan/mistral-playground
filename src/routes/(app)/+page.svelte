@@ -5,11 +5,10 @@
 	import { browser } from '$app/environment';
 
 	if (browser && $apiKey) {
-		goto('/chat');
+		goto('/chat', { replaceState: true });
 	}
 
 	let apiKeyInput = $state('');
-	let saveApiKey = $state(true);
 
 	function onSubmit(event: Event) {
 		event.preventDefault();
@@ -43,16 +42,6 @@
 				/>
 				<button class="btn variant-filled-primary" type="submit">Start</button>
 			</div>
-			<!-- <div>
-				<SlideToggle
-					name="saveApiKey"
-					size="sm"
-					active="bg-primary-700 dark:bg-primary-700"
-					bind:checked={saveApiKey}
-				>
-					Remember API key (Save to local storage)
-				</SlideToggle>
-			</div> -->
 		</form>
 	</div>
 </div>
