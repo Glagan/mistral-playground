@@ -1,8 +1,8 @@
 import { decompress } from '$lib/compress';
 import { parse } from 'devalue';
-import type { PageLoad } from './$types'; import type { SharedChatState } from '$lib/stores/chat.svelte';
+import type { PageServerLoad } from './$types'; import type { SharedChatState } from '$lib/stores/chat.svelte';
 
-export const load: PageLoad = async ({ params }) => {
+export const load: PageServerLoad = async ({ params }) => {
     const content = params.content;
     try {
         const parsedChat: SharedChatState = parse(await decompress(atob(content.replaceAll('-', '/'))));
