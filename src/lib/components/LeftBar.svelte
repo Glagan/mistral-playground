@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { MenuIcon } from 'lucide-svelte';
+	import MenuIcon from 'lucide-svelte/icons/menu';
 	import Navigation from './Navigation.svelte';
 	import { getDrawerStore, type DrawerSettings } from '@skeletonlabs/skeleton';
 
