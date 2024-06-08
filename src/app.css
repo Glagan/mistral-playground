@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+.grid-layout {
+	grid-template-columns: 25% 50% 25%;
+	grid-auto-rows: minmax(50pc, auto);
+}
+
 code {
 	@apply text-base overflow-x-auto px-[3px] py-[3px] font-mono rounded;
 	font-feature-settings: normal;
