@@ -42,6 +42,7 @@
   "dependencies": {
     "@felte/validator-zod": "^1.0.17",
     "@mistralai/mistralai": "^0.5.0",
+    "@sentry/browser": "^8.11.0",
     "@sveltejs/adapter-node": "^5.2.0",
     "devalue": "^5.0.0",
     "felte": "^1.2.14",
