@@ -6,7 +6,7 @@
 	import { code } from '$lib/stores/code.svelte';
 	import { page } from '$app/stores';
 	import BotIcon from 'lucide-svelte/icons/bot';
-	import CandlestickChartIcon from 'lucide-svelte/icons/candlestick-chart';
+	import ChartCandlestickIcon from 'lucide-svelte/icons/chart-candlestick';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import LogOutIcon from 'lucide-svelte/icons/log-out';
 	import PackagePlusIcon from 'lucide-svelte/icons/package-plus';
@@ -156,7 +156,7 @@
 			: ' '} hover:variant-soft-primary"
 		onclick={() => drawerStore.close()}
 	>
-		<CandlestickChartIcon class="flex-shrink-0" />
+		<ChartCandlestickIcon class="flex-shrink-0" />
 		<span class="truncate">Embeddings</span>
 	</a>
 	<div class="flex-grow"></div>
