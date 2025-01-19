@@ -1,11 +1,4 @@
 <script lang="ts">
-	import * as Sentry from '@sentry/browser';
-
-	Sentry.init({
-		dsn: 'https://b9592c3c96694923aab56e89bd0a99f2@glitchtip.nikurasu.org/2',
-		tracesSampleRate: 0.01
-	});
-
 	import { apiKey } from '$lib/stores/apiKey';
 	import { Drawer, initializeStores, Modal, getDrawerStore } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
