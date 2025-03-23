@@ -97,13 +97,10 @@
 		const startedAt = performance.now();
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
-			const chatStreamResponse = client.chatStream(
+			const chatStreamResponse = await client.chat.stream(
 				{
 					model: chat.state.options.model ? chat.state.options.model : 'open-mixtral-8x22b',
-					messages: messages.map((message) => ({
-						role: message.type,
-						content: message.content[message.index]
-					})),
+					messages: messages.map((message) => ({ role: message.type, content: message.content[message.index] })),
 					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
 					randomSeed: typeof chat.state.options.randomSeed === 'number' ? chat.state.options.randomSeed : undefined,
 					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
@@ -111,20 +108,19 @@
 					temperature: chat.state.options.temperature,
 					topP: chat.state.options.topP
 				},
-				{ signal: abortController.signal }
+				{ fetchOptions: { signal: abortController.signal } }
 			);
 			for await (const message of chatStreamResponse) {
 				// console.log(message);
-				if (message.choices[0].delta.content !== undefined) {
-					const text = message.choices[0].delta.content;
+				const data = message.data;
+				if (data.choices[0].delta.content !== undefined) {
+					const text = data.choices[0].delta.content;
 					answer.content[answer.index] += text ?? '';
 				}
-				if (message.usage) {
+				if (data.usage) {
 					const completionTime = performance.now() - startedAt;
-					chat.state.usage = message.usage;
-					chat.state.usage.tps = Math.round(
-						Number((message.usage as Usage).completion_tokens / (completionTime / 1000))
-					);
+					chat.state.usage = data.usage;
+					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
 				}
 				if (outputNode) {
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -152,10 +148,7 @@
 				if (responseBody) {
 					try {
 						const body = JSON.parse(responseBody[2].trim());
-						error = {
-							text: `Failed to generate: ${responseBody[1].trim()}`,
-							body
-						};
+						error = { text: `Failed to generate: ${responseBody[1].trim()}`, body };
 					} catch (jsonError) {
 						error = { text: `Failed to generate: ${_error.message}` };
 					}
@@ -173,23 +166,13 @@
 		event.preventDefault();
 		error = null;
 		if (systemPrompt) {
-			chat.state.messages.push({
-				id: uuid(),
-				type: 'system',
-				index: 0,
-				content: [systemPrompt]
-			});
+			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
 		}
 		if (promptText.length) {
-			chat.state.messages.push({
-				id: uuid(),
-				type: 'user',
-				index: 0,
-				content: [promptText]
-			});
+			chat.state.messages.push({ id: uuid(), type: 'user', index: 0, content: [promptText] });
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
@@ -199,12 +182,7 @@
 		// Take the messages up to here for the next generation
 		const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages));
 
-		const answer: Message = $state({
-			id: uuid(),
-			type: 'assistant',
-			index: 0,
-			content: ['']
-		});
+		const answer: Message = $state({ id: uuid(), type: 'assistant', index: 0, content: [''] });
 		chat.state.messages.push(answer);
 		if (outputNode) {
 			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -216,12 +194,7 @@
 	async function addSystemPrompt(event: Event) {
 		event.preventDefault();
 		if (systemPrompt) {
-			chat.state.messages.push({
-				id: uuid(),
-				type: 'system',
-				index: 0,
-				content: [systemPrompt]
-			});
+			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
 			systemPrompt = '';
 			showOptions = false;
 		}
@@ -399,9 +372,9 @@
 					<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
 						<span class="badge variant-soft-secondary">Tokens</span>
 						<div>
-							Prompt: <span class="text-primary-400">{chat.state.usage.prompt_tokens}</span> / Completion:
-							<span class="text-primary-400">{chat.state.usage.completion_tokens}</span>
-							/ Total: <span class="text-primary-400">{chat.state.usage.total_tokens}</span>
+							Prompt: <span class="text-primary-400">{chat.state.usage.promptTokens}</span> / Completion:
+							<span class="text-primary-400">{chat.state.usage.completionTokens}</span>
+							/ Total: <span class="text-primary-400">{chat.state.usage.totalTokens}</span>
 						</div>
 						{#if chat.state.usage.tps}
 							<div>
@@ -463,7 +436,7 @@
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={chat.state.options.model} class="select flex-grow-0" disabled={models.loading}>
-							{#each models.list as item}
+							{#each models.chat as item}
 								<option value={item.id}>{item.id}</option>
 							{/each}
 						</select>
