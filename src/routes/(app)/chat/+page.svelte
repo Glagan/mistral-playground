@@ -367,26 +367,36 @@
 		{/if}
 		<ModelError />
 		<label class="label">
-			<div class="flex justify-between items-center">
-				{#if chat.state.usage}
-					<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
-						<span class="badge variant-soft-secondary">Tokens</span>
-						<div>
-							Prompt: <span class="text-primary-400">{chat.state.usage.promptTokens}</span> / Completion:
-							<span class="text-primary-400">{chat.state.usage.completionTokens}</span>
-							/ Total: <span class="text-primary-400">{chat.state.usage.totalTokens}</span>
+			<div class="flex justify-between items-center gap-2">
+				<div class="flex items-center gap-2">
+					{#if chat.state.options.model}
+						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
+							<span class="badge variant-soft-secondary">Model</span>
+							<div>{chat.state.options.model}</div>
 						</div>
-						{#if chat.state.usage.tps}
-							<div>
-								<span class="text-primary-400">(</span>{chat.state.usage.tps}
-								<span class="text-primary-400">tk/s</span><span class="text-primary-400">)</span>
-							</div>
-						{/if}
+					{:else}
 						<span></span>
-					</div>
-				{:else}
-					<span></span>
-				{/if}
+					{/if}
+					{#if chat.state.usage}
+						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
+							<span class="badge variant-soft-secondary">Tokens</span>
+							<div>
+								Prompt: <span class="text-primary-400">{chat.state.usage.promptTokens}</span> / Completion:
+								<span class="text-primary-400">{chat.state.usage.completionTokens}</span>
+								/ Total: <span class="text-primary-400">{chat.state.usage.totalTokens}</span>
+							</div>
+							{#if chat.state.usage.tps}
+								<div>
+									<span class="text-primary-400">(</span>{chat.state.usage.tps}
+									<span class="text-primary-400">tk/s</span><span class="text-primary-400">)</span>
+								</div>
+							{/if}
+							<span></span>
+						</div>
+					{:else}
+						<span></span>
+					{/if}
+				</div>
 				{#if tokens > 0}
 					<span class="text-xs" transition:fade>
 						~<span class="text-surface-300">{tokens}</span> tokens
