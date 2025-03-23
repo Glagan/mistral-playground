@@ -3,25 +3,16 @@
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { chat } from '$lib/stores/chat.svelte';
-	import {
-		defaultCodeModel,
-		defaultModel,
-		defaultTemperature,
-		settings,
-		settingsSchema,
-		type Settings
-	} from '$lib/stores/settings';
+	import { defaultModel, defaultTemperature, settings, settingsSchema, type Settings } from '$lib/stores/settings';
 	import { createForm } from 'felte';
 	import { validateSchema } from '@felte/validator-zod';
 	import { slide } from 'svelte/transition';
-	import { code } from '$lib/stores/code.svelte';
 
 	const modalStore = getModalStore();
 
 	const { form, errors } = createForm<Settings>({
 		initialValues: {
 			model: $settings.model ?? defaultModel,
-			codeModel: $settings.codeModel ?? defaultCodeModel,
 			temperature: $settings.temperature ?? defaultTemperature,
 			seed: $settings.seed ?? undefined,
 			endpoint: $settings.endpoint ?? undefined
@@ -30,9 +21,6 @@
 		onSubmit: async (values) => {
 			if (chat && chat.state.options.model === $settings.model) {
 				chat.state.options.model = values.model;
-			}
-			if (code && code.state.options.model === $settings.codeModel) {
-				code.state.options.model = values.codeModel;
 			}
 			const reloadModels = values.endpoint !== $settings.endpoint;
 			settings.set(values);
@@ -52,7 +40,7 @@
 			{#if $apiKey}
 				<label>
 					<div class="flex items-center justify-between">
-						<span>Default model</span>
+						<span>Default chat model</span>
 						<span>{$settings.model}</span>
 					</div>
 					<select
@@ -61,7 +49,7 @@
 						class:input-warning={$errors.model}
 						disabled={models.loading || !models.loaded}
 					>
-						{#each models.list as item}
+						{#each models.chat as item}
 							<option value={item.id}>{item.id}</option>
 						{/each}
 					</select>
@@ -74,47 +62,12 @@
 			{:else}
 				<label>
 					<div class="flex items-center justify-between">
-						<span>Default model</span>
+						<span>Default chat model</span>
 						<span>{$settings.model ?? ''}</span>
 					</div>
 					<select class="select flex-grow-0" disabled={models.loading}>
 						{#if $settings.model}
 							<option value={$settings.model}>{$settings.model}</option>
-						{/if}
-					</select>
-				</label>
-			{/if}
-			{#if $apiKey}
-				<label>
-					<div class="flex items-center justify-between">
-						<span>Default code model</span>
-						<span>{$settings.codeModel}</span>
-					</div>
-					<select
-						name="codeModel"
-						class="select flex-grow-0"
-						class:input-warning={$errors.codeModel}
-						disabled={models.loading || !models.loaded}
-					>
-						{#each models.list.filter((model) => /codestral/.test(model.id)) as item}
-							<option value={item.id}>{item.id}</option>
-						{/each}
-					</select>
-					{#if $errors.codeModel}
-						<span class="text-warning-300 block text-sm" transition:slide={{ axis: 'y' }}>
-							{$errors.codeModel}
-						</span>
-					{/if}
-				</label>
-			{:else}
-				<label>
-					<div class="flex items-center justify-between">
-						<span>Default code codeModel</span>
-						<span>{$settings.codeModel ?? ''}</span>
-					</div>
-					<select class="select flex-grow-0" disabled={models.loading}>
-						{#if $settings.codeModel}
-							<option value={$settings.codeModel}>{$settings.codeModel}</option>
 						{/if}
 					</select>
 				</label>

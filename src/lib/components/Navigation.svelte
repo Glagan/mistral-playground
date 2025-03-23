@@ -3,7 +3,6 @@
 	import { fade, slide } from 'svelte/transition';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { chat } from '$lib/stores/chat.svelte';
-	import { code } from '$lib/stores/code.svelte';
 	import { page } from '$app/stores';
 	import BotIcon from 'lucide-svelte/icons/bot';
 	import ChartCandlestickIcon from 'lucide-svelte/icons/chart-candlestick';
@@ -69,7 +68,6 @@
 			event.stopPropagation();
 		}
 		chat.reset();
-		code.reset();
 		drawerStore.close();
 	}
 </script>
@@ -104,41 +102,6 @@
 		</button>
 	{/if}
 	{#if $page.url.pathname === '/chat' && !isFromRoot}
-		<button
-			type="button"
-			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
-			transition:slide={{ axis: 'y' }}
-			onclick={openHistoryDrawer}
-		>
-			<GalleryHorizontalEndIcon class="flex-shrink-0" />
-			<span class="truncate">History</span>
-		</button>
-	{/if}
-	<a
-		href="/code"
-		class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/code'
-			? 'variant-soft-primary'
-			: ' '} hover:variant-soft-primary"
-		onclick={() => {
-			resetSession();
-			drawerStore.close();
-		}}
-	>
-		<BracesIcon class="flex-shrink-0" />
-		<span class="truncate">Code</span>
-	</a>
-	{#if $page.url.pathname === '/code' && code.state.response.length}
-		<button
-			type="button"
-			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
-			transition:slide={{ axis: 'y' }}
-			onclick={resetSession}
-		>
-			<PackagePlusIcon class="flex-shrink-0" />
-			<span class="truncate">New code generation</span>
-		</button>
-	{/if}
-	{#if $page.url.pathname === '/code' && !isFromRoot}
 		<button
 			type="button"
 			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
