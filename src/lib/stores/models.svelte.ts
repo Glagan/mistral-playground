@@ -10,8 +10,30 @@ export const models: {
 	error: { title: string; message: string } | null;
 	list: (BaseModelCard | FTModelCard)[];
 	chat: (BaseModelCard | FTModelCard)[];
+	chatGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
 	ocr: (BaseModelCard | FTModelCard)[];
+	ocrGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
 } = $state({ loading: false, loaded: false, error: null, list: [], chat: [], ocr: [] });
+
+function groupModels(models: (BaseModelCard | FTModelCard)[]): Record<string, (BaseModelCard | FTModelCard)[]> {
+	const groups: Record<string, (BaseModelCard | FTModelCard)[]> = {};
+	for (let index = 0; index < models.length; index++) {
+		const model = models[index];
+		const modelName = model.id.match(/^(.+?)-(latest|[\dxb]+(?:-rc\d+)?)$/)?.[1];
+		if (!modelName) {
+			if (!groups[model.id]) {
+				groups[model.id] = [];
+			}
+			groups[model.id].push(model);
+		} else {
+			if (!groups[modelName]) {
+				groups[modelName] = [];
+			}
+			groups[modelName].push(model);
+		}
+	}
+	return groups;
+}
 
 export async function loadModels() {
 	try {
@@ -20,7 +42,9 @@ export async function loadModels() {
 		const response = await client.models.list();
 		models.list = response.data?.filter((model) => model.id !== 'mistral-embed') ?? [];
 		models.chat = models.list.filter((model) => model.capabilities.completionChat && !model.id.includes('ocr'));
+		models.chatGroups = groupModels(models.chat);
 		models.ocr = models.list.filter((model) => model.id.includes('ocr'));
+		models.ocrGroups = groupModels(models.ocr);
 		models.loaded = true;
 		models.error = null;
 	} catch (_error) {

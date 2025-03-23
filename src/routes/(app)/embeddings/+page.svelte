@@ -111,7 +111,7 @@
 		{#if showOptions}
 			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
 				<select bind:value={model} class="select flex-grow-0">
-					<option value="mistral-embed">Mistral Embed</option>
+					<option value="mistral-embed">mistral-embed</option>
 				</select>
 			</div>
 		{/if}

@@ -49,8 +49,12 @@
 						class:input-warning={$errors.model}
 						disabled={models.loading || !models.loaded}
 					>
-						{#each models.chat as item}
-							<option value={item.id}>{item.id}</option>
+						{#each Object.entries(models.chatGroups) as [groupName, items]}
+							<optgroup label={groupName}>
+								{#each items as item}
+									<option value={item.id}>{item.id}</option>
+								{/each}
+							</optgroup>
 						{/each}
 					</select>
 					{#if $errors.model}

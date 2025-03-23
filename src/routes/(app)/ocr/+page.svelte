@@ -230,8 +230,12 @@
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={ocr.state.options.model} class="select flex-grow-0" disabled={models.loading}>
-							{#each models.ocr as item}
-								<option value={item.id}>{item.id}</option>
+							{#each Object.entries(models.ocrGroups) as [groupName, items]}
+								<optgroup label={groupName}>
+									{#each items as item}
+										<option value={item.id}>{item.id}</option>
+									{/each}
+								</optgroup>
 							{/each}
 						</select>
 					</div>

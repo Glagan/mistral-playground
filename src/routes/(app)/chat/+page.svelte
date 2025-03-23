@@ -447,8 +447,12 @@
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={chat.state.options.model} class="select flex-grow-0" disabled={models.loading}>
-							{#each models.chat as item}
-								<option value={item.id}>{item.id}</option>
+							{#each Object.entries(models.chatGroups) as [groupName, items]}
+								<optgroup label={groupName}>
+									{#each items as item}
+										<option value={item.id}>{item.id}</option>
+									{/each}
+								</optgroup>
 							{/each}
 						</select>
 						<a href="https://docs.mistral.ai/guides/model-selection/" target="_blank" rel="noreferrer noopener">
