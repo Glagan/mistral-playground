@@ -14,6 +14,7 @@
 	import SquareArrowOutUpRightIcon from 'lucide-svelte/icons/square-arrow-out-up-right';
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
 	import ScanSearchIcon from 'lucide-svelte/icons/scan-search';
+	import BadgeInfoIcon from 'lucide-svelte/icons/badge-info';
 	import {
 		getDrawerStore,
 		getModalStore,
@@ -184,6 +185,10 @@
 		<GithubIcon class="flex-shrink-0" />
 		<span class="truncate">Github</span>
 		<SquareArrowOutUpRightIcon size={16} />
+	</a>
+	<a href="/about" class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary">
+		<BadgeInfoIcon class="flex-shrink-0" />
+		<span class="truncate">About</span>
 	</a>
 	{#if !/\/share/.test($page.url.pathname)}
 		<button

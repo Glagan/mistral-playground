@@ -8,7 +8,6 @@
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
-	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
