@@ -20,7 +20,6 @@ bun run dev --open
 - Customizable API endpoint to use your own
 - History of your previous prompts
 - Create Embeddings
-- Create Code completion
 - Can be used offline with a local endpoint
 - Share generated chats
 

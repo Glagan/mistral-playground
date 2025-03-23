@@ -3,8 +3,8 @@
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import { history } from '$lib/stores/history';
+	import { ocr, type OCRState } from '$lib/stores/ocr.svelte';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
-	import { code, type CodeState } from '$lib/stores/code.svelte';
 	import { tick } from 'svelte';
 	import hljs from 'highlight.js/lib/core';
 
@@ -12,11 +12,11 @@
 
 	const drawerStore = getDrawerStore();
 
-	function loadHistoryCodeEntry(entry: CodeState) {
+	function loadHistoryOCREntry(entry: OCRState) {
 		drawerStore.close();
-		code.setFromEntry(entry);
+		ocr.setFromEntry(entry);
 		tick().then(() => {
-			const outputNode = document.getElementById('messages-container')!;
+			const outputNode = document.getElementById('pages-container')!;
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
@@ -24,10 +24,10 @@
 		});
 	}
 
-	function deleteHistoryCodeEntry(entry: CodeState) {
-		$history.code = $history.code.filter((e) => e.id !== entry.id);
-		if (code.state.id === entry.id) {
-			code.reset();
+	function deleteHistoryOCREntry(entry: OCRState) {
+		$history.ocr = $history.ocr.filter((e) => e.id !== entry.id);
+		if (ocr.state.id === entry.id) {
+			ocr.reset();
 		}
 	}
 </script>
@@ -41,28 +41,24 @@
 		<span>History</span>
 	</h2>
 	<div class="flex flex-col gap-2">
-		{#each $history.code as entry (entry.id)}
+		{#each $history.ocr as entry (entry.id)}
 			<div
 				class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
-				code.state.id
+				ocr.state.id
 					? 'border-primary-700 bg-primary-700/20 px-2'
 					: 'border-transparent lg:px-2'}"
 				transition:slide={{ axis: 'y' }}
 			>
-				{#if entry.prompt.length}
-					<div class="flex-grow flex-shrink truncate">
-						{entry.prompt}
-					</div>
-				{:else}
-					<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
-				{/if}
+				<div class="flex-grow flex-shrink truncate">
+					{entry.filename}
+				</div>
 				<div class="flex flex-row gap-2 items-end justify-end">
-					{#if entry.id !== code.state.id}
-						<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryCodeEntry(entry)}>
+					{#if entry.id !== ocr.state.id}
+						<button class="flex-shrink-0 btn variant-ringed-secondary" onclick={() => loadHistoryOCREntry(entry)}>
 							Load
 						</button>
 					{/if}
-					<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryCodeEntry(entry)}>
+					<button class="flex-shrink-0 btn variant-ringed-error" onclick={() => deleteHistoryOCREntry(entry)}>
 						<Trash2Icon />
 					</button>
 				</div>

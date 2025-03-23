@@ -1,8 +1,8 @@
 <script lang="ts">
 	import { page } from '$app/stores';
 	import ChatHistoryList from '$lib/components/ChatHistoryList.svelte';
-	import CodeHistoryList from '$lib/components/CodeHistoryList.svelte';
 	import LeftBar from '$lib/components/LeftBar.svelte';
+	import OcrHistoryList from '$lib/components/OCRHistoryList.svelte';
 	import { apiKey } from '$lib/stores/apiKey';
 
 	const { children } = $props();
@@ -19,8 +19,8 @@
 >
 	{#if $page.url.pathname === '/chat' && $apiKey}
 		<ChatHistoryList mobile={false} />
-	{:else if $page.url.pathname === '/code' && $apiKey}
-		<CodeHistoryList mobile={false} />
+	{:else if $page.url.pathname === '/ocr' && $apiKey}
+		<OcrHistoryList mobile={false} />
 	{/if}
 </div>
 
