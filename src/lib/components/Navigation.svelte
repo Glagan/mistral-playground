@@ -13,7 +13,7 @@
 	import GithubIcon from 'lucide-svelte/icons/github';
 	import SquareArrowOutUpRightIcon from 'lucide-svelte/icons/square-arrow-out-up-right';
 	import CoffeeIcon from 'lucide-svelte/icons/coffee';
-	import BracesIcon from 'lucide-svelte/icons/braces';
+	import ScanSearchIcon from 'lucide-svelte/icons/scan-search';
 	import {
 		getDrawerStore,
 		getModalStore,
@@ -24,6 +24,7 @@
 	import { models } from '$lib/stores/models.svelte';
 	import { goto } from '$app/navigation';
 	import SettingsModal from './SettingsModal.svelte';
+	import { ocr } from '$lib/stores/ocr.svelte';
 
 	const { isFromRoot }: { isFromRoot: boolean } = $props();
 
@@ -68,6 +69,7 @@
 			event.stopPropagation();
 		}
 		chat.reset();
+		ocr.reset();
 		drawerStore.close();
 	}
 </script>
@@ -102,6 +104,38 @@
 		</button>
 	{/if}
 	{#if $page.url.pathname === '/chat' && !isFromRoot}
+		<button
+			type="button"
+			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+			transition:slide={{ axis: 'y' }}
+			onclick={openHistoryDrawer}
+		>
+			<GalleryHorizontalEndIcon class="flex-shrink-0" />
+			<span class="truncate">History</span>
+		</button>
+	{/if}
+	<a
+		href="/ocr"
+		class="btn transition-all justify-start font-bold text-lg {$page.url.pathname === '/ocr'
+			? 'variant-soft-primary'
+			: ' '} hover:variant-soft-primary"
+		onclick={() => drawerStore.close()}
+	>
+		<ScanSearchIcon class="flex-shrink-0" />
+		<span class="truncate">OCR</span>
+	</a>
+	{#if $page.url.pathname === '/ocr' && ocr.state.pages.length}
+		<button
+			type="button"
+			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"
+			transition:slide={{ axis: 'y' }}
+			onclick={resetSession}
+		>
+			<PackagePlusIcon class="flex-shrink-0" />
+			<span class="truncate">New Document</span>
+		</button>
+	{/if}
+	{#if $page.url.pathname === '/ocr' && !isFromRoot}
 		<button
 			type="button"
 			class="btn transition-all justify-start font-bold text-lg ml-8 hover:variant-soft-primary"

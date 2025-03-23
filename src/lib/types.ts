@@ -12,11 +12,18 @@ export type ChatOptions = {
 	randomSeed: undefined | number;
 };
 
-export type CodeOptions = {
-	model: string;
-	temperature: number;
-	topP: number;
-	minTokens: undefined | number;
-	maxTokens: undefined | number;
-	randomSeed: undefined | number;
+export type Page = {
+	index: number;
+	markdown: string;
+	images: {
+		id: string;
+		top_left_x: number;
+		top_left_y: number;
+		bottom_right_x: number;
+		bottom_right_y: number;
+		image_base64: string;
+	}[];
+	dimensions: { dpi: number; height: number; width: number };
 };
+
+export type OCROptions = { model: string };

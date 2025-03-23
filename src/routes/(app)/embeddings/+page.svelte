@@ -41,7 +41,6 @@
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
 			const body = await client.embeddings.create({ model, inputs: [promptText] });
-			console.log(body);
 			embeddings = body.data[0].embedding ?? [];
 		} catch (_error) {
 			console.error(_error);

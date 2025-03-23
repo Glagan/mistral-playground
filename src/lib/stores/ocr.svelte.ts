@@ -1,0 +1,56 @@
+import type { OCROptions } from '../types';
+import { v4 as uuid } from 'uuid';
+import type { OCRPageObject, OCRUsageInfo } from '@mistralai/mistralai/models/components';
+
+export type OCRState = {
+	id: string;
+	filename: string;
+	pages: OCRPageObject[];
+	usage?: OCRUsageInfo;
+	options: OCROptions;
+};
+
+export type SharedOCRState = {
+	m: {
+		t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
+		c: string; // content
+	}[];
+	o: {
+		m: string; // model
+		t?: number | undefined; // temperature
+		tP?: number | undefined; // topP
+		mT?: number | undefined; // maxTokens
+		r?: number | undefined; // randomSeed
+		j?: boolean | undefined; // json
+		s?: boolean | undefined; // safePrompt
+	};
+};
+
+function defaultOptions(): OCROptions {
+	// return { model: get(settings).model ?? 'mistral-ocr-latest' };
+	return { model: 'mistral-ocr-latest' };
+}
+
+export function createCurrent() {
+	const state: OCRState = $state({ id: uuid(), filename: '', pages: [], options: defaultOptions() });
+
+	function reset() {
+		state.id = uuid();
+		state.filename = '';
+		state.usage = undefined;
+		state.pages = [];
+		state.options = defaultOptions();
+	}
+
+	function setFromEntry(entry: OCRState) {
+		state.id = entry.id;
+		state.filename = entry.filename;
+		state.options = entry.options;
+		state.usage = entry.usage;
+		state.pages = entry.pages;
+	}
+
+	return { state, defaultOptions, setFromEntry, reset };
+}
+
+export const ocr = createCurrent();

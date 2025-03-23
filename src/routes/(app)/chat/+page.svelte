@@ -21,10 +21,10 @@
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import { loadModels, models } from '$lib/stores/models.svelte';
-	import { specificModelsTokenLimit } from '$lib/const';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import ShareModal from '$lib/components/ShareModal.svelte';
+	import { defaultChatModel } from '$lib/const';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -65,9 +65,10 @@
 	const tokens = $derived(encoding.encode(promptText).length);
 	let systemPrompt = $state('');
 	const systemPromptTokens = $derived(encoding.encode(systemPrompt).length);
-	const stateIsValid = $derived(
-		tokens <= (specificModelsTokenLimit[chat.state.options.model] ?? 32000) && messageOrderIsValid(chat.state.messages)
+	const maxTokens = $derived(
+		models.chat.find((model) => model.id === chat.state.options.model)?.maxContextLength ?? 32000
 	);
+	const stateIsValid = $derived(tokens <= maxTokens && messageOrderIsValid(chat.state.messages));
 
 	function removeFromHistory() {
 		$history.chat = $history.chat.filter((e) => e.id !== chat.state.id);
@@ -99,7 +100,7 @@
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
 			const chatStreamResponse = await client.chat.stream(
 				{
-					model: chat.state.options.model ? chat.state.options.model : 'open-mixtral-8x22b',
+					model: chat.state.options.model ? chat.state.options.model : defaultChatModel,
 					messages: messages.map((message) => ({ role: message.type, content: message.content[message.index] })),
 					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
 					randomSeed: typeof chat.state.options.randomSeed === 'number' ? chat.state.options.randomSeed : undefined,
@@ -498,7 +499,7 @@
 						name="maxTokens"
 						id="maxTokens"
 						min="1"
-						max={specificModelsTokenLimit[chat.state.options.model] ?? 32000}
+						max={models.chat.find((model) => model.id === chat.state.options.model)?.maxContextLength ?? 32000}
 						placeholder="Max tokens"
 					/>
 					<input

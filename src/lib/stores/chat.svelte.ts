@@ -3,12 +3,7 @@ import type { Message, ChatOptions, Usage } from '../types';
 import { settings } from './settings';
 import { v4 as uuid } from 'uuid';
 
-export type ChatState = {
-	id: string;
-	messages: Message[];
-	usage?: Usage;
-	options: ChatOptions;
-};
+export type ChatState = { id: string; messages: Message[]; usage?: Usage; options: ChatOptions };
 
 export type SharedChatState = {
 	m: {
@@ -23,13 +18,13 @@ export type SharedChatState = {
 		r?: number | undefined; // randomSeed
 		j?: boolean | undefined; // json
 		s?: boolean | undefined; // safePrompt
-	}
-}
+	};
+};
 
 function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {
-		model: get(settings).model ?? 'open-mixtral-8x22b',
+		model: get(settings).model ?? 'mistral-small-latest',
 		temperature: get(settings).temperature,
 		topP: 1,
 		maxTokens: undefined,
@@ -40,11 +35,7 @@ function defaultOptions(): ChatOptions {
 }
 
 export function createCurrent() {
-	const state: ChatState = $state({
-		id: uuid(),
-		messages: [],
-		options: defaultOptions()
-	});
+	const state: ChatState = $state({ id: uuid(), messages: [], options: defaultOptions() });
 
 	function reset() {
 		state.options = defaultOptions();
@@ -60,12 +51,7 @@ export function createCurrent() {
 		state.messages = entry.messages;
 	}
 
-	return {
-		state,
-		defaultOptions,
-		setFromEntry,
-		reset
-	};
+	return { state, defaultOptions, setFromEntry, reset };
 }
 
 export const chat = createCurrent();

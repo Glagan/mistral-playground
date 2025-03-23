@@ -33,6 +33,7 @@
 	import 'highlight.js/styles/github-dark.css';
 	import Navigation from '$lib/components/Navigation.svelte';
 	import ChatHistoryList from '$lib/components/ChatHistoryList.svelte';
+	import OCRHistoryList from '$lib/components/OCRHistoryList.svelte';
 
 	initializeStores();
 	const drawerStore = getDrawerStore();
@@ -52,6 +53,10 @@
 		{#if $page.url.pathname === '/chat' && $apiKey}
 			<div class="p-2">
 				<ChatHistoryList mobile={true} />
+			</div>
+		{:else if $page.url.pathname === '/ocr' && $apiKey}
+			<div class="p-2">
+				<OCRHistoryList mobile={true} />
 			</div>
 		{/if}
 	{/if}

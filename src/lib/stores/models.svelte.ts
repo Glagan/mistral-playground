@@ -10,7 +10,8 @@ export const models: {
 	error: { title: string; message: string } | null;
 	list: (BaseModelCard | FTModelCard)[];
 	chat: (BaseModelCard | FTModelCard)[];
-} = $state({ loading: false, loaded: false, error: null, list: [], chat: [] });
+	ocr: (BaseModelCard | FTModelCard)[];
+} = $state({ loading: false, loaded: false, error: null, list: [], chat: [], ocr: [] });
 
 export async function loadModels() {
 	try {
@@ -18,7 +19,8 @@ export async function loadModels() {
 		const client = getClientForRequest({ apiKey: get(apiKey), endpoint: get(settings).endpoint });
 		const response = await client.models.list();
 		models.list = response.data?.filter((model) => model.id !== 'mistral-embed') ?? [];
-		models.chat = models.list.filter((model) => model.capabilities.completionChat);
+		models.chat = models.list.filter((model) => model.capabilities.completionChat && !model.id.includes('ocr'));
+		models.ocr = models.list.filter((model) => model.id.includes('ocr'));
 		models.loaded = true;
 		models.error = null;
 	} catch (_error) {

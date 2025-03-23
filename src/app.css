@@ -15,11 +15,62 @@ code {
 	background: #0d1117;
 }
 
+.rendered-markdown pre code {
+	@apply block w-full;
+}
+
+.rendered-markdown img {
+	@apply m-auto shadow shadow-neutral-600;
+}
+
 .rendered-markdown ul {
 	list-style: disc;
 	margin-left: 1rem;
 }
+
 .rendered-markdown ol {
 	list-style: decimal;
 	margin-left: 1rem;
 }
+
+.rendered-markdown table {
+	@apply w-full border border-primary-300 rounded border-collapse;
+
+	thead > tr {
+		@apply bg-primary-900;
+
+		th {
+			@apply p-2 text-left border-y border-primary-300;
+		}
+	}
+
+	tbody > tr:nth-child(2n+1),
+	& > tr:nth-child(2n+1) {
+		@apply bg-primary-900/50;
+
+		td {
+			@apply p-2 py-4;
+		}
+	}
+}
+
+.rendered-markdown h1 {
+	@apply text-3xl;
+}
+
+.rendered-markdown h2 {
+	@apply text-2xl;
+}
+
+.rendered-markdown h3 {
+	@apply text-xl;
+}
+
+.rendered-markdown h4 {
+	@apply text-lg;
+}
+
+.rendered-markdown a {
+	@apply text-primary-600 underline;
+}
+

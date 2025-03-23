@@ -47,6 +47,8 @@
 		"highlight.js": "^11.11.1",
 		"lucide-svelte": "^0.483.0",
 		"marked": "^15.0.7",
+		"marked-katex-extension": "^5.1.4",
+		"pretty-bytes": "^6.1.1",
 		"tiktoken": "^1.0.20",
 		"ufo": "^1.5.4",
 		"uuid": "^11.1.0",
