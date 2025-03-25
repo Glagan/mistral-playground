@@ -9,10 +9,10 @@
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
+	import FileTextIcon from 'lucide-svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import { FileTextIcon } from 'lucide-svelte';
 	import { defaultChatModel } from '$lib/const';
 	import PdfPages from '$lib/components/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
@@ -69,7 +69,9 @@
 			const ocrResponse = await client.ocr.process(
 				{
 					model: ocr.state.options.model ? ocr.state.options.model : defaultChatModel,
-					document: { documentUrl: b64File, type: 'document_url' },
+					document: file.type.includes('image')
+						? { imageUrl: b64File, type: 'image_url' }
+						: { documentUrl: b64File, type: 'document_url' },
 					includeImageBase64: true
 				},
 				{ fetchOptions: { signal: abortController.signal } }
@@ -168,7 +170,7 @@
 				</div>
 			</div>
 			{#if !files?.length}
-				<FileDropzone bind:files name="files" accept="application/pdf">
+				<FileDropzone bind:files name="files" accept="application/pdf,image/jpeg,image/jpg,image/png,image/webp">
 					<svelte:fragment slot="lead">
 						<FileTextIcon class="mx-auto" size="32" />
 					</svelte:fragment>
@@ -176,7 +178,7 @@
 						<span class="label-text"><strong>Upload a file</strong> or drag and drop</span>
 					</svelte:fragment>
 					<svelte:fragment slot="meta">
-						<span>PDF allowed.</span>
+						<span>PDF and images allowed.</span>
 					</svelte:fragment>
 				</FileDropzone>
 			{:else}
