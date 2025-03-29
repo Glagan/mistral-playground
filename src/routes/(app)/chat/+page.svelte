@@ -9,7 +9,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Message, Usage } from '$lib/types';
+	import type { Usage, Message } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { history } from '$lib/stores/history';
@@ -20,11 +20,15 @@
 	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
+	import FileTextIcon from 'lucide-svelte/icons/file-text';
+	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import ShareModal from '$lib/components/ShareModal.svelte';
 	import { defaultChatModel } from '$lib/const';
+	import prettyBytes from 'pretty-bytes';
+	import { fileToB64 } from '$lib/files';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -35,6 +39,9 @@
 
 	let showOptions = $state(false);
 	let promptText = $state('');
+	let isDragging = $state(false);
+	let dragCounter = $state(0);
+	let files = $state<File[]>([]);
 
 	let error: { text: string; body?: object } | null = $state(null);
 
@@ -56,7 +63,7 @@
 		}
 		return messages.every((message, index) => {
 			if (index === 0) {
-				return message.type === 'user' || message.type === 'system';
+				return message.versions[message.index].role === 'user' || message.versions[message.index].role === 'system';
 			}
 			return true;
 		});
@@ -101,7 +108,7 @@
 			const chatStreamResponse = await client.chat.stream(
 				{
 					model: chat.state.options.model ? chat.state.options.model : defaultChatModel,
-					messages: messages.map((message) => ({ role: message.type, content: message.content[message.index] })),
+					messages: messages.map((message) => message.versions[message.index]),
 					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
 					randomSeed: typeof chat.state.options.randomSeed === 'number' ? chat.state.options.randomSeed : undefined,
 					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
@@ -116,7 +123,7 @@
 				const data = message.data;
 				if (data.choices[0].delta.content !== undefined) {
 					const text = data.choices[0].delta.content;
-					answer.content[answer.index] += text ?? '';
+					(answer.versions[answer.index].content as string) += text ?? '';
 				}
 				if (data.usage) {
 					const completionTime = performance.now() - startedAt;
@@ -128,8 +135,8 @@
 				}
 			}
 			if (chat.state.options.json) {
-				answer.content[answer.index] =
-					`\`\`\`json\n${JSON.stringify(JSON.parse(answer.content[answer.index]), undefined, 4)}\n\`\`\``;
+				answer.versions[answer.index].content =
+					`\`\`\`json\n${JSON.stringify(JSON.parse(answer.versions[answer.index].content as string), undefined, 4)}\n\`\`\``;
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -139,10 +146,10 @@
 			const _error = __error as Error;
 			// Ignore abort errors
 			if (_error.name !== 'AbortError') {
-				if (answer.content.length === 1) {
+				if (answer.versions.length === 1) {
 					chat.state.messages.pop();
 				} else {
-					answer.content.splice(answer.index, 1);
+					answer.versions.splice(answer.index, 1);
 					answer.index -= 1;
 				}
 				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
@@ -167,13 +174,30 @@
 		event.preventDefault();
 		error = null;
 		if (systemPrompt) {
-			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
+			chat.state.messages.push({
+				id: uuid(),
+				index: 0,
+				versions: [{ role: 'system', content: systemPrompt }]
+			});
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
 		}
 		if (promptText.length) {
-			chat.state.messages.push({ id: uuid(), type: 'user', index: 0, content: [promptText] });
+			const message: Message = { id: uuid(), index: 0, versions: [{ role: 'user', content: promptText }] };
+			chat.state.messages.push(message);
+			if (files.length) {
+				message.versions[0].content = [
+					{ type: 'text', text: promptText },
+					...(await Promise.all(
+						files.map(async (file) => ({
+							// TODO support all file types
+							type: 'image_url' as const,
+							imageUrl: await fileToB64(file)
+						}))
+					))
+				];
+			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
@@ -183,7 +207,7 @@
 		// Take the messages up to here for the next generation
 		const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages));
 
-		const answer: Message = $state({ id: uuid(), type: 'assistant', index: 0, content: [''] });
+		const answer: Message = $state({ id: uuid(), index: 0, versions: [{ role: 'assistant', content: '' }] });
 		chat.state.messages.push(answer);
 		if (outputNode) {
 			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -195,7 +219,7 @@
 	async function addSystemPrompt(event: Event) {
 		event.preventDefault();
 		if (systemPrompt) {
-			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
+			chat.state.messages.push({ id: uuid(), index: 0, versions: [{ role: 'system', content: systemPrompt }] });
 			systemPrompt = '';
 			showOptions = false;
 		}
@@ -235,8 +259,8 @@
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const message = chat.state.messages[index];
-			message.content.push('');
-			message.index = message.content.length - 1;
+			message.versions.push({ role: 'assistant', content: '' });
+			message.index = message.versions.length - 1;
 
 			// Take the messages up to the answer we need to re-generate
 			const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages.slice(0, index)));
@@ -260,7 +284,7 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			if (chat.state.messages[index].index < chat.state.messages[index].content.length - 1) {
+			if (chat.state.messages[index].index < chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index = chat.state.messages[index].index + 1;
 				updateOrInsertHistory();
 			}
@@ -271,8 +295,8 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			chat.state.messages[index].content.splice(chat.state.messages[index].index);
-			if (chat.state.messages[index].index >= chat.state.messages[index].content.length - 1) {
+			chat.state.messages[index].versions.splice(chat.state.messages[index].index);
+			if (chat.state.messages[index].index >= chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index -= 1;
 			}
 			updateOrInsertHistory();
@@ -283,7 +307,7 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			chat.state.messages[index].content[message.index] = content;
+			chat.state.messages[index].versions[chat.state.messages[index].index].content = content;
 			updateOrInsertHistory();
 		}
 	}
@@ -315,6 +339,64 @@
 
 	onMount(() => {
 		loadModels();
+
+		// Add file drag and drop event listeners
+		const handleDragEnter = (e: DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			if (e.dataTransfer?.types.includes('Files')) {
+				dragCounter++;
+				isDragging = true;
+			}
+		};
+
+		const handleDragLeave = (e: DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+			dragCounter--;
+			if (dragCounter === 0) {
+				isDragging = false;
+			}
+		};
+
+		const handleDragOver = (e: DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+		};
+
+		const handleDrop = (e: DragEvent) => {
+			e.preventDefault();
+			e.stopPropagation();
+
+			dragCounter = 0;
+			isDragging = false;
+
+			if (e.dataTransfer?.files) {
+				// TODO alert to tell users if the uploaded file is not supported ?
+				files.push(...Array.from(e.dataTransfer.files).filter((file) => file.type.includes('image')));
+
+				// If files are uploaded, we need to filter models to only allow models with vision
+				if (files.length > 0) {
+					const currentModel = models.chat.find((m) => m.id === chat.state.options.model);
+					if (!currentModel || !currentModel.capabilities.vision) {
+						chat.state.options.model = 'mistral-small-latest';
+					}
+				}
+			}
+		};
+
+		window.addEventListener('dragenter', handleDragEnter);
+		window.addEventListener('dragleave', handleDragLeave);
+		window.addEventListener('dragover', handleDragOver);
+		window.addEventListener('drop', handleDrop);
+
+		// Cleanup function
+		return () => {
+			window.removeEventListener('dragenter', handleDragEnter);
+			window.removeEventListener('dragleave', handleDragLeave);
+			window.removeEventListener('dragover', handleDragOver);
+			window.removeEventListener('drop', handleDrop);
+		};
 	});
 
 	onDestroy(() => {
@@ -367,12 +449,39 @@
 			</aside>
 		{/if}
 		<ModelError />
+		{#if files.length}
+			<div class="flex flex-col gap-1">
+				{#each files as file, index}
+					<div
+						class="flex flex-row gap-2 items-center dropzone textarea border border-surface-400 p-2 rounded-container-token"
+					>
+						<div class="flex-grow-0 flex-shrink-0">
+							<FileTextIcon class="mx-auto" size="32" />
+						</div>
+						<div class="flex flex-col flex-grow flex-shrink truncate">
+							<div class="flex-grow flex-shrink truncate">{file.name}</div>
+							<div class="text-sm text-surface-400">{prettyBytes(file.size)}</div>
+						</div>
+						<div>
+							<button
+								type="reset"
+								class="btn variant-ghost-error"
+								disabled={loading}
+								onclick={() => files.splice(index, 1)}
+							>
+								<Trash2Icon size={16} />
+							</button>
+						</div>
+					</div>
+				{/each}
+			</div>
+		{/if}
 		<label class="label">
 			<div class="flex justify-between items-center gap-2">
 				<div class="flex items-center gap-2">
 					{#if chat.state.options.model}
 						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
-							<span class="badge variant-soft-secondary">Model</span>
+							<span class="badge variant-soft-secondary">{files.length ? 'Vision model' : 'Chat model'}</span>
 							<div>{chat.state.options.model}</div>
 						</div>
 					{:else}
@@ -404,14 +513,31 @@
 					</span>
 				{/if}
 			</div>
-			<textarea
-				bind:value={promptText}
-				disabled={loading || !!models.error}
-				class="textarea"
-				rows="3"
-				placeholder="Type something..."
-				data-focusindex="0"
-			></textarea>
+			<div class="relative">
+				<textarea
+					bind:value={promptText}
+					disabled={loading || !!models.error}
+					class="textarea"
+					rows="3"
+					placeholder="Type something or drag and drop files..."
+					data-focusindex="0"
+				></textarea>
+				{#if isDragging}
+					<div
+						class="absolute dropzone textarea flex flex-row gap-2 items-center border-2 border-dashed !border-primary-500 p-4 py-4 rounded-container-token top-0 left-0 right-0 bottom-0"
+					>
+						<div class="flex-grow-0 flex-shrink-0">
+							<FileTextIcon class="mx-auto" size="32" />
+						</div>
+						<div class="flex flex-col gap-1 flex-grow flex-shrink">
+							<div class="flex flex-col gap-1 flex-grow flex-shrink">
+								<span class="label-text"><strong>Drop a file</strong></span>
+							</div>
+							<span>PDF and images allowed.</span>
+						</div>
+					</div>
+				{/if}
+			</div>
 		</label>
 		<div class="flex flex-row justify-between">
 			<button
@@ -436,7 +562,10 @@
 					disabled={loading ||
 						models.loading ||
 						!!models.error ||
-						(!promptText && chat.state.messages[chat.state.messages.length - 1]?.type !== 'user')}
+						(!promptText &&
+							chat.state.messages[chat.state.messages.length - 1].versions[
+								chat.state.messages[chat.state.messages.length - 1].versions.length - 1
+							].role !== 'user')}
 				>
 					Submit
 				</button>
@@ -447,7 +576,7 @@
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={chat.state.options.model} class="select flex-grow-0" disabled={models.loading}>
-							{#each Object.entries(models.chatGroups) as [groupName, items]}
+							{#each Object.entries(files.length ? models.visionGroups : models.chatGroups) as [groupName, items]}
 								<optgroup label={groupName}>
 									{#each items as item}
 										<option value={item.id}>{item.id}</option>

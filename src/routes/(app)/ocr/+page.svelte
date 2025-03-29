@@ -16,6 +16,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import PdfPages from '$lib/components/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
+	import { fileToB64 } from '$lib/files';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -55,12 +56,7 @@
 		loading = true;
 		showOptions = false;
 
-		const b64File = await new Promise<string>((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(file);
-			reader.onload = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
+		const b64File = await fileToB64(file);
 
 		abortController = new AbortController();
 		const startedAt = performance.now();
@@ -152,7 +148,7 @@
 				<div class="flex items-center gap-2 truncate">
 					{#if ocr.state.options.model}
 						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
-							<span class="badge variant-soft-secondary">Model</span>
+							<span class="badge variant-soft-secondary">OCR model</span>
 							<div>{ocr.state.options.model}</div>
 						</div>
 					{/if}

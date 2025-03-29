@@ -40,7 +40,7 @@
 			/>
 		{/each}
 	{/if}
-	{#if interact && messages.length && messages[messages.length - 1].type === 'user'}
+	{#if interact && messages.length && messages[messages.length - 1].versions[messages[messages.length - 1].index].role === 'user'}
 		<div class="flex flex-row flex-nowrap">
 			<div class="flex items-center justify-center flex-grow flex-shrink-0 w-full">
 				<button

@@ -37,13 +37,17 @@
 	} = $props();
 
 	const markdown = $derived.by(() => {
-		return (
-			marked.parse(message.content[message.index].trim(), { async: false, gfm: true, breaks: true }) as string
-		).trim();
+		const content = message.versions[message.index].content;
+		if (typeof content === 'string') {
+			return (marked.parse(content.trim(), { async: false, gfm: true, breaks: true }) as string).trim();
+		} else if (content && content[0].type === 'text') {
+			return (marked.parse(content[0].text.trim(), { async: false, gfm: true, breaks: true }) as string).trim();
+		}
+		return '';
 	});
 
 	$effect(() => {
-		message.content[message.index];
+		message.versions[message.index];
 		hljs.highlightAll();
 	});
 

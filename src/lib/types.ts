@@ -1,6 +1,13 @@
+import type { AssistantMessage, SystemMessage, UserMessage } from '@mistralai/mistralai/models/components';
+
 export type Usage = { promptTokens: number; completionTokens: number; totalTokens: number; tps?: number };
 
-export type Message = { type: 'user' | 'assistant' | 'system'; id: string; index: number; content: string[] };
+export type MistralMessage =
+	| (SystemMessage & { role: 'system' })
+	| (UserMessage & { role: 'user' })
+	| (AssistantMessage & { role: 'assistant' });
+
+export type Message = { id: string; versions: MistralMessage[]; index: number };
 
 export type ChatOptions = {
 	model: string;
