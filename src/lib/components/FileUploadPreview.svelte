@@ -48,19 +48,23 @@
 			<FileTextIcon class="mx-auto" size="32" />
 		</div>
 	{/if}
-	<div class="flex flex-col flex-grow flex-shrink truncate">
-		<div class="flex-grow flex-shrink truncate">{file.name}</div>
-		<div class="text-sm text-surface-400">{prettyBytes(file.size)}</div>
-	</div>
-	{#if isImage}
-		<button type="button" class="btn btn-sm variant-ghost-primary" disabled={loading} onclick={openExpandedView}>
-			<span>Expand</span>
-			<ExpandIcon size={16} />
-		</button>
-	{/if}
-	<div>
-		<button type="button" class="btn variant-ghost-error" disabled={loading} onclick={remove}>
-			<Trash2Icon size={16} />
-		</button>
+	<div class="flex flex-col lg:flex-row flex-grow flex-shrink gap-2">
+		<div class="flex flex-col flex-grow flex-shrink truncate">
+			<div class="flex-grow flex-shrink truncate">{file.name}</div>
+			<div class="text-sm text-surface-400">{prettyBytes(file.size)}</div>
+		</div>
+		<div class="flex flex-row items-center gap-2 flex-grow-0 flex-shrink-0">
+			{#if isImage}
+				<button type="button" class="btn btn-sm variant-ghost-primary" disabled={loading} onclick={openExpandedView}>
+					<span>Expand</span>
+					<ExpandIcon size={16} />
+				</button>
+			{/if}
+			<div>
+				<button type="button" class="btn variant-ghost-error" disabled={loading} onclick={remove}>
+					<Trash2Icon size={16} />
+				</button>
+			</div>
+		</div>
 	</div>
 </div>

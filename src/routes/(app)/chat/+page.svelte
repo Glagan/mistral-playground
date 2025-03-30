@@ -21,6 +21,7 @@
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import FileTextIcon from 'lucide-svelte/icons/file-text';
+	import ImageUpIcon from 'lucide-svelte/icons/image-up';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
@@ -613,29 +614,28 @@
 				}}
 			>
 				<Settings2Icon size={20} />
-				<span>Options</span>
+				<span class="hidden md:inline-block">Options</span>
 			</button>
-			<div>
-				<label for="fileUpload">
-					<input
-						id="fileUpload"
-						class="hidden"
-						type="file"
-						multiple
-						accept="image/png,image/jpeg,image/jpg,image/webp"
-						disabled={loading || models.loading || !!models.error}
-						onchange={onFileChange}
-					/>
-					<button
-						type="button"
-						class="btn variant-filled-secondary transition-all"
-						disabled={loading || models.loading || !!models.error}
-						onclick={() => document.getElementById('fileUpload')?.click()}
-					>
-						Upload image
-					</button>
-				</label>
-			</div>
+			<label for="fileUpload">
+				<input
+					id="fileUpload"
+					class="hidden"
+					type="file"
+					multiple
+					accept="image/png,image/jpeg,image/jpg,image/webp"
+					disabled={loading || models.loading || !!models.error}
+					onchange={onFileChange}
+				/>
+				<button
+					type="button"
+					class="btn variant-filled-secondary transition-all"
+					disabled={loading || models.loading || !!models.error}
+					onclick={() => document.getElementById('fileUpload')?.click()}
+				>
+					<ImageUpIcon size={20} class="md:hidden" />
+					<span class="hidden md:inline-block">Upload image</span>
+				</button>
+			</label>
 			<div class="flex flex-row gap-2">
 				<button
 					type="submit"
