@@ -15,7 +15,8 @@ code {
 	background: #0d1117;
 }
 
-.rendered-markdown pre code {
+.rendered-markdown pre code,
+pre.codeblock-pre > code.codeblock-code {
 	@apply block w-full;
 }
 
@@ -44,8 +45,8 @@ code {
 		}
 	}
 
-	tbody > tr:nth-child(2n+1),
-	& > tr:nth-child(2n+1) {
+	tbody > tr:nth-child(2n + 1),
+	& > tr:nth-child(2n + 1) {
 		@apply bg-primary-900/50;
 
 		td {
@@ -73,4 +74,3 @@ code {
 .rendered-markdown a {
 	@apply text-primary-600 underline;
 }
-

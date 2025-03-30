@@ -1,15 +1,42 @@
 import { get } from 'svelte/store';
-import type { Message, ChatOptions, Usage } from '../types';
+import type { ChatOptions, Usage, Message } from '../types';
 import { settings } from './settings';
 import { v4 as uuid } from 'uuid';
 
-export type ChatState = { id: string; messages: Message[]; usage?: Usage; options: ChatOptions };
+export type ChatState = {
+	id: string;
+	messages: Message[];
+	usage?: Usage;
+	options: ChatOptions;
+};
 
 export type SharedChatState = {
-	m: {
-		t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
-		c: string; // content
-	}[];
+	m: // Old schema
+	(
+		| {
+				t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
+				c: string; // content
+		  }
+		| [
+				{
+					t: 1 | 2;
+					c: (
+						| {
+								t: 1; // 1: "text
+								e: string; // text
+						  }
+						| {
+								t: 2; // 2: "image_url"
+								e: string; // image_url
+						  }
+						| {
+								// undefined: "document_url"
+								e: string; // document_url
+						  }
+					)[];
+				}
+		  ]
+	)[];
 	o: {
 		m: string; // model
 		t?: number | undefined; // temperature
@@ -38,9 +65,9 @@ export function createCurrent() {
 	const state: ChatState = $state({ id: uuid(), messages: [], options: defaultOptions() });
 
 	function reset() {
+		state.id = uuid();
 		state.options = defaultOptions();
 		state.usage = undefined;
-		state.id = uuid();
 		state.messages = [];
 	}
 

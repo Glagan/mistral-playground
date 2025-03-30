@@ -4,6 +4,7 @@
 	import { CodeBlock } from '@skeletonlabs/skeleton';
 	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
 	import { slide } from 'svelte/transition';
+	import type { MessageInteraction } from '$lib/message';
 
 	let {
 		messages,
@@ -14,25 +15,16 @@
 		messages: Message[];
 		loading: boolean;
 		error: { text: string; body?: object } | null;
-		interact?: {
-			moveUp: (message: Message) => void;
-			moveDown: (message: Message) => void;
-			refresh: (message: Message) => void;
-			previousVersion: (message: Message) => void;
-			nextVersion: (message: Message) => void;
-			deleteVersion: (message: Message) => void;
-			updateMessage: (message: Message, content: string) => void;
-			deleteMessage: (message: Message) => void;
-			generate: (event: Event) => void;
-		};
+		interact?: MessageInteraction;
 	} = $props();
 </script>
 
 <div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
 	{#if messages.length > 0}
-		{#each messages as message, index (message.id)}
+		{#each messages as message, index (message.id + message.index)}
 			<MessageSvelte
 				message={messages[index]}
+				{index}
 				isFirst={index === 0}
 				isLast={index === messages.length - 1}
 				{loading}
@@ -40,7 +32,7 @@
 			/>
 		{/each}
 	{/if}
-	{#if interact && messages.length && messages[messages.length - 1].type === 'user'}
+	{#if interact && messages.length && messages[messages.length - 1].role === 'user'}
 		<div class="flex flex-row flex-nowrap">
 			<div class="flex items-center justify-center flex-grow flex-shrink-0 w-full">
 				<button

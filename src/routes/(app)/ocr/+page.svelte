@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { focusTrap, FileDropzone } from '@skeletonlabs/skeleton';
+	import { focusTrap, FileDropzone, getToastStore } from '@skeletonlabs/skeleton';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -9,22 +9,23 @@
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
+	import FileTextIcon from 'lucide-svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import { FileTextIcon } from 'lucide-svelte';
 	import { defaultChatModel } from '$lib/const';
 	import PdfPages from '$lib/components/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
+	import { fileToB64 } from '$lib/files';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
 	}
 
+	const toastStore = getToastStore();
+
 	let files = $state<FileList | undefined>(undefined);
-
 	let showOptions = $state(false);
-
 	let error: { text: string; body?: object } | null = $state(null);
 
 	$effect(() => {
@@ -38,7 +39,7 @@
 			id: ocr.state.id,
 			filename: ocr.state.filename,
 			pages: JSON.parse(JSON.stringify(ocr.state.pages)),
-			usage: JSON.parse(JSON.stringify(ocr.state.usage)),
+			usage: ocr.state.usage ? JSON.parse(JSON.stringify(ocr.state.usage)) : undefined,
 			options: JSON.parse(JSON.stringify(ocr.state.options))
 		});
 		$history.ocr = $history.ocr;
@@ -51,16 +52,16 @@
 		error = null;
 		ocr.reset();
 
+		if (file.size > 50 * 1024 * 1024) {
+			toastStore.trigger({ message: 'File size should be less than 50MB.' });
+			return;
+		}
+
 		const outputNode = document.getElementById('pages-container');
 		loading = true;
 		showOptions = false;
 
-		const b64File = await new Promise<string>((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(file);
-			reader.onload = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
+		const b64File = await fileToB64(file);
 
 		abortController = new AbortController();
 		const startedAt = performance.now();
@@ -69,7 +70,9 @@
 			const ocrResponse = await client.ocr.process(
 				{
 					model: ocr.state.options.model ? ocr.state.options.model : defaultChatModel,
-					document: { documentUrl: b64File, type: 'document_url' },
+					document: file.type.includes('image')
+						? { imageUrl: b64File, type: 'image_url' }
+						: { documentUrl: b64File, type: 'document_url' },
 					includeImageBase64: true
 				},
 				{ fetchOptions: { signal: abortController.signal } }
@@ -168,7 +171,12 @@
 				</div>
 			</div>
 			{#if !files?.length}
-				<FileDropzone bind:files name="files" accept="application/pdf">
+				<FileDropzone
+					bind:files
+					name="files"
+					multiple={false}
+					accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+				>
 					<svelte:fragment slot="lead">
 						<FileTextIcon class="mx-auto" size="32" />
 					</svelte:fragment>
@@ -176,7 +184,7 @@
 						<span class="label-text"><strong>Upload a file</strong> or drag and drop</span>
 					</svelte:fragment>
 					<svelte:fragment slot="meta">
-						<span>PDF allowed.</span>
+						<span>PDF and images (.png, .jpeg, .jpg and .webp) allowed.</span>
 					</svelte:fragment>
 				</FileDropzone>
 			{:else}
