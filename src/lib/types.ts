@@ -1,6 +1,27 @@
+import type { ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
+
 export type Usage = { promptTokens: number; completionTokens: number; totalTokens: number; tps?: number };
 
-export type Message = { type: 'user' | 'assistant' | 'system'; id: string; index: number; content: string[] };
+export type MessageRole = 'system' | 'user' | 'assistant';
+export type MessageBase = { id: string; index: number };
+
+export type SystemMessageDetails = {
+	role: 'system';
+	versions: { content: TextChunk[] }[];
+};
+export type UserMessageDetails = {
+	role: 'user';
+	versions: { content: ContentChunk[] }[];
+};
+export type AssistantMessageDetails = {
+	role: 'assistant';
+	versions: { content: ContentChunk[] }[];
+};
+export type AssistantMessage = MessageBase & AssistantMessageDetails;
+
+export type MessageDetails = SystemMessageDetails | UserMessageDetails | AssistantMessageDetails;
+export type Message = MessageBase & MessageDetails;
+export type MessageContent = TextChunk[] | ContentChunk[];
 
 export type ChatOptions = {
 	model: string;

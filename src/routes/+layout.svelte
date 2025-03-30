@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { apiKey } from '$lib/stores/apiKey';
-	import { Drawer, initializeStores, Modal, getDrawerStore } from '@skeletonlabs/skeleton';
+	import { Drawer, initializeStores, Modal, getDrawerStore, Toast } from '@skeletonlabs/skeleton';
 	import { page } from '$app/stores';
 
 	import '../app.css';
@@ -62,6 +62,7 @@
 	{/if}
 </Drawer>
 <Modal />
+<Toast />
 
 <style lang="postcss">
 </style>

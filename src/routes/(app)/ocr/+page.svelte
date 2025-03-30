@@ -16,6 +16,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import PdfPages from '$lib/components/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
+	import { fileToB64 } from '$lib/files';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -55,12 +56,7 @@
 		loading = true;
 		showOptions = false;
 
-		const b64File = await new Promise<string>((resolve, reject) => {
-			const reader = new FileReader();
-			reader.readAsDataURL(file);
-			reader.onload = () => resolve(reader.result as string);
-			reader.onerror = (error) => reject(error);
-		});
+		const b64File = await fileToB64(file);
 
 		abortController = new AbortController();
 		const startedAt = performance.now();
@@ -170,7 +166,7 @@
 				</div>
 			</div>
 			{#if !files?.length}
-				<FileDropzone bind:files name="files" accept="application/pdf,image/jpeg,image/jpg,image/png,image/webp">
+				<FileDropzone bind:files name="files" accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp">
 					<svelte:fragment slot="lead">
 						<FileTextIcon class="mx-auto" size="32" />
 					</svelte:fragment>
@@ -178,7 +174,7 @@
 						<span class="label-text"><strong>Upload a file</strong> or drag and drop</span>
 					</svelte:fragment>
 					<svelte:fragment slot="meta">
-						<span>PDF and images allowed.</span>
+						<span>PDF and images (.png, .jpeg, .jpg and .webp) allowed.</span>
 					</svelte:fragment>
 				</FileDropzone>
 			{:else}

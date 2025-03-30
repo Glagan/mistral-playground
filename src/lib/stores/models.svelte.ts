@@ -11,9 +11,22 @@ export const models: {
 	list: (BaseModelCard | FTModelCard)[];
 	chat: (BaseModelCard | FTModelCard)[];
 	chatGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
+	vision: (BaseModelCard | FTModelCard)[];
+	visionGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
 	ocr: (BaseModelCard | FTModelCard)[];
 	ocrGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
-} = $state({ loading: false, loaded: false, error: null, list: [], chat: [], ocr: [] });
+} = $state({
+	loading: false,
+	loaded: false,
+	error: null,
+	list: [],
+	chat: [],
+	chatGroups: {},
+	ocr: [],
+	ocrGroups: {},
+	vision: [],
+	visionGroups: {}
+});
 
 function groupModels(models: (BaseModelCard | FTModelCard)[]): Record<string, (BaseModelCard | FTModelCard)[]> {
 	const groups: Record<string, (BaseModelCard | FTModelCard)[]> = {};
@@ -43,6 +56,10 @@ export async function loadModels() {
 		models.list = response.data?.filter((model) => model.id !== 'mistral-embed') ?? [];
 		models.chat = models.list.filter((model) => model.capabilities.completionChat && !model.id.includes('ocr'));
 		models.chatGroups = groupModels(models.chat);
+		models.vision = models.chat.filter(
+			(model) => model.capabilities.completionChat && model.capabilities.vision && !model.id.includes('ocr')
+		);
+		models.visionGroups = groupModels(models.vision);
 		models.ocr = models.list.filter((model) => model.id.includes('ocr'));
 		models.ocrGroups = groupModels(models.ocr);
 		models.loaded = true;

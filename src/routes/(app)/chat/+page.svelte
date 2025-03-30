@@ -9,7 +9,7 @@
 	} from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Message, Usage } from '$lib/types';
+	import type { Usage, Message, AssistantMessage, MessageDetails, MessageRole, MessageContent } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { history } from '$lib/stores/history';
@@ -20,11 +20,17 @@
 	import { v4 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
+	import FileTextIcon from 'lucide-svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import ShareModal from '$lib/components/ShareModal.svelte';
 	import { defaultChatModel } from '$lib/const';
+	import { fileToB64, handleFileUpload } from '$lib/files';
+	import FileUploadPreview from '$lib/components/FileUploadPreview.svelte';
+	import type { TextChunk } from '@mistralai/mistralai/models/components';
+	import { getToastStore } from '@skeletonlabs/skeleton';
+	import { editing } from '$lib/stores/editing.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -32,14 +38,20 @@
 
 	const encoding = get_encoding('cl100k_base');
 	const modalStore = getModalStore();
+	const toastStore = getToastStore();
 
 	let showOptions = $state(false);
 	let promptText = $state('');
+	let isDragging = $state(false);
+	let dragCounter = $state(0);
+	let files = $state<File[]>([]);
 
 	let error: { text: string; body?: object } | null = $state(null);
 
 	$effect(() => {
 		chat.state.id;
+		editing.id = '';
+		files = [];
 		error = null;
 	});
 
@@ -56,9 +68,9 @@
 		}
 		return messages.every((message, index) => {
 			if (index === 0) {
-				return message.type === 'user' || message.type === 'system';
+				return message.role === 'user' || message.role === 'system';
 			}
-			return true;
+			return message.role !== 'system';
 		});
 	}
 
@@ -89,7 +101,7 @@
 	let loading = $state(false);
 	let abortController: AbortController | null = null;
 
-	async function generate(messages: Message[], answer: Message) {
+	async function generate(messages: Message[], answer: AssistantMessage) {
 		const outputNode = document.getElementById('messages-container');
 		loading = true;
 		showOptions = false;
@@ -101,7 +113,24 @@
 			const chatStreamResponse = await client.chat.stream(
 				{
 					model: chat.state.options.model ? chat.state.options.model : defaultChatModel,
-					messages: messages.map((message) => ({ role: message.type, content: message.content[message.index] })),
+					messages: messages.map((message) => {
+						// Useless condition to avoid type errors
+						if (message.role === 'user') {
+							return {
+								role: message.role,
+								content: message.versions[message.index].content
+							};
+						} else if (message.role === 'assistant') {
+							return {
+								role: message.role,
+								content: message.versions[message.index].content
+							};
+						}
+						return {
+							role: message.role,
+							content: message.versions[message.index].content
+						};
+					}),
 					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
 					randomSeed: typeof chat.state.options.randomSeed === 'number' ? chat.state.options.randomSeed : undefined,
 					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
@@ -112,11 +141,10 @@
 				{ fetchOptions: { signal: abortController.signal } }
 			);
 			for await (const message of chatStreamResponse) {
-				// console.log(message);
 				const data = message.data;
 				if (data.choices[0].delta.content !== undefined) {
 					const text = data.choices[0].delta.content;
-					answer.content[answer.index] += text ?? '';
+					(answer.versions[answer.index].content[0] as TextChunk).text += text ?? '';
 				}
 				if (data.usage) {
 					const completionTime = performance.now() - startedAt;
@@ -127,23 +155,26 @@
 					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 				}
 			}
-			if (chat.state.options.json) {
-				answer.content[answer.index] =
-					`\`\`\`json\n${JSON.stringify(JSON.parse(answer.content[answer.index]), undefined, 4)}\n\`\`\``;
+			if (!abortController.signal.aborted) {
+				if (chat.state.options.json && answer.versions[answer.index].content[0].type === 'text') {
+					(answer.versions[answer.index].content[0] as TextChunk).text =
+						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
+				}
 			}
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
-			updateOrInsertHistory();
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors
-			if (_error.name !== 'AbortError') {
-				if (answer.content.length === 1) {
-					chat.state.messages.pop();
-				} else {
-					answer.content.splice(answer.index, 1);
-					answer.index -= 1;
+			if (!abortController.signal.aborted && _error.name !== 'AbortError') {
+				if (!(answer.versions[answer.index].content[0] as TextChunk)?.text) {
+					if (answer.versions.length === 1) {
+						chat.state.messages.pop();
+					} else {
+						answer.versions.splice(answer.index, 1);
+						answer.index -= 1;
+					}
 				}
 				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
 				if (responseBody) {
@@ -159,6 +190,9 @@
 			}
 		} finally {
 			loading = false;
+			if (chat.state.messages.length) {
+				updateOrInsertHistory();
+			}
 		}
 	}
 
@@ -167,13 +201,42 @@
 		event.preventDefault();
 		error = null;
 		if (systemPrompt) {
-			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
+			chat.state.messages.push({
+				id: uuid(),
+				index: 0,
+				role: 'system',
+				versions: [{ content: [{ type: 'text', text: systemPrompt }] }]
+			});
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
 		}
 		if (promptText.length) {
-			chat.state.messages.push({ id: uuid(), type: 'user', index: 0, content: [promptText] });
+			const message: Message = {
+				id: uuid(),
+				index: 0,
+				role: 'user',
+				versions: [{ content: [{ type: 'text', text: promptText }] }]
+			};
+			if (files.length) {
+				for (let index = 0; index < files.length; index++) {
+					const file = files[index];
+					if (file.type.includes('image/')) {
+						message.versions[0].content.push({
+							type: 'image_url' as const,
+							imageUrl: await fileToB64(file)
+						});
+					} else {
+						message.versions[0].content.push({
+							type: 'document_url' as const,
+							documentUrl: await fileToB64(file),
+							documentName: file.name
+						});
+					}
+				}
+				files = [];
+			}
+			chat.state.messages.push(message);
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
@@ -182,8 +245,12 @@
 
 		// Take the messages up to here for the next generation
 		const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages));
-
-		const answer: Message = $state({ id: uuid(), type: 'assistant', index: 0, content: [''] });
+		const answer: Message = $state({
+			id: uuid(),
+			index: 0,
+			role: 'assistant',
+			versions: [{ content: [{ type: 'text', text: '' }] }]
+		});
 		chat.state.messages.push(answer);
 		if (outputNode) {
 			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -195,7 +262,12 @@
 	async function addSystemPrompt(event: Event) {
 		event.preventDefault();
 		if (systemPrompt) {
-			chat.state.messages.push({ id: uuid(), type: 'system', index: 0, content: [systemPrompt] });
+			chat.state.messages.push({
+				id: uuid(),
+				index: 0,
+				role: 'system',
+				versions: [{ content: [{ type: 'text', text: systemPrompt }] }]
+			});
 			systemPrompt = '';
 			showOptions = false;
 		}
@@ -234,14 +306,14 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			const message = chat.state.messages[index];
-			message.content.push('');
-			message.index = message.content.length - 1;
+			if (chat.state.messages[index].role === 'assistant') {
+				chat.state.messages[index].versions.push({ content: [{ type: 'text', text: '' }] });
+				chat.state.messages[index].index = chat.state.messages[index].versions.length - 1;
 
-			// Take the messages up to the answer we need to re-generate
-			const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages.slice(0, index)));
-
-			await generate(messagesToSend, message);
+				// Take the messages up to the answer we need to re-generate
+				const messagesToSend = JSON.parse(JSON.stringify(chat.state.messages.slice(0, index)));
+				await generate(messagesToSend, chat.state.messages[index]);
+			}
 		}
 	}
 
@@ -260,7 +332,7 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			if (chat.state.messages[index].index < chat.state.messages[index].content.length - 1) {
+			if (chat.state.messages[index].index < chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index = chat.state.messages[index].index + 1;
 				updateOrInsertHistory();
 			}
@@ -271,19 +343,21 @@
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			chat.state.messages[index].content.splice(chat.state.messages[index].index);
-			if (chat.state.messages[index].index >= chat.state.messages[index].content.length - 1) {
+			chat.state.messages[index].versions.splice(chat.state.messages[index].index);
+			if (chat.state.messages[index].index >= chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index -= 1;
 			}
 			updateOrInsertHistory();
 		}
 	}
 
-	function updateMessage(message: Message, content: string) {
+	function updateMessage(message: Message, role: MessageRole, content: MessageContent) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
-			chat.state.messages[index].content[message.index] = content;
+			const active = chat.state.messages[index];
+			active.role = role;
+			active.versions[active.index].content = content;
 			updateOrInsertHistory();
 		}
 	}
@@ -313,8 +387,91 @@
 		modalStore.trigger(settingsModal);
 	}
 
+	function handleUploadedFiles(uploadedFiles: File[]) {
+		const { files: validFiles, errors } = handleFileUpload(uploadedFiles);
+		files.push(...validFiles);
+		for (const error of errors) {
+			toastStore.trigger({ message: error, background: 'variant-filled-warning' });
+		}
+	}
+
+	function onFileChange(
+		event: Event & {
+			currentTarget: EventTarget & HTMLInputElement;
+		}
+	) {
+		handleUploadedFiles(event.currentTarget.files ? Array.from(event.currentTarget.files) : []);
+		event.currentTarget.files = null;
+	}
+
 	onMount(() => {
 		loadModels();
+
+		// Add file drag and drop event listeners
+		const handleDragEnter = (e: DragEvent) => {
+			if (editing.id) {
+				return;
+			}
+
+			e.preventDefault();
+			e.stopPropagation();
+			if (e.dataTransfer?.types.includes('Files')) {
+				dragCounter++;
+				isDragging = true;
+			}
+		};
+
+		const handleDragLeave = (e: DragEvent) => {
+			if (editing.id) {
+				return;
+			}
+
+			e.preventDefault();
+			e.stopPropagation();
+			dragCounter--;
+			if (dragCounter === 0) {
+				isDragging = false;
+			}
+		};
+
+		const handleDragOver = (e: DragEvent) => {
+			if (editing.id) {
+				return;
+			}
+
+			e.preventDefault();
+			e.stopPropagation();
+		};
+
+		const handleDrop = (e: DragEvent) => {
+			if (editing.id) {
+				return;
+			}
+
+			e.preventDefault();
+			e.stopPropagation();
+
+			dragCounter = 0;
+			isDragging = false;
+
+			if (e.dataTransfer?.files) {
+				return handleUploadedFiles(e.dataTransfer.files ? Array.from(e.dataTransfer.files) : []);
+			}
+			return null;
+		};
+
+		window.addEventListener('dragenter', handleDragEnter);
+		window.addEventListener('dragleave', handleDragLeave);
+		window.addEventListener('dragover', handleDragOver);
+		window.addEventListener('drop', handleDrop);
+
+		// Cleanup function
+		return () => {
+			window.removeEventListener('dragenter', handleDragEnter);
+			window.removeEventListener('dragleave', handleDragLeave);
+			window.removeEventListener('dragover', handleDragOver);
+			window.removeEventListener('drop', handleDrop);
+		};
 	});
 
 	onDestroy(() => {
@@ -325,36 +482,39 @@
 <div
 	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
 >
-	{#if chat.state.messages.length}
-		<Messages
-			messages={chat.state.messages}
-			interact={{
-				moveUp,
-				moveDown,
-				refresh,
-				previousVersion,
-				nextVersion,
-				deleteVersion,
-				updateMessage,
-				deleteMessage,
-				generate: onSubmit
-			}}
-			{loading}
-			{error}
-		/>
-		{#if loading}
-			<button
-				class="btn variant-ghost-error transition-all mx-auto"
-				type="button"
-				transition:slide={{ axis: 'y' }}
-				onclick={stopGenerating}
-			>
-				Stop
-			</button>
+	<div class="relative flex-grow flex-shrink w-full overflow-auto">
+		{#if chat.state.messages.length}
+			<Messages
+				messages={chat.state.messages}
+				interact={{
+					moveUp,
+					moveDown,
+					refresh,
+					previousVersion,
+					nextVersion,
+					deleteVersion,
+					updateMessage,
+					deleteMessage,
+					generate: onSubmit
+				}}
+				{loading}
+				{error}
+			/>
+			{#if loading}
+				<button
+					class="block btn variant-ghost-error transition-all mx-auto mt-4"
+					type="button"
+					transition:slide={{ axis: 'y' }}
+					onclick={stopGenerating}
+				>
+					Stop
+				</button>
+			{/if}
+		{:else}
+			<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 		{/if}
-	{:else}
-		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
-	{/if}
+		<div class="h-4 bg-gradient-to-b from-surface-900/0 to-surface-900 sticky bottom-0 left-0 right-0"></div>
+	</div>
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		{#if !stateIsValid}
 			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
@@ -397,6 +557,11 @@
 					{:else}
 						<span></span>
 					{/if}
+					{#if chat.state.messages.length}
+						<button type="button" class="btn text-xs py-1 px-2 variant-ghost-secondary" onclick={() => openShare()}>
+							Share
+						</button>
+					{/if}
 				</div>
 				{#if tokens > 0}
 					<span class="text-xs" transition:fade>
@@ -404,15 +569,39 @@
 					</span>
 				{/if}
 			</div>
-			<textarea
-				bind:value={promptText}
-				disabled={loading || !!models.error}
-				class="textarea"
-				rows="3"
-				placeholder="Type something..."
-				data-focusindex="0"
-			></textarea>
+			<div class="relative">
+				<textarea
+					bind:value={promptText}
+					disabled={loading || !!models.error}
+					class="textarea"
+					rows="5"
+					placeholder="Type something or drag and drop images..."
+					data-focusindex="0"
+				></textarea>
+				{#if isDragging}
+					<div
+						class="absolute dropzone textarea flex flex-row gap-2 items-center border-2 border-dashed !border-primary-500 p-4 py-4 rounded-container-token top-0 left-0 right-0 bottom-0"
+					>
+						<div class="flex-grow-0 flex-shrink-0">
+							<FileTextIcon class="mx-auto" size="32" />
+						</div>
+						<div class="flex flex-col gap-1 flex-grow flex-shrink">
+							<div class="flex flex-col gap-1 flex-grow flex-shrink">
+								<span class="label-text"><strong>Drop a file</strong></span>
+							</div>
+							<span>Images (.png, .jpeg, .jpg and .webp) allowed.</span>
+						</div>
+					</div>
+				{/if}
+			</div>
 		</label>
+		{#if files.length}
+			<div class="flex flex-col gap-1">
+				{#each files as file, index}
+					<FileUploadPreview {file} {loading} remove={() => files.splice(index, 1)} />
+				{/each}
+			</div>
+		{/if}
 		<div class="flex flex-row justify-between">
 			<button
 				class="btn variant-ghost-surface"
@@ -426,17 +615,38 @@
 				<Settings2Icon size={20} />
 				<span>Options</span>
 			</button>
+			<div>
+				<label for="fileUpload">
+					<input
+						id="fileUpload"
+						class="hidden"
+						type="file"
+						multiple
+						accept="image/png,image/jpeg,image/jpg,image/webp"
+						disabled={loading || models.loading || !!models.error}
+						onchange={onFileChange}
+					/>
+					<button
+						type="button"
+						class="btn variant-filled-secondary transition-all"
+						disabled={loading || models.loading || !!models.error}
+						onclick={() => document.getElementById('fileUpload')?.click()}
+					>
+						Upload image
+					</button>
+				</label>
+			</div>
 			<div class="flex flex-row gap-2">
-				{#if chat.state.messages.length}
-					<button type="button" class="btn variant-ghost-secondary mx-auto" onclick={() => openShare()}>Share</button>
-				{/if}
 				<button
 					type="submit"
 					class="btn variant-filled-primary transition-all"
 					disabled={loading ||
 						models.loading ||
 						!!models.error ||
-						(!promptText && chat.state.messages[chat.state.messages.length - 1]?.type !== 'user')}
+						(!promptText &&
+							(chat.state.messages.length === 0 ||
+								(chat.state.messages.length > 0 &&
+									chat.state.messages[chat.state.messages.length - 1].role !== 'user')))}
 				>
 					Submit
 				</button>
@@ -447,7 +657,7 @@
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
 						<select bind:value={chat.state.options.model} class="select flex-grow-0" disabled={models.loading}>
-							{#each Object.entries(models.chatGroups) as [groupName, items]}
+							{#each Object.entries(files.length || chat.state.messages.some( (m) => m.versions.some( (v) => v.content.some((c) => c.type === 'image_url' || c.type === 'document_url') ) ) ? models.visionGroups : models.chatGroups) as [groupName, items]}
 								<optgroup label={groupName}>
 									{#each items as item}
 										<option value={item.id}>{item.id}</option>
@@ -534,7 +744,7 @@
 							name="system"
 							id="system"
 							placeholder="System prompt"
-							rows="4"
+							rows="5"
 						></textarea>
 					</label>
 					<button
