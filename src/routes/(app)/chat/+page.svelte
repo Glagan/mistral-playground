@@ -102,7 +102,7 @@
 	let abortController: AbortController | null = null;
 
 	async function generate(messages: Message[], answer: AssistantMessage) {
-		const outputNode = document.getElementById('messages-container');
+		const outputNode = document.getElementById('messages-container')?.parentElement;
 		loading = true;
 		showOptions = false;
 

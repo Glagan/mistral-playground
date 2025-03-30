@@ -50,15 +50,13 @@
 	{#if $drawerStore.id === 'navigation'}
 		<Navigation isFromRoot={false} />
 	{:else if $drawerStore.id === 'history'}
-		{#if $page.url.pathname === '/chat' && $apiKey}
-			<div class="p-2">
+		<div class="p-2">
+			{#if $page.url.pathname === '/chat' && $apiKey}
 				<ChatHistoryList mobile={true} />
-			</div>
-		{:else if $page.url.pathname === '/ocr' && $apiKey}
-			<div class="p-2">
+			{:else if $page.url.pathname === '/ocr' && $apiKey}
 				<OCRHistoryList mobile={true} />
-			</div>
-		{/if}
+			{/if}
+		</div>
 	{/if}
 </Drawer>
 <Modal />

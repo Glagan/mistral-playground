@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import { history } from '$lib/stores/history';
@@ -32,10 +32,7 @@
 	}
 </script>
 
-<div
-	class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
-	transition:fade={{ duration: 200 }}
->
+<div class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}">
 	<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
 		<GalleryHorizontalEndIcon />
 		<span>History</span>

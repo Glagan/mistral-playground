@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, slide } from 'svelte/transition';
+	import { slide } from 'svelte/transition';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import { history } from '$lib/stores/history';
@@ -32,16 +32,17 @@
 	}
 </script>
 
-<div
-	class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}"
-	transition:fade={{ duration: 200 }}
->
+<div class="w-full flex-shrink overflow-auto p-4 {!mobile ? 'hidden lg:block' : ''}">
 	<h2 class="flex flex-row items-center gap-2 text-lg font-bold mb-2">
 		<GalleryHorizontalEndIcon />
 		<span>History</span>
 	</h2>
 	<div class="flex flex-col gap-2">
 		{#each $history.chat as entry (entry.id)}
+			{@const firstTextNode = entry.messages
+				.find((m) => m.role === 'user')
+				?.versions.find((v) => v.content.find((c) => c.type === 'text'))
+				?.content.find((c) => c.type === 'text')}
 			<div
 				class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
 				chat.state.id
@@ -49,9 +50,9 @@
 					: 'border-transparent lg:px-2'}"
 				transition:slide={{ axis: 'y' }}
 			>
-				{#if entry.messages.length}
+				{#if firstTextNode?.text}
 					<div class="flex-grow flex-shrink truncate">
-						{entry.messages[0].content}
+						{firstTextNode.text}
 					</div>
 				{:else}
 					<div class="flex-grow flex-shrink truncate text-surface-200 text-opacity-75 italic">Empty prompt</div>
