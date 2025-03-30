@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { focusTrap, FileDropzone } from '@skeletonlabs/skeleton';
+	import { focusTrap, FileDropzone, getToastStore } from '@skeletonlabs/skeleton';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
@@ -22,10 +22,10 @@
 		goto('/', { replaceState: true });
 	}
 
+	const toastStore = getToastStore();
+
 	let files = $state<FileList | undefined>(undefined);
-
 	let showOptions = $state(false);
-
 	let error: { text: string; body?: object } | null = $state(null);
 
 	$effect(() => {
@@ -39,7 +39,7 @@
 			id: ocr.state.id,
 			filename: ocr.state.filename,
 			pages: JSON.parse(JSON.stringify(ocr.state.pages)),
-			usage: JSON.parse(JSON.stringify(ocr.state.usage)),
+			usage: ocr.state.usage ? JSON.parse(JSON.stringify(ocr.state.usage)) : undefined,
 			options: JSON.parse(JSON.stringify(ocr.state.options))
 		});
 		$history.ocr = $history.ocr;
@@ -51,6 +51,11 @@
 	async function generate(file: File) {
 		error = null;
 		ocr.reset();
+
+		if (file.size > 50 * 1024 * 1024) {
+			toastStore.trigger({ message: 'File size should be less than 50MB.' });
+			return;
+		}
 
 		const outputNode = document.getElementById('pages-container');
 		loading = true;
@@ -166,7 +171,12 @@
 				</div>
 			</div>
 			{#if !files?.length}
-				<FileDropzone bind:files name="files" accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp">
+				<FileDropzone
+					bind:files
+					name="files"
+					multiple={false}
+					accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+				>
 					<svelte:fragment slot="lead">
 						<FileTextIcon class="mx-auto" size="32" />
 					</svelte:fragment>

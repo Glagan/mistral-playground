@@ -92,7 +92,7 @@
 		$history.chat.splice(0, 0, {
 			id: chat.state.id,
 			messages: JSON.parse(JSON.stringify(chat.state.messages)),
-			usage: JSON.parse(JSON.stringify(chat.state.usage)),
+			usage: chat.state.usage ? JSON.parse(JSON.stringify(chat.state.usage)) : undefined,
 			options: JSON.parse(JSON.stringify(chat.state.options))
 		});
 		$history.chat = $history.chat;

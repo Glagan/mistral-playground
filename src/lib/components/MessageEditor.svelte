@@ -104,7 +104,7 @@
 				<span class="label-text"><strong>Upload a file</strong> or drag and drop</span>
 			</svelte:fragment>
 			<svelte:fragment slot="meta">
-				<span>Images allowed.</span>
+				<span>Images (.png, .jpeg, .jpg and .webp) allowed.</span>
 			</svelte:fragment>
 		</FileDropzone>
 	{/if}
