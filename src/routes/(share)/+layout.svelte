@@ -10,7 +10,3 @@
 
 <LeftBar />
 {@render children()}
-<div></div>
-
-<style lang="postcss">
-</style>

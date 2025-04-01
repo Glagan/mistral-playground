@@ -61,6 +61,3 @@
 </Drawer>
 <Modal />
 <Toast />
-
-<style lang="postcss">
-</style>

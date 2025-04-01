@@ -17,6 +17,3 @@
 	</h1>
 </div>
 <div></div>
-
-<style lang="postcss">
-</style>
