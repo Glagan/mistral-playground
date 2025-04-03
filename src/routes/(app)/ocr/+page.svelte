@@ -4,7 +4,6 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import { history } from '$lib/stores/history';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
@@ -17,6 +16,7 @@
 	import PdfPages from '$lib/components/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
 	import { fileToB64 } from '$lib/files';
+	import { db } from '$lib/stores/db';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -33,16 +33,14 @@
 		error = null;
 	});
 
-	function updateOrInsertHistory() {
-		$history.ocr = $history.ocr.filter((e) => e.id !== ocr.state.id);
-		$history.ocr.splice(0, 0, {
+	async function updateOrInsertHistory() {
+		await db.ocr.put({
 			id: ocr.state.id,
 			filename: ocr.state.filename,
 			pages: JSON.parse(JSON.stringify(ocr.state.pages)),
 			usage: ocr.state.usage ? JSON.parse(JSON.stringify(ocr.state.usage)) : undefined,
 			options: JSON.parse(JSON.stringify(ocr.state.options))
 		});
-		$history.ocr = $history.ocr;
 	}
 
 	let loading = $state(false);
@@ -84,7 +82,7 @@
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
 			files = undefined;
-			updateOrInsertHistory();
+			await updateOrInsertHistory();
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors

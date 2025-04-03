@@ -2,15 +2,18 @@
 	import { slide } from 'svelte/transition';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
-	import { history } from '$lib/stores/history';
 	import { ocr, type OCRState } from '$lib/stores/ocr.svelte';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import { tick } from 'svelte';
 	import hljs from 'highlight.js/lib/core';
+	import { liveQuery } from 'dexie';
+	import { db } from '$lib/stores/db';
 
 	const { mobile = false }: { mobile?: boolean } = $props();
 
 	const drawerStore = getDrawerStore();
+
+	let ocrHistory = liveQuery(() => db.ocr.toArray());
 
 	function loadHistoryOCREntry(entry: OCRState) {
 		drawerStore.close();
@@ -24,8 +27,8 @@
 		});
 	}
 
-	function deleteHistoryOCREntry(entry: OCRState) {
-		$history.ocr = $history.ocr.filter((e) => e.id !== entry.id);
+	async function deleteHistoryOCREntry(entry: OCRState) {
+		await db.chat.delete(entry.id);
 		if (ocr.state.id === entry.id) {
 			ocr.reset();
 		}
@@ -38,7 +41,7 @@
 		<span>History</span>
 	</h2>
 	<div class="flex flex-col gap-2">
-		{#each $history.ocr as entry (entry.id)}
+		{#each $ocrHistory as entry (entry.id)}
 			<div
 				class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
 				ocr.state.id

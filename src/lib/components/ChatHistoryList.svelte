@@ -2,15 +2,19 @@
 	import { slide } from 'svelte/transition';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
-	import { history } from '$lib/stores/history';
 	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import { getDrawerStore } from '@skeletonlabs/skeleton';
 	import { tick } from 'svelte';
 	import hljs from 'highlight.js/lib/core';
+	import { findFirstTextNode } from '$lib/message';
+	import { liveQuery } from 'dexie';
+	import { db } from '$lib/stores/db';
 
 	const { mobile = false }: { mobile?: boolean } = $props();
 
 	const drawerStore = getDrawerStore();
+
+	let chatHistory = liveQuery(() => db.chat.toArray());
 
 	function loadHistoryChatEntry(entry: ChatState) {
 		drawerStore.close();
@@ -24,8 +28,8 @@
 		});
 	}
 
-	function deleteHistoryChatEntry(entry: ChatState) {
-		$history.chat = $history.chat.filter((e) => e.id !== entry.id);
+	async function deleteHistoryChatEntry(entry: ChatState) {
+		await db.chat.delete(entry.id);
 		if (chat.state.id === entry.id) {
 			chat.reset();
 		}
@@ -38,11 +42,8 @@
 		<span>History</span>
 	</h2>
 	<div class="flex flex-col gap-2">
-		{#each $history.chat as entry (entry.id)}
-			{@const firstTextNode = entry.messages
-				.find((m) => m.role === 'user')
-				?.versions.find((v) => v.content.find((c) => c.type === 'text'))
-				?.content.find((c) => c.type === 'text')}
+		{#each $chatHistory as entry (entry.id)}
+			{@const firstTextNode = findFirstTextNode(entry.messages)}
 			<div
 				class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
 				chat.state.id
