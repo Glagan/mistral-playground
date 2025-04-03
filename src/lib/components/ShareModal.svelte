@@ -3,8 +3,11 @@
 	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
 	import LinkIcon from 'lucide-svelte/icons/link';
 	import KeyRoundIcon from 'lucide-svelte/icons/key-round';
+	import InfoIcon from 'lucide-svelte/icons/info';
 	import { chat } from '$lib/stores/chat.svelte';
 	import type { SelectChatShare } from '$lib/server/schema';
+	import { findFirstTextNode } from '$lib/message';
+	import { db } from '$lib/stores/db';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
@@ -23,9 +26,14 @@
 			body: JSON.stringify(chat.state)
 		});
 		const body = (await response.json()) as { chatShare: SelectChatShare };
-		const link = `${joinURL(window.location.host, 'share', body.chatShare.id)}?key=${body.chatShare.deletionKey}`;
 		shareId = body.chatShare.id;
 		deletionKey = body.chatShare.deletionKey;
+		await db.share.add({
+			id: body.chatShare.id,
+			title: findFirstTextNode(chat.state.messages)?.text ?? '',
+			deletionKey: body.chatShare.deletionKey,
+			createdAt: body.chatShare.createdAt
+		});
 		toastStore.trigger({
 			classes: 'variant-filled-success',
 			message: 'Chat share link created'
@@ -76,7 +84,7 @@
 					</div>
 				</div>
 				<div class="grid grid-cols-2 gap-2 items-center">
-					<button type="button" onclick={() => copyShareLink} class="btn variant-ghost-secondary">Copy</button>
+					<button type="button" onclick={() => copyShareLink()} class="btn variant-ghost-secondary">Copy</button>
 					<button type="button" onclick={() => copyShareLink(true)} class="btn variant-ghost-success"
 						>Copy with deletion key</button
 					>
@@ -93,6 +101,14 @@
 						<button type="button" onclick={copyDeletionKey} class="variant-filled-success">Copy</button>
 					</div>
 				</div>
+			{/if}
+			{#if shareId}
+				<aside class="alert variant-ghost-tertiary p-2">
+					<div class="input-group-shim">
+						<InfoIcon size={24} />
+					</div>
+					<div class="alert-message">Your shared chats are saved in your shared chat history.</div>
+				</aside>
 			{/if}
 		</div>
 		<div class="flex items-center justify-end gap-4 mt-2">

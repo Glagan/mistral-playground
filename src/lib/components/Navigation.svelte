@@ -26,6 +26,7 @@
 	import { goto } from '$app/navigation';
 	import SettingsModal from './SettingsModal.svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
+	import ShareIcon from 'lucide-svelte/icons/share';
 
 	const { isFromRoot }: { isFromRoot: boolean } = $props();
 
@@ -158,7 +159,7 @@
 		<span class="truncate">Embeddings</span>
 	</a>
 	<div class="flex-grow"></div>
-	{#if !/\/share/.test($page.url.pathname) && $apiKey}
+	{#if !/\/share[^d]/.test($page.url.pathname) && $apiKey}
 		<button
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 			transition:fade
@@ -190,7 +191,13 @@
 		<BadgeInfoIcon class="flex-shrink-0" />
 		<span class="truncate">About</span>
 	</a>
-	{#if !/\/share/.test($page.url.pathname)}
+	{#if !/\/share[^d]/.test($page.url.pathname)}
+		<a href="/shared" class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary">
+			<ShareIcon class="flex-shrink-0" />
+			<span class="truncate">Shared chats</span>
+		</a>
+	{/if}
+	{#if !/\/share[^d]/.test($page.url.pathname)}
 		<button
 			class="btn transition-all justify-start font-bold text-lg hover:variant-soft-primary"
 			transition:fade

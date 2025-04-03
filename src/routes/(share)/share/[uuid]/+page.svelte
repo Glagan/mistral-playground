@@ -86,7 +86,7 @@
 	{:else}
 		<div class="flex flex-col items-center text-center gap-3">
 			<TriangleAlertIcon size={52} />
-			<h3 class="text-xl text-red-200">Failed to load shared chat</h3>
+			<h3 class="text-xl text-red-500">Failed to load shared chat</h3>
 			<p>The chat data is corrupted or doesn't exists.</p>
 			<div class="flex flex-row gap-2 items-center">
 				<a href="/" class="btn justify-start font-bold transition-all variant-ringed-primary disabled:opacity-75">
