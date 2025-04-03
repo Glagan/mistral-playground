@@ -9,10 +9,9 @@
 	} from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Usage, Message, AssistantMessage, MessageDetails, MessageRole, MessageContent } from '$lib/types';
+	import type { Usage, Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import { history } from '$lib/stores/history';
 	import Messages from '$lib/components/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount } from 'svelte';
@@ -32,6 +31,7 @@
 	import type { TextChunk } from '@mistralai/mistralai/models/components';
 	import { getToastStore } from '@skeletonlabs/skeleton';
 	import { editing } from '$lib/stores/editing.svelte';
+	import { db } from '$lib/stores/db';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -83,20 +83,17 @@
 	);
 	const stateIsValid = $derived(tokens <= maxTokens && messageOrderIsValid(chat.state.messages));
 
-	function removeFromHistory() {
-		$history.chat = $history.chat.filter((e) => e.id !== chat.state.id);
-		$history.chat = $history.chat;
+	async function removeFromHistory() {
+		await db.chat.delete(chat.state.id);
 	}
 
-	function updateOrInsertHistory() {
-		$history.chat = $history.chat.filter((e) => e.id !== chat.state.id);
-		$history.chat.splice(0, 0, {
+	async function updateOrInsertHistory() {
+		await db.chat.put({
 			id: chat.state.id,
 			messages: JSON.parse(JSON.stringify(chat.state.messages)),
 			usage: chat.state.usage ? JSON.parse(JSON.stringify(chat.state.usage)) : undefined,
 			options: JSON.parse(JSON.stringify(chat.state.options))
 		});
-		$history.chat = $history.chat;
 	}
 
 	let loading = $state(false);
@@ -192,7 +189,7 @@
 		} finally {
 			loading = false;
 			if (chat.state.messages.length) {
-				updateOrInsertHistory();
+				await updateOrInsertHistory();
 			}
 		}
 	}
@@ -283,23 +280,23 @@
 
 	// * > Message events
 
-	function moveUp(message: Message) {
+	async function moveUp(message: Message) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index > 0) {
 			chat.state.messages.splice(index, 1);
 			chat.state.messages.splice(index - 1, 0, message);
-			updateOrInsertHistory();
+			await updateOrInsertHistory();
 		}
 	}
 
-	function moveDown(message: Message) {
+	async function moveDown(message: Message) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0 && index < chat.state.messages.length - 1) {
 			chat.state.messages.splice(index, 1);
 			chat.state.messages.splice(index + 1, 0, message);
-			updateOrInsertHistory();
+			await updateOrInsertHistory();
 		}
 	}
 
@@ -324,7 +321,7 @@
 		if (index >= 0) {
 			if (chat.state.messages[index].index > 0) {
 				chat.state.messages[index].index = chat.state.messages[index].index - 1;
-				updateOrInsertHistory();
+				await updateOrInsertHistory();
 			}
 		}
 	}
@@ -335,7 +332,7 @@
 		if (index >= 0) {
 			if (chat.state.messages[index].index < chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index = chat.state.messages[index].index + 1;
-				updateOrInsertHistory();
+				await updateOrInsertHistory();
 			}
 		}
 	}
@@ -348,30 +345,30 @@
 			if (chat.state.messages[index].index >= chat.state.messages[index].versions.length - 1) {
 				chat.state.messages[index].index -= 1;
 			}
-			updateOrInsertHistory();
+			await updateOrInsertHistory();
 		}
 	}
 
-	function updateMessage(message: Message, role: MessageRole, content: MessageContent) {
+	async function updateMessage(message: Message, role: MessageRole, content: MessageContent) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const active = chat.state.messages[index];
 			active.role = role;
 			active.versions[active.index].content = content;
-			updateOrInsertHistory();
+			await updateOrInsertHistory();
 		}
 	}
 
-	function deleteMessage(message: Message) {
+	async function deleteMessage(message: Message) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			chat.state.messages.splice(index, 1);
 			if (chat.state.messages.length === 0) {
-				removeFromHistory();
+				await removeFromHistory();
 			} else {
-				updateOrInsertHistory();
+				await updateOrInsertHistory();
 			}
 		}
 	}

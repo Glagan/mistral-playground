@@ -11,3 +11,10 @@ export type MessageInteraction = {
 	deleteMessage: (message: Message) => void;
 	generate: (event: Event) => void;
 };
+
+export function findFirstTextNode(messages: Message[]) {
+	return messages
+		.find((m) => m.role === 'user')
+		?.versions.find((v) => v.content.find((c) => c.type === 'text'))
+		?.content.find((c) => c.type === 'text');
+}

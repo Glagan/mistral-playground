@@ -1,53 +1,64 @@
 <script lang="ts">
-	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
-	import { chat, type SharedChatState } from '$lib/stores/chat.svelte';
-	import { stringify } from 'devalue';
-	import { compress } from '$lib/compress';
 	import { joinURL } from 'ufo';
+	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
+	import LinkIcon from 'lucide-svelte/icons/link';
+	import KeyRoundIcon from 'lucide-svelte/icons/key-round';
+	import InfoIcon from 'lucide-svelte/icons/info';
+	import { chat } from '$lib/stores/chat.svelte';
+	import type { SelectChatShare } from '$lib/server/schema';
+	import { findFirstTextNode } from '$lib/message';
+	import { db } from '$lib/stores/db';
 
 	const modalStore = getModalStore();
 	const toastStore = getToastStore();
 
-	async function copyAndClose() {
-		const sharedOptions: SharedChatState['o'] = {
-			m: chat.state.options.model
-		};
-		if (typeof chat.state.options.temperature === 'number') {
-			sharedOptions.t = chat.state.options.temperature;
-		}
-		if (typeof chat.state.options.topP === 'number') {
-			sharedOptions.tP = chat.state.options.topP;
-		}
-		if (typeof chat.state.options.maxTokens === 'number' && chat.state.options.maxTokens > 0) {
-			sharedOptions.mT = chat.state.options.maxTokens;
-		}
-		if (typeof chat.state.options.randomSeed === 'number') {
-			sharedOptions.r = chat.state.options.randomSeed;
-		}
-		if (chat.state.options.json === true) {
-			sharedOptions.j = true;
-		}
-		if (chat.state.options.safePrompt === true) {
-			sharedOptions.s = true;
-		}
-		const shared: SharedChatState = {
-			m: chat.state.messages.map((message) => {
-				return {
-					t: message.type === 'user' ? 1 : message.type === 'system' ? 2 : undefined,
-					c: message.content[message.index]
-				};
-			}),
-			o: sharedOptions
-		};
-		const stringified = stringify(shared);
-		const compressed = btoa(await compress(stringified));
-		const link = `${joinURL(window.location.host, 'share', compressed.replaceAll('/', '-'))}`;
-		await navigator.clipboard.writeText(link);
+	let loading = $state(false);
+	let shareId = $state('');
+	let deletionKey = $state('');
+
+	async function generate() {
+		loading = true;
+		const response = await fetch('/api/share', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify(chat.state)
+		});
+		const body = (await response.json()) as { chatShare: SelectChatShare };
+		shareId = body.chatShare.id;
+		deletionKey = body.chatShare.deletionKey;
+		await db.share.add({
+			id: body.chatShare.id,
+			title: findFirstTextNode(chat.state.messages)?.text ?? '',
+			deletionKey: body.chatShare.deletionKey,
+			createdAt: body.chatShare.createdAt
+		});
 		toastStore.trigger({
 			classes: 'variant-filled-success',
-			message: 'Link copied to clipboard'
+			message: 'Chat share link created'
 		});
-		modalStore.close();
+		loading = false;
+	}
+
+	async function copyShareLink(includeDeletion = false) {
+		await navigator.clipboard.writeText(
+			includeDeletion
+				? `${joinURL(window.location.host, 'share', shareId)}?key=${deletionKey}`
+				: `${joinURL(window.location.host, 'share', shareId)}`
+		);
+		toastStore.trigger({
+			classes: 'variant-filled-success',
+			message: 'Chat share link copied'
+		});
+	}
+
+	async function copyDeletionKey() {
+		await navigator.clipboard.writeText(deletionKey);
+		toastStore.trigger({
+			classes: 'variant-filled-success',
+			message: 'Deletion key copied'
+		});
 	}
 </script>
 
@@ -55,16 +66,70 @@
 	<div>
 		<h2 class="text-xl">Share</h2>
 		<div class="card variant-filled-surface p-4 flex flex-col gap-4">
-			<div>Shared links can't be deleted.</div>
-			<div>Your API key is safe and <b>not</b> included in the shared link.</div>
+			<div>The created Shared link is public and can't be deleted without it's key.</div>
+			<div>Your API key is safe and <b>not</b> included in the share link.</div>
+			{#if shareId}
+				<div>
+					<p>Chat share link</p>
+					<div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
+						<div class="input-group-shim">
+							<LinkIcon size={24} />
+						</div>
+						<input
+							type="text"
+							value={joinURL(window.location.host, 'share', shareId)}
+							readonly
+							placeholder="Chat share link"
+						/>
+					</div>
+				</div>
+				<div class="grid grid-cols-2 gap-2 items-center">
+					<button type="button" onclick={() => copyShareLink()} class="btn variant-ghost-secondary">Copy</button>
+					<button type="button" onclick={() => copyShareLink(true)} class="btn variant-ghost-success"
+						>Copy with deletion key</button
+					>
+				</div>
+			{/if}
+			{#if deletionKey}
+				<div>
+					<p>Deletion key</p>
+					<div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
+						<div class="input-group-shim">
+							<KeyRoundIcon size={24} />
+						</div>
+						<input type="text" value={deletionKey} readonly placeholder="Deletion key" />
+						<button type="button" onclick={copyDeletionKey} class="variant-filled-success">Copy</button>
+					</div>
+				</div>
+			{/if}
+			{#if shareId}
+				<aside class="alert variant-ghost-tertiary p-2">
+					<div class="input-group-shim">
+						<InfoIcon size={24} />
+					</div>
+					<div class="alert-message">Your shared chats are saved in your shared chat history.</div>
+				</aside>
+			{/if}
 		</div>
 		<div class="flex items-center justify-end gap-4 mt-2">
-			<button type="button" class="flex-shrink-0 btn variant-ghost-primary" onclick={() => modalStore.close()}>
+			<button
+				type="button"
+				class="flex-shrink-0 btn variant-ghost-primary"
+				disabled={loading}
+				onclick={() => modalStore.close()}
+			>
 				Close
 			</button>
-			<button type="submit" class="flex-shrink-0 btn variant-filled-success" onclick={() => copyAndClose()}>
-				Copy
-			</button>
+			{#if !shareId}
+				<button
+					type="submit"
+					class="flex-shrink-0 btn variant-filled-success"
+					disabled={loading}
+					onclick={() => generate()}
+				>
+					Create
+				</button>
+			{/if}
 		</div>
 	</div>
 {/if}

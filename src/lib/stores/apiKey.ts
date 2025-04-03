@@ -1,4 +1,3 @@
-import { localStorageStore } from '@skeletonlabs/skeleton';
-import type { Writable } from 'svelte/store';
+import { writable, type Writable } from 'svelte/store';
 
-export const apiKey: Writable<string> = localStorageStore('apiKey', '');
+export const apiKey: Writable<string> = writable('');

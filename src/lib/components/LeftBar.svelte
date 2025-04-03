@@ -24,7 +24,12 @@
 >
 	<img class="block max-h-14 lg:max-h-max lg:mx-auto" src="/logo-dark.webp" alt="Mistral Playground" />
 	<div class="flex lg:hidden flex-col items-center gap-2">
-		<button type="button" class="transition-all font-bold text-lg" onclick={openNavigationDrawer}>
+		<button
+			type="button"
+			aria-label="Navigation"
+			class="transition-all font-bold text-lg"
+			onclick={openNavigationDrawer}
+		>
 			<MenuIcon size={40} />
 		</button>
 	</div>

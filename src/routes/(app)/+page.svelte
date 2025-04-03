@@ -13,6 +13,8 @@
 	function onSubmit(event: Event) {
 		event.preventDefault();
 		if (apiKeyInput) {
+			// Create a cookie to be able to render the index page on the server if possible
+			document.cookie = `apiKey=${apiKeyInput}`;
 			apiKey.set(apiKeyInput);
 			goto('/chat');
 		}
@@ -45,6 +47,3 @@
 		</form>
 	</div>
 </div>
-
-<style lang="postcss">
-</style>

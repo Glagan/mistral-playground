@@ -10,44 +10,6 @@ export type ChatState = {
 	options: ChatOptions;
 };
 
-export type SharedChatState = {
-	m: // Old schema
-	(
-		| {
-				t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
-				c: string; // content
-		  }
-		| [
-				{
-					t: 1 | 2;
-					c: (
-						| {
-								t: 1; // 1: "text
-								e: string; // text
-						  }
-						| {
-								t: 2; // 2: "image_url"
-								e: string; // image_url
-						  }
-						| {
-								// undefined: "document_url"
-								e: string; // document_url
-						  }
-					)[];
-				}
-		  ]
-	)[];
-	o: {
-		m: string; // model
-		t?: number | undefined; // temperature
-		tP?: number | undefined; // topP
-		mT?: number | undefined; // maxTokens
-		r?: number | undefined; // randomSeed
-		j?: boolean | undefined; // json
-		s?: boolean | undefined; // safePrompt
-	};
-};
-
 function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {

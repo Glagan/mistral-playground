@@ -1,4 +1,4 @@
-FROM oven/bun:1.2.7-alpine as builder
+FROM oven/bun:1.2.8-alpine as builder
 
 WORKDIR /app
 COPY package*.json ./
@@ -7,7 +7,7 @@ COPY . .
 RUN bun run build
 # RUN bun prune --production
 
-FROM oven/bun:1.2.7-alpine
+FROM oven/bun:1.2.8-alpine
 
 WORKDIR /app
 COPY --from=builder /app/build build/

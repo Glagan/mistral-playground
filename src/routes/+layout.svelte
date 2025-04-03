@@ -17,7 +17,11 @@
 	import sql from 'highlight.js/lib/languages/sql';
 	import python from 'highlight.js/lib/languages/python';
 
-	const { children } = $props();
+	const { data, children } = $props();
+
+	if (data.apiKey) {
+		apiKey.set(data.apiKey);
+	}
 
 	hljs.registerLanguage('xml', xml); // for HTML
 	hljs.registerLanguage('css', css);
@@ -61,6 +65,3 @@
 </Drawer>
 <Modal />
 <Toast />
-
-<style lang="postcss">
-</style>

@@ -10,22 +10,6 @@ export type OCRState = {
 	options: OCROptions;
 };
 
-export type SharedOCRState = {
-	m: {
-		t?: 1 | 2; // type, 1: "user", 2: "system", undefined: "assistant"
-		c: string; // content
-	}[];
-	o: {
-		m: string; // model
-		t?: number | undefined; // temperature
-		tP?: number | undefined; // topP
-		mT?: number | undefined; // maxTokens
-		r?: number | undefined; // randomSeed
-		j?: boolean | undefined; // json
-		s?: boolean | undefined; // safePrompt
-	};
-};
-
 function defaultOptions(): OCROptions {
 	// return { model: get(settings).model ?? 'mistral-ocr-latest' };
 	return { model: 'mistral-ocr-latest' };

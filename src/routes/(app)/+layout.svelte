@@ -23,6 +23,3 @@
 		<OcrHistoryList mobile={false} />
 	{/if}
 </div>
-
-<style lang="postcss">
-</style>
