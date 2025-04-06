@@ -16,7 +16,7 @@
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
-	import { v4 as uuid } from 'uuid';
+	import { v7 as uuid } from 'uuid';
 	import Settings2Icon from 'lucide-svelte/icons/settings-2';
 	import CircleHelpIcon from 'lucide-svelte/icons/circle-help';
 	import FileTextIcon from 'lucide-svelte/icons/file-text';

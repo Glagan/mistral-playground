@@ -14,7 +14,7 @@
 
 	const drawerStore = getDrawerStore();
 
-	let chatHistory = liveQuery(() => db.chat.toArray());
+	let chatHistory = liveQuery(() => db.chat.reverse().toArray());
 
 	function loadHistoryChatEntry(entry: ChatState) {
 		drawerStore.close();
