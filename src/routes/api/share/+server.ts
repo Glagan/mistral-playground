@@ -3,7 +3,8 @@ import { chatShareTable } from '$lib/server/schema';
 import type { ChatState } from '$lib/stores/chat.svelte';
 import { error, json } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { CryptoHasher, randomUUIDv7 } from 'bun';
+import { createHash } from 'crypto';
+import { v7 as uuid } from 'uuid';
 import { z } from 'zod';
 
 const messageDetailsSchema = z.discriminatedUnion('role', [
@@ -71,7 +72,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		error(400, validated.error.message);
 	}
 
-	const id = randomUUIDv7('hex');
+	const id = uuid();
 	// Select only the active versions of each messages
 	for (let index = 0; index < validated.data.messages.length; index++) {
 		const message = validated.data.messages[index];
@@ -81,7 +82,7 @@ export const POST: RequestHandler = async ({ request }) => {
 		}
 	}
 
-	const deletionKey = new CryptoHasher('md5').update(Date.now().toString()).update(id).digest('hex');
+	const deletionKey = createHash('md5').update(Date.now().toString()).update(id).digest('hex');
 	const [chatShare] = await db
 		.insert(chatShareTable)
 		.values([{ id, data: validated.data as ChatState, deletionKey }])

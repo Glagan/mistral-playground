@@ -13,7 +13,7 @@
 
 	const drawerStore = getDrawerStore();
 
-	let ocrHistory = liveQuery(() => db.ocr.toArray());
+	let ocrHistory = liveQuery(() => db.ocr.reverse().toArray());
 
 	function loadHistoryOCREntry(entry: OCRState) {
 		drawerStore.close();

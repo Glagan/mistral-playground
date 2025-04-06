@@ -11,7 +11,7 @@
 	const toastStore = getToastStore();
 
 	let loading = $state(false);
-	let sharedChats = liveQuery(() => db.share.toArray());
+	let sharedChats = liveQuery(() => db.share.reverse().toArray());
 
 	async function copyShareLink(entry: ChatShareState) {
 		await navigator.clipboard.writeText(joinURL(window.location.origin, 'share', entry.id));

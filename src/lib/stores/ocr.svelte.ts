@@ -1,5 +1,5 @@
 import type { OCROptions } from '../types';
-import { v4 as uuid } from 'uuid';
+import { v7 as uuid } from 'uuid';
 import type { OCRPageObject, OCRUsageInfo } from '@mistralai/mistralai/models/components';
 
 export type OCRState = {
