@@ -498,16 +498,6 @@
 				{loading}
 				{error}
 			/>
-			{#if loading}
-				<button
-					class="block btn variant-ghost-error transition-all mx-auto mt-4"
-					type="button"
-					transition:slide={{ axis: 'y' }}
-					onclick={stopGenerating}
-				>
-					Stop
-				</button>
-			{/if}
 		{:else}
 			<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 		{/if}
@@ -634,19 +624,25 @@
 				</button>
 			</label>
 			<div class="flex flex-row gap-2">
-				<button
-					type="submit"
-					class="btn variant-filled-primary transition-all"
-					disabled={loading ||
-						models.loading ||
-						!!models.error ||
-						(!promptText &&
-							(chat.state.messages.length === 0 ||
-								(chat.state.messages.length > 0 &&
-									chat.state.messages[chat.state.messages.length - 1].role !== 'user')))}
-				>
-					Submit
-				</button>
+				{#if loading}
+					<button class="block btn variant-ghost-error transition-all" type="button" onclick={stopGenerating}>
+						Stop
+					</button>
+				{:else}
+					<button
+						type="submit"
+						class="btn variant-filled-primary transition-all"
+						disabled={loading ||
+							models.loading ||
+							!!models.error ||
+							(!promptText &&
+								(chat.state.messages.length === 0 ||
+									(chat.state.messages.length > 0 &&
+										chat.state.messages[chat.state.messages.length - 1].role !== 'user')))}
+					>
+						Submit
+					</button>
+				{/if}
 			</div>
 		</div>
 		{#if showOptions}
