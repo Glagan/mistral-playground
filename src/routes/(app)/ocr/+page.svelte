@@ -134,16 +134,6 @@
 	{:else}
 		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
 	{/if}
-	{#if loading}
-		<button
-			class="btn variant-ghost-error transition-all mx-auto"
-			type="button"
-			transition:slide={{ axis: 'y' }}
-			onclick={stopGenerating}
-		>
-			Stop
-		</button>
-	{/if}
 	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
 		<ModelError />
 		<label class="label">
@@ -222,13 +212,17 @@
 				<!-- {#if ocr.state.messages.length}
 					<button type="button" class="btn variant-ghost-secondary mx-auto" onclick={() => openShare()}>Share</button>
 				{/if} -->
-				<button
-					type="submit"
-					class="btn variant-filled-primary transition-all"
-					disabled={loading || models.loading || !!models.error || !files?.length}
-				>
-					Submit
-				</button>
+				{#if loading}
+					<button class="btn variant-ghost-error transition-all" type="button" onclick={stopGenerating}> Stop </button>
+				{:else}
+					<button
+						type="submit"
+						class="btn variant-filled-primary transition-all"
+						disabled={loading || models.loading || !!models.error || !files?.length}
+					>
+						Submit
+					</button>
+				{/if}
 			</div>
 		</div>
 		{#if showOptions}
