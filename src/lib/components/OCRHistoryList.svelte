@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
+	import { fly } from 'svelte/transition';
 	import GalleryHorizontalEndIcon from 'lucide-svelte/icons/gallery-horizontal-end';
 	import Trash2Icon from 'lucide-svelte/icons/trash-2';
 	import { ocr, type OCRState } from '$lib/stores/ocr.svelte';
@@ -40,14 +40,14 @@
 		<GalleryHorizontalEndIcon />
 		<span>History</span>
 	</h2>
-	<div class="flex flex-col gap-2">
-		{#each $ocrHistory as entry (entry.id)}
+	<div class="flex flex-col gap-2 overflow-hidden">
+		{#each $ocrHistory as entry, index (entry.id)}
 			<div
 				class="flex flex-col lg:flex-row lg:items-center gap-2 border-2 py-1 rounded-md transition-all {entry.id ===
 				ocr.state.id
 					? 'border-primary-700 bg-primary-700/20 px-2'
 					: 'border-transparent lg:px-2'}"
-				transition:slide={{ axis: 'y' }}
+				transition:fly={{ x: 20, delay: 50 * index }}
 			>
 				<div class="flex-grow flex-shrink truncate">
 					{entry.filename}
