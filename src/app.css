@@ -74,3 +74,7 @@ pre.codeblock-pre > code.codeblock-code {
 .rendered-markdown a {
 	@apply text-primary-600 underline;
 }
+
+.rendered-markdown think {
+	@apply bg-primary-300/20 border-l-2 border-primary-300 p-2 rounded-r block whitespace-pre-wrap overflow-auto font-light;
+}

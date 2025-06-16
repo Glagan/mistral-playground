@@ -99,6 +99,16 @@
 	let loading = $state(false);
 	let abortController: AbortController | null = null;
 
+	function scrollDown(outputNode: HTMLElement | null | undefined) {
+		if (outputNode) {
+			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
+			// const thinkBlock = document.getElementById('messages-container')!.querySelector('div:last-of-type think');
+			// if (thinkBlock) {
+			// 	thinkBlock.scroll({ top: thinkBlock.scrollHeight, behavior: 'smooth' });
+			// }
+		}
+	}
+
 	async function generate(messages: Message[], answer: AssistantMessage) {
 		const outputNode = document.getElementById('messages-container')?.parentElement;
 		loading = true;
@@ -149,9 +159,7 @@
 					chat.state.usage = data.usage;
 					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
 				}
-				if (outputNode) {
-					outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-				}
+				scrollDown(outputNode);
 			}
 			if (!abortController.signal.aborted) {
 				if (chat.state.options.json && answer.versions[answer.index].content[0].type === 'text') {
@@ -159,9 +167,7 @@
 						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
 				}
 			}
-			if (outputNode) {
-				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-			}
+			scrollDown(outputNode);
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors
@@ -205,9 +211,7 @@
 				role: 'system',
 				versions: [{ content: [{ type: 'text', text: systemPrompt }] }]
 			});
-			if (outputNode) {
-				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-			}
+			scrollDown(outputNode);
 		}
 		if (promptText.length) {
 			const message: Message = {
@@ -235,9 +239,7 @@
 				files = [];
 			}
 			chat.state.messages.push(message);
-			if (outputNode) {
-				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-			}
+			scrollDown(outputNode);
 		}
 		promptText = '';
 
@@ -250,9 +252,7 @@
 			versions: [{ content: [{ type: 'text', text: '' }] }]
 		});
 		chat.state.messages.push(answer);
-		if (outputNode) {
-			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
-		}
+		scrollDown(outputNode);
 
 		await generate(messagesToSend, answer);
 	}
