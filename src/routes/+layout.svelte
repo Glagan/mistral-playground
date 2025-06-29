@@ -45,7 +45,7 @@
 	const pages: Record<string, string> = {
 		'/chat': 'Chat completion',
 		'/ocr': 'OCR',
-		'/embeddings': 'embeddings',
+		'/embeddings': 'Embeddings',
 		'/shared': 'Shared chats',
 		'/settings': 'Settings',
 		'/about': 'About',

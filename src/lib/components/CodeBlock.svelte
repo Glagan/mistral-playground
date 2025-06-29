@@ -24,3 +24,4 @@
 {#if htmlCode}
 	{@html htmlCode}
 {/if}
+<p class="break-words whitespace-pre-wrap"></p>

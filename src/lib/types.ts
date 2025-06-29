@@ -1,4 +1,4 @@
-import type { ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
+import { EmbeddingDtype, type ContentChunk, type TextChunk } from '@mistralai/mistralai/models/components';
 
 export type Usage = { promptTokens: number; completionTokens: number; totalTokens: number; tps?: number };
 
@@ -49,3 +49,6 @@ export type Page = {
 };
 
 export type OCROptions = { model: string };
+
+export const embeddingTypes = ['float', 'int8', 'uint8', 'binary', 'ubinary'] as const;
+export type EmbeddingType = (typeof embeddingTypes)[number];

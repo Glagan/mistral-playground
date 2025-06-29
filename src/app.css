@@ -119,3 +119,7 @@
 		@apply bg-background text-foreground;
 	}
 }
+
+.shiki.github-dark {
+	@apply rounded p-4 wrap-anywhere whitespace-pre-wrap;
+}
