@@ -1,10 +1,11 @@
 <script lang="ts">
 	import MessageSvelte from '$lib/components/Message.svelte';
 	import type { Message } from '$lib/types';
-	import { CodeBlock } from '@skeletonlabs/skeleton';
-	import RefreshCwIcon from 'lucide-svelte/icons/refresh-cw';
+	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import { slide } from 'svelte/transition';
 	import type { MessageInteraction } from '$lib/message';
+	import CodeBlock from './CodeBlock.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	let {
 		messages,
@@ -19,7 +20,7 @@
 	} = $props();
 </script>
 
-<div id="messages-container" class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
+<div id="messages-container" class="flex w-full shrink grow flex-col gap-4 overflow-auto min-h-0">
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id + message.index)}
 			<MessageSvelte
@@ -34,26 +35,21 @@
 	{/if}
 	{#if interact && messages.length && messages[messages.length - 1].role === 'user'}
 		<div class="flex flex-row flex-nowrap">
-			<div class="flex items-center justify-center flex-grow flex-shrink-0 w-full">
-				<button
-					type="button"
-					class="btn btn-lg variant-soft-primary transition-all disabled:opacity-75"
-					disabled={loading}
-					onclick={interact.generate}
-				>
+			<div class="flex w-full shrink-0 grow items-center justify-center">
+				<Button disabled={loading} onclick={interact.generate}>
 					<RefreshCwIcon size={16} />
 					<span>Generate response</span>
-				</button>
+				</Button>
 			</div>
 		</div>
 	{/if}
 	{#if error}
-		<aside class="flex flex-col gap-2 items-start alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-			<div class="alert-message space-y-4 rendered-markdown">
+		<aside class="alert variant-ghost-error flex flex-col items-start gap-2" transition:slide={{ axis: 'y' }}>
+			<div class="alert-message rendered-markdown space-y-4">
 				{error.text}
 			</div>
 			{#if error.body}
-				<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} class="!ml-0 w-full"></CodeBlock>
+				<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} />
 			{/if}
 		</aside>
 	{/if}

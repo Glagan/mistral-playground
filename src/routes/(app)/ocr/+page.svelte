@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { slide } from 'svelte/transition';
-	import { focusTrap, FileDropzone, getToastStore } from '@skeletonlabs/skeleton';
+	import { FileDropzone } from '@skeletonlabs/skeleton';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
-	import Settings2Icon from 'lucide-svelte/icons/settings-2';
-	import FileTextIcon from 'lucide-svelte/icons/file-text';
+	import Settings2Icon from '@lucide/svelte/icons/settings-2';
+	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
@@ -17,12 +17,11 @@
 	import prettyBytes from 'pretty-bytes';
 	import { fileToB64 } from '$lib/files';
 	import { db } from '$lib/stores/db';
+	import { toast } from 'svelte-sonner';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
 	}
-
-	const toastStore = getToastStore();
 
 	let files = $state<FileList | undefined>(undefined);
 	let showOptions = $state(false);
@@ -51,7 +50,7 @@
 		ocr.reset();
 
 		if (file.size > 50 * 1024 * 1024) {
-			toastStore.trigger({ message: 'File size should be less than 50MB.' });
+			toast.info('File size should be less than 50MB.');
 			return;
 		}
 
@@ -126,27 +125,25 @@
 	});
 </script>
 
-<div
-	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
->
+<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:max-h-screen">
 	{#if ocr.state.pages.length}
 		<PdfPages pages={ocr.state.pages} {loading} {error} />
 	{:else}
-		<div class="flex justify-center items-center flex-grow flex-shrink w-full overflow-auto"></div>
+		<div class="flex w-full shrink grow items-center justify-center overflow-auto"></div>
 	{/if}
-	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
+	<form class="flex shrink-0 flex-col gap-2" onsubmit={onSubmit}>
 		<ModelError />
 		<label class="label">
-			<div class="flex justify-between items-center gap-2">
+			<div class="flex items-center justify-between gap-2">
 				<div class="flex items-center gap-2 truncate">
 					{#if ocr.state.options.model}
-						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
+						<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
 							<span class="badge variant-soft-secondary">Model</span>
 							<div>{ocr.state.options.model}</div>
 						</div>
 					{/if}
 					{#if ocr.state.usage}
-						<div class="flex items-center gap-2 text-xs opacity-75 text-right text-primary-500">
+						<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
 							<span class="badge variant-soft-secondary">Document</span>
 							<div>
 								Pages: <span class="text-primary-400">{ocr.state.usage.pagesProcessed}</span>
@@ -154,7 +151,7 @@
 						</div>
 					{/if}
 					{#if ocr.state.filename}
-						<div class="text-xs text-primary-500 truncate" title={ocr.state.filename}>{ocr.state.filename}</div>
+						<div class="text-primary-500 truncate text-xs" title={ocr.state.filename}>{ocr.state.filename}</div>
 					{/if}
 				</div>
 			</div>
@@ -178,12 +175,12 @@
 			{:else}
 				{@const file = files[0]}
 				<div
-					class="dropzone textarea relative flex flex-row gap-2 items-center border-2 border-dashed !border-primary-500 p-4 py-4 rounded-container-token"
+					class="dropzone textarea !border-primary-500 rounded-container-token relative flex flex-row items-center gap-2 border-2 border-dashed p-4 py-4"
 				>
-					<div class="flex-grow-0 flex-shrink-0">
+					<div class="shrink-0 grow-0">
 						<FileTextIcon size="48" />
 					</div>
-					<div class="flex flex-col gap-1 flex-grow flex-shrink">
+					<div class="flex shrink grow flex-col gap-1">
 						<div class="font-bold">{file.name}</div>
 						<div>{prettyBytes(file.size)}</div>
 					</div>
@@ -229,7 +226,7 @@
 			<div class="flex flex-col gap-2" transition:slide={{ axis: 'y' }}>
 				<div class="grid grid-cols-3 gap-2">
 					<div class="flex items-center gap-1">
-						<select bind:value={ocr.state.options.model} class="select flex-grow-0" disabled={models.loading}>
+						<select bind:value={ocr.state.options.model} class="select grow-0" disabled={models.loading}>
 							{#each Object.entries(models.ocrGroups) as [groupName, items]}
 								<optgroup label={groupName}>
 									{#each items as item}

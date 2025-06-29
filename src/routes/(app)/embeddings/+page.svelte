@@ -1,14 +1,14 @@
 <script lang="ts">
 	import { fade, slide } from 'svelte/transition';
-	import { CodeBlock, focusTrap } from '@skeletonlabs/skeleton';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
-	import Settings2Icon from 'lucide-svelte/icons/settings-2';
+	import Settings2Icon from '@lucide/svelte/icons/settings-2';
 	import { marked } from 'marked';
 	import { getClientForRequest } from '$lib/mistral';
+	import CodeBlock from '$lib/components/CodeBlock.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -52,30 +52,28 @@
 	}
 </script>
 
-<div
-	class="flex flex-grow flex-shrink justify-center items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen"
->
-	<div class="flex flex-col flex-grow flex-shrink gap-4 w-full overflow-auto">
+<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:max-h-screen">
+	<div class="flex w-full shrink grow flex-col gap-4 overflow-auto">
 		{#if error}
 			<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-				<div class="alert-message space-y-4 rendered-markdown">
+				<div class="alert-message rendered-markdown space-y-4">
 					{@html renderedError}
 				</div>
 			</aside>
 		{/if}
 		{#if embeddings.length > 0}
 			<div class="card overflow-x-hidden">
-				<CodeBlock language="txt" code={embeddings.join(', ')}></CodeBlock>
+				<CodeBlock code={embeddings.join(',')} language="json" />
 			</div>
 		{:else if loading}
-			<div class="card p-4 variant-ghost-secondary overflow-x-hidden">
+			<div class="card variant-ghost-secondary overflow-x-hidden p-4">
 				<span class="text-surface-200 italic">Loading...</span>
 			</div>
 		{/if}
 	</div>
-	<form class="flex flex-col gap-2 flex-shrink-0" use:focusTrap={true} onsubmit={onSubmit}>
+	<form class="flex shrink-0 flex-col gap-2" onsubmit={onSubmit}>
 		<label class="label">
-			<div class="flex justify-end items-center">
+			<div class="flex items-center justify-end">
 				{#if tokens > 0}
 					<span class="text-xs" transition:fade>
 						~<span class="text-surface-300">{tokens}</span> tokens
@@ -109,8 +107,8 @@
 			</button>
 		</div>
 		{#if showOptions}
-			<div class="grid grid-cols-2 lg:grid-cols-3 gap-2 items-center" transition:slide={{ axis: 'y' }}>
-				<select bind:value={model} class="select flex-grow-0">
+			<div class="grid grid-cols-2 items-center gap-2 lg:grid-cols-3" transition:slide={{ axis: 'y' }}>
+				<select bind:value={model} class="select grow-0">
 					<option value="mistral-embed">mistral-embed</option>
 				</select>
 			</div>

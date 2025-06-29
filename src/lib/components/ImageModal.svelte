@@ -1,13 +1,34 @@
 <script lang="ts">
-	import { getModalStore } from '@skeletonlabs/skeleton';
+	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import type { Snippet } from 'svelte';
+	import ExpandIcon from '@lucide/svelte/icons/expand';
+	import Button from '$lib/components/ui/button/button.svelte';
 
-	const modalStore = getModalStore();
+	let {
+		image,
+		title,
+		disabled,
+		children
+	}: {
+		image: string;
+		title: string;
+		disabled?: boolean;
+		children?: Snippet;
+	} = $props();
 </script>
 
-{#if $modalStore[0]}
-	<img
-		src={$modalStore[0]?.image}
-		alt={$modalStore[0]?.title}
-		class="max-w-[90vw] max-h-[90vh] rounded-container-token overflow-hidden shadow-xl"
-	/>
-{/if}
+<Dialog.Root>
+	<Dialog.Trigger>
+		{#if children}
+			{@render children()}
+		{:else}
+			<Button {disabled}>
+				<ExpandIcon size={16} />
+				Expand
+			</Button>
+		{/if}
+	</Dialog.Trigger>
+	<Dialog.Content>
+		<img src={image} alt={title} class="rounded-container-token max-h-[90vh] max-w-[90vw] overflow-hidden shadow-xl" />
+	</Dialog.Content>
+</Dialog.Root>

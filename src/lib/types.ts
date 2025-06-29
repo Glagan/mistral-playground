@@ -27,10 +27,11 @@ export type ChatOptions = {
 	model: string;
 	temperature: number;
 	topP: number;
-	maxTokens: undefined | number;
+	maxTokens: number | undefined;
 	json?: boolean;
 	safePrompt: boolean;
-	randomSeed: undefined | number;
+	seed?: number | undefined;
+	systemPrompt?: string | undefined;
 };
 
 export type Page = {
