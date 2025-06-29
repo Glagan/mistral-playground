@@ -459,8 +459,8 @@
 	});
 </script>
 
-<div class="flex shrink grow flex-row gap-0 pb-4">
-	<form class="flex flex-col gap-6 lg:w-[30vw]">
+<div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
+	<form class="flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]">
 		<div class="flex w-full flex-col gap-1.5">
 			<label for="topP" class="text-sm leading-none font-medium">Model</label>
 			<Popover.Root bind:open>
@@ -566,29 +566,30 @@
 		</div>
 		<Textarea rows={5} placeholder="System prompt" bind:value={chat.state.options.systemPrompt} />
 	</form>
-	<div class="relative flex w-full shrink grow flex-col px-4">
-		{#if chat.state.messages.length}
-			<Messages
-				messages={chat.state.messages}
-				interact={{
-					moveUp,
-					moveDown,
-					refresh,
-					previousVersion,
-					nextVersion,
-					deleteVersion,
-					updateMessage,
-					deleteMessage,
-					generate: onSubmit
-				}}
-				{loading}
-				{error}
-			/>
-		{:else}
-			<div class="flex w-full shrink grow items-center justify-center overflow-auto"></div>
-		{/if}
-		<div class="from-surface-900/0 to-surface-900 sticky right-0 bottom-0 left-0 h-4 bg-gradient-to-b"></div>
-		<form class="flex shrink-0 flex-col gap-2" onsubmit={onSubmit}>
+	<div class="relative flex h-full w-full shrink grow flex-col">
+		<div class="flex-1 overflow-y-auto px-4">
+			{#if chat.state.messages.length}
+				<Messages
+					messages={chat.state.messages}
+					interact={{
+						moveUp,
+						moveDown,
+						refresh,
+						previousVersion,
+						nextVersion,
+						deleteVersion,
+						updateMessage,
+						deleteMessage,
+						generate: onSubmit
+					}}
+					{loading}
+					{error}
+				/>
+			{:else}
+				<div class="flex h-full w-full items-center justify-center"></div>
+			{/if}
+		</div>
+		<form class="flex shrink-0 flex-col gap-2 px-4 pt-4" onsubmit={onSubmit}>
 			{#if !stateIsValid}
 				<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 					<div class="alert-message">

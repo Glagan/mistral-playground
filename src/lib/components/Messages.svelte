@@ -20,7 +20,7 @@
 	} = $props();
 </script>
 
-<div id="messages-container" class="flex w-full shrink grow flex-col gap-4 overflow-auto min-h-0">
+<div id="messages-container" class="flex w-full shrink grow flex-col gap-4 overflow-auto">
 	{#if messages.length > 0}
 		{#each messages as message, index (message.id + message.index)}
 			<MessageSvelte
