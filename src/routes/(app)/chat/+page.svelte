@@ -159,7 +159,9 @@
 					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
 					safePrompt: chat.state.options.safePrompt,
 					temperature: chat.state.options.temperature,
-					topP: chat.state.options.topP
+					topP: chat.state.options.topP,
+					frequencyPenalty: chat.state.options.frequencyPenalty,
+					presencePenalty: chat.state.options.presencePenalty
 				},
 				{ fetchOptions: { signal: abortController.signal } }
 			);
@@ -510,7 +512,7 @@
 			</label>
 			<div class="flex flex-row gap-2">
 				<Slider type="single" bind:value={chat.state.options.temperature} min={0} max={1} step={0.01} />
-				<span class="w-8">{chat.state.options.temperature}</span>
+				<span class="w-10">{chat.state.options.temperature}</span>
 			</div>
 		</div>
 		<div class="flex w-full flex-col gap-1.5">
@@ -525,7 +527,7 @@
 			</label>
 			<div class="flex flex-row gap-2">
 				<Slider type="single" id="topP" bind:value={chat.state.options.topP} min={0} max={1} step={0.01} />
-				<span class="w-8">{chat.state.options.topP}</span>
+				<span class="w-10">{chat.state.options.topP}</span>
 			</div>
 		</div>
 		<div class="flex flex-row items-center justify-between rounded-lg border p-4">
@@ -537,6 +539,58 @@
 				</div>
 			</div>
 			<Switch id="json_mode" bind:checked={chat.state.options.json} />
+		</div>
+		<div class="flex w-full flex-col gap-1.5">
+			<label for="topP" class="text-sm leading-none font-medium">
+				Presence penalty
+				{#if chat.state.options.presencePenalty !== 0}
+					<Button variant="outline" size="sm" onclick={() => (chat.state.options.presencePenalty = 0)}>
+						Reset
+						<RotateCcwIcon />
+					</Button>
+				{/if}
+			</label>
+			<p class="text-muted-foreground text-sm">
+				Determines how much the model penalizes the repetition of words or phrases.
+			</p>
+			<div class="flex flex-row gap-2">
+				<Slider
+					type="single"
+					id="presencePenalty"
+					bind:value={chat.state.options.presencePenalty}
+					min={-2}
+					max={2}
+					step={0.01}
+				/>
+				<span class="w-10">{chat.state.options.presencePenalty}</span>
+			</div>
+		</div>
+		<div class="flex w-full flex-col gap-1.5">
+			<label for="topP" class="text-sm leading-none font-medium">
+				Frequency penalty
+				{#if chat.state.options.frequencyPenalty !== 0}
+					<Button variant="outline" size="sm" onclick={() => (chat.state.options.frequencyPenalty = 0)}>
+						Reset
+						<RotateCcwIcon />
+					</Button>
+				{/if}
+			</label>
+			<p class="text-muted-foreground text-sm">
+				Penalizes the repetition of words based on their frequency in the generated text. A higher frequency penalty
+				discourages the model from repeating words that have already appeared frequently in the output, promoting
+				diversity and reducing repetition.
+			</p>
+			<div class="flex flex-row gap-2">
+				<Slider
+					type="single"
+					id="frequencyPenalty"
+					bind:value={chat.state.options.frequencyPenalty}
+					min={-2}
+					max={2}
+					step={0.01}
+				/>
+				<span class="w-10">{chat.state.options.frequencyPenalty}</span>
+			</div>
 		</div>
 		<div class="flex w-full flex-col gap-1.5">
 			<Label for="maxTokens">Max tokens</Label>

@@ -27,6 +27,8 @@ export type ChatOptions = {
 	model: string;
 	temperature: number;
 	topP: number;
+	presencePenalty: number | undefined;
+	frequencyPenalty: number | undefined;
 	maxTokens: number | undefined;
 	json?: boolean;
 	safePrompt: boolean;
