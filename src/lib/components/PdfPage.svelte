@@ -3,6 +3,7 @@
 	import hljs from 'highlight.js/lib/core';
 	import { marked } from 'marked';
 	import markedKatex from 'marked-katex-extension';
+	import * as Card from '$lib/components/ui/card/index.js';
 
 	let { page, loading }: { page: OCRPageObject; loading: boolean } = $props();
 	marked.use(markedKatex({ throwOnError: false }));
@@ -25,11 +26,9 @@
 <div class="text-center">
 	<div class="text-neutral-600">{page.index + 1}</div>
 </div>
-<div class="card p-4 variant-ghost-primary text-primary-300">
-	<div class="space-y-4 rendered-markdown max-w-full overflow-x-hidden">
-		{@html markdown}
-	</div>
-</div>
 
-<style>
-</style>
+<Card.Root class="w-full gap-3 py-3">
+	<Card.Content class="rendered-markdown relative max-w-full space-y-4 overflow-x-hidden px-3">
+		{@html markdown}
+	</Card.Content>
+</Card.Root>

@@ -12,7 +12,7 @@ export type OCRState = {
 
 function defaultOptions(): OCROptions {
 	// return { model: get(settings).model ?? 'mistral-ocr-latest' };
-	return { model: 'mistral-ocr-latest' };
+	return { model: 'mistral-ocr-latest', imageLimit: undefined, minSize: undefined };
 }
 
 export function createCurrent() {
