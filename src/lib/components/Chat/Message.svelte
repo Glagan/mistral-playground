@@ -16,7 +16,6 @@
 	import Button from '$lib/components/ui/button/button.svelte';
 	import ImageUpIcon from '@lucide/svelte/icons/image-up';
 	import { models } from '$lib/stores/models.svelte';
-	import { FileDropZone, type FileDropZoneProps } from '$lib/components/ui/file-drop-zone/index.js';
 	import type { ContentChunk } from '@mistralai/mistralai/models/components';
 	import { fileToB64, handleFileUpload } from '$lib/files';
 	import { toast } from 'svelte-sonner';
@@ -91,9 +90,12 @@
 		// }
 	};
 
-	const onUpload: FileDropZoneProps['onUpload'] = async (uploadedFiles) => {
+	async function onUpload(uploadedFiles: FileList | null) {
+		if (!uploadedFiles) {
+			return;
+		}
 		// we use set instead of an assignment since it accepts a File[]
-		const { files: validFiles, errors } = handleFileUpload(uploadedFiles);
+		const { files: validFiles, errors } = handleFileUpload(Array.from(uploadedFiles));
 		for (const error of errors) {
 			toast.error(error);
 		}
@@ -101,12 +103,12 @@
 			for (let index = 0; index < validFiles.length; index++) {
 				const file = validFiles[index];
 				if (file.type.includes('image/')) {
-					(message.versions[message.index].content as ContentChunk[]).push({
+					(messageCopy.versions[messageCopy.index].content as ContentChunk[]).push({
 						type: 'image_url' as const,
 						imageUrl: await fileToB64(file)
 					});
 				} else {
-					(message.versions[message.index].content as ContentChunk[]).push({
+					(messageCopy.versions[messageCopy.index].content as ContentChunk[]).push({
 						type: 'document_url' as const,
 						documentUrl: await fileToB64(file),
 						documentName: file.name
@@ -114,7 +116,7 @@
 				}
 			}
 		}
-	};
+	}
 </script>
 
 <Card.Root
@@ -158,19 +160,29 @@
 						<Trash2Icon size={16} />
 					</Button>
 				</div>
-			{:else}
+			{:else if editing.id !== message.id}
 				<div class="shrink grow"></div>
 			{/if}
 			<div class="flex shrink-0 flex-row flex-wrap items-center gap-2 {editing.id === message.id ? 'w-full' : ''}">
 				{#if editing.id === message.id}
-					<Button
-						variant="secondary"
-						disabled={loading || models.loading || !!models.error}
-						onclick={() => document.getElementById('fileUpload')?.click()}
-					>
-						<ImageUpIcon size={20} />
-						<span class="hidden md:inline-block">Upload image</span>
-					</Button>
+					<label for="messageFileUpload">
+						<input
+							id="messageFileUpload"
+							type="file"
+							multiple
+							accept="image/png,image/jpeg,image/jpg,image/webp"
+							onchange={(e) => onUpload(e.currentTarget.files)}
+							class="hidden"
+						/>
+						<Button
+							variant="secondary"
+							disabled={loading || models.loading || !!models.error || message.role !== 'user'}
+							onclick={() => document.getElementById('messageFileUpload')?.click()}
+						>
+							<ImageUpIcon size={20} />
+							<span class="hidden md:inline-block">Upload image</span>
+						</Button>
+					</label>
 					<span class="shrink grow"></span>
 					<Button variant="destructive" disabled={loading} onclick={cancelEdit}>Cancel</Button>
 					<Button disabled={loading} onclick={stopEditing}>Save</Button>

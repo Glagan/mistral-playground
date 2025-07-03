@@ -6,7 +6,7 @@
 	import { joinURL } from 'ufo';
 	import { goto } from '$app/navigation';
 	import { page } from '$app/state';
-	import Messages from '$lib/components/Messages.svelte';
+	import Messages from '$lib/components/Chat/Messages.svelte';
 	import MessageCircleQuestionIcon from '@lucide/svelte/icons/message-circle-question';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import BotIcon from '@lucide/svelte/icons/bot';

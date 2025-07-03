@@ -111,6 +111,10 @@
 	let loading = $state(false);
 	let abortController: AbortController | null = null;
 
+	function createNewChat() {
+		chat.reset();
+	}
+
 	function scrollDown(outputNode: HTMLElement | null | undefined) {
 		if (outputNode) {
 			outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
@@ -619,6 +623,7 @@
 			<Switch id="safePrompt" bind:checked={chat.state.options.safePrompt} />
 		</div>
 		<Textarea rows={5} placeholder="System prompt" bind:value={chat.state.options.systemPrompt} />
+		<Button class="mx-auto" onclick={createNewChat}>New chat</Button>
 	</form>
 	<div class="relative flex h-full w-full shrink grow flex-col">
 		<div class="flex-1 overflow-y-auto px-4">

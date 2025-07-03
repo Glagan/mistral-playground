@@ -27,8 +27,6 @@
 		dataType: 'json'
 	});
 
-	const { enhance } = form;
-
 	function closeAndFocusTrigger() {
 		open = false;
 		tick().then(() => {
@@ -37,7 +35,7 @@
 	}
 </script>
 
-<form class="flex flex-col items-stretch gap-4 lg:max-w-[30vw]" use:enhance>
+<form class="flex flex-col items-stretch gap-4 lg:max-w-[30vw]">
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-balance">Settings</h1>
 	<p class="leading-7">
 		Default options replace the Mistral default values and are always applied in new chat sessions.
