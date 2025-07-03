@@ -85,8 +85,14 @@
 	import NavMain from './nav-main.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import type { ComponentProps } from 'svelte';
+	import { page } from '$app/state';
+	import ChatHistoryList from './Navigation/ChatHistoryList.svelte';
+	import OcrHistoryList from './Navigation/OCRHistoryList.svelte';
 
 	let { ref = $bindable(null), collapsible = 'icon', ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
+
+	const isInChat = $derived(page.url.pathname === '/chat');
+	const isInOcr = $derived(page.url.pathname === '/ocr');
 </script>
 
 <Sidebar.Root {collapsible} {...restProps}>
@@ -95,6 +101,11 @@
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<NavMain title="Playground" items={data.navMain} />
+		{#if isInChat}
+			<ChatHistoryList />
+		{:else if isInOcr}
+			<OcrHistoryList />
+		{/if}
 		<NavMain title="Documentation" items={data.navSecondary} />
 	</Sidebar.Content>
 	<Sidebar.Footer>

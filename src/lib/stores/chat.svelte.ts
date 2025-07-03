@@ -19,7 +19,9 @@ function defaultOptions(): ChatOptions {
 		maxTokens: undefined,
 		json: false,
 		safePrompt: false,
-		seed: isNaN(Number(seed)) ? undefined : Number(seed)
+		seed: isNaN(Number(seed)) ? undefined : Number(seed),
+		frequencyPenalty: 0,
+		presencePenalty: 0
 	};
 }
 

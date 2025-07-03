@@ -2,7 +2,7 @@
 	import type { Message } from '$lib/types';
 	import { marked } from 'marked';
 	import hljs from 'highlight.js/lib/core';
-	import FileMessagePreview from './FileMessagePreview.svelte';
+	import FileMessagePreview from '$lib/components/File/MessagePreview.svelte';
 
 	let {
 		message
@@ -24,7 +24,7 @@
 	});
 </script>
 
-<div class="space-y-4 rendered-markdown">
+<div class="rendered-markdown space-y-4">
 	{#each content as item, index (index)}
 		{#if item.type === 'text'}
 			{@html markdown[index]}

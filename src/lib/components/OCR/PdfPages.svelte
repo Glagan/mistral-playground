@@ -2,7 +2,7 @@
 	import type { OCRPageObject } from '@mistralai/mistralai/models/components';
 	import { slide } from 'svelte/transition';
 	import PdfPage from './PdfPage.svelte';
-	import CodeBlock from './CodeBlock.svelte';
+	import CodeBlock from '$lib/components/CodeBlock.svelte';
 
 	let {
 		pages,

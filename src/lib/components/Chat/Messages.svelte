@@ -1,10 +1,10 @@
 <script lang="ts">
-	import MessageSvelte from '$lib/components/Message.svelte';
+	import MessageSvelte from '$lib/components/Chat/Message.svelte';
 	import type { Message } from '$lib/types';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
 	import { slide } from 'svelte/transition';
 	import type { MessageInteraction } from '$lib/message';
-	import CodeBlock from './CodeBlock.svelte';
+	import CodeBlock from '$lib/components/CodeBlock.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 
 	let {

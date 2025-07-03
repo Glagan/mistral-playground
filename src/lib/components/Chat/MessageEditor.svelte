@@ -1,7 +1,7 @@
 <script lang="ts">
 	import type { Message } from '$lib/types';
 	import { onMount, tick } from 'svelte';
-	import FileMessagePreview from './FileMessagePreview.svelte';
+	import FileMessagePreview from '$lib/components/File/MessagePreview.svelte';
 	import * as ToggleGroup from '$lib/components/ui/toggle-group/index.js';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Alert from '$lib/components/ui/alert/index.js';

@@ -5,7 +5,7 @@
 	import type { Usage, Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
-	import Messages from '$lib/components/Messages.svelte';
+	import Messages from '$lib/components/Chat/Messages.svelte';
 	import { settings, settingsSchema } from '$lib/stores/settings';
 	import { onDestroy, onMount } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
@@ -20,7 +20,7 @@
 	import ShareModal from '$lib/components/ShareModal.svelte';
 	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload } from '$lib/files';
-	import FileUploadPreview from '$lib/components/FileUploadPreview.svelte';
+	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
 	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';

@@ -12,7 +12,7 @@
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import { defaultChatModel } from '$lib/const';
-	import PdfPages from '$lib/components/PdfPages.svelte';
+	import PdfPages from '$lib/components/OCR/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
 	import { fileToB64 } from '$lib/files';
 	import { db } from '$lib/stores/db';
