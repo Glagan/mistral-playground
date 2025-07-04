@@ -10,14 +10,11 @@
 	import { onDestroy, onMount } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
 	import { v7 as uuid } from 'uuid';
-	import Settings2Icon from '@lucide/svelte/icons/settings-2';
-	import CircleHelpIcon from '@lucide/svelte/icons/circle-help';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import ImageUpIcon from '@lucide/svelte/icons/image-up';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import ShareModal from '$lib/components/ShareModal.svelte';
 	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
@@ -126,7 +123,7 @@
 	}
 
 	async function generate(messages: Message[], answer: AssistantMessage) {
-		const outputNode = document.getElementById('messages-container');
+		const outputNode = document.getElementById('messages-container')?.parentElement;
 		loading = true;
 
 		abortController = new AbortController();

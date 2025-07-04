@@ -7,6 +7,8 @@
 	import { joinURL } from 'ufo';
 	import { toast } from 'svelte-sonner';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
 
 	let loading = $state(false);
 	let sharedChats = liveQuery(() => db.share.reverse().toArray());
@@ -30,49 +32,42 @@
 	}
 </script>
 
-<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch gap-4 p-4 lg:max-h-screen">
-	<h1 class="text-3xl">Shared chats</h1>
+<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
+	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-balance">Shared chats</h1>
 	{#if $sharedChats?.length}
-		<div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-3">
+		<div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-4">
 			{#each $sharedChats as share}
-				<div class="card variant-ghost-primary flex flex-col gap-4 p-4">
-					{#if share.title}
-						<p class="line-clamp-3 whitespace-pre-wrap">{share.title}</p>
-					{:else}
-						<p class="text-neutral-200 italic">No title</p>
-					{/if}
-					<div class="border-primary-500 border-t border-dashed"></div>
-					<div class="flex flex-row items-center justify-between gap-2">
-						<p class="text-neutral-300">{new Date(share.createdAt).toLocaleString()}</p>
-						<div>
-							<button
-								class="btn btn-sm variant-ringed-error shrink-0"
-								disabled={loading}
-								onclick={() => copyShareLink(share)}
-							>
-								<LinkIcon />
-							</button>
-							<ConfirmDialog
-								title="Confirm deletion"
-								description="Do you really want to delete this shared chat?"
-								onConfirm={() => deleteChat(share)}
-							>
-								{#snippet trigger()}
-									<button class="btn btn-sm variant-ringed-error shrink-0" disabled={loading}>
-										<Trash2Icon />
-									</button>
-								{/snippet}
-							</ConfirmDialog>
-						</div>
-					</div>
-				</div>
+				<Card.Root class="w-full ">
+					<Card.Header>
+						{#if share.title}
+							<Card.Title>{share.title}</Card.Title>
+						{/if}
+						<Card.Description>{new Date(share.createdAt).toLocaleString()}</Card.Description>
+					</Card.Header>
+					<Card.Footer class="flex flex-row justify-end gap-2">
+						<Button onclick={() => copyShareLink(share)}>
+							<LinkIcon />
+						</Button>
+						<ConfirmDialog
+							title="Confirm deletion"
+							description="Do you really want to delete this shared chat?"
+							onConfirm={() => deleteChat(share)}
+						>
+							{#snippet trigger()}
+								<Button variant="destructive" disabled={loading}>
+									<Trash2Icon />
+								</Button>
+							{/snippet}
+						</ConfirmDialog>
+					</Card.Footer>
+				</Card.Root>
 			{/each}
 		</div>
 	{:else}
 		<div class="flex shrink grow flex-col items-center justify-center gap-3 text-center">
 			<ShareIcon size={52} />
-			<h3 class="text-primary-500 text-xl">No shared chats</h3>
-			<p>Chats you share will appear here.</p>
+			<h3 class=" text-2xl font-semibold tracking-tight">No shared chats</h3>
+			<p class="text-muted-foreground leading-7">You can manage your shared chats from here.</p>
 		</div>
 	{/if}
 </div>

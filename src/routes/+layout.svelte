@@ -30,10 +30,14 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	import { apiKey } from '$lib/stores/apiKey';
 	import { page } from '$app/state';
 	import { loadModels } from '$lib/stores/models.svelte';
+	import ShareIcon from '@lucide/svelte/icons/share';
+	import CodeIcon from '@lucide/svelte/icons/code';
+	import ShareModal from '$lib/components/ShareModal.svelte';
 
 	const { data, children } = $props();
 
@@ -61,7 +65,7 @@
 	<AppSidebar />
 	<Sidebar.Inset>
 		<header
-			class="flex h-16 shrink-0 grow-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+			class="flex h-16 shrink-0 grow-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
 		>
 			<div class="flex items-center gap-2 px-4">
 				<Sidebar.Trigger class="-ml-1" />
@@ -78,6 +82,15 @@
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
 			</div>
+			{#if page.url.pathname === '/chat'}
+				<div class="gap-2 px-4">
+					<Button variant="outline" onclick={() => apiKey.set('')}>
+						<CodeIcon />
+						<span>Export to code</span>
+					</Button>
+					<ShareModal />
+				</div>
+			{/if}
 		</header>
 		<div class="flex flex-1 shrink grow flex-col gap-4 p-4 pt-0">
 			{@render children()}

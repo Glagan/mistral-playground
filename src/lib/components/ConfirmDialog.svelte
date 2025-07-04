@@ -1,5 +1,6 @@
 <script lang="ts">
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import Button from '$lib/components/ui/button/button.svelte';
 	import type { Snippet } from 'svelte';
 
 	const {
@@ -9,9 +10,11 @@
 		children,
 		onConfirm
 	}: { title: string; description?: string; trigger: Snippet; children?: Snippet; onConfirm: () => void } = $props();
+
+	let open = $state(false);
 </script>
 
-<Dialog.Root>
+<Dialog.Root bind:open>
 	<Dialog.Trigger>
 		{@render trigger()}
 	</Dialog.Trigger>
@@ -24,8 +27,13 @@
 		</Dialog.Header>
 		{@render children?.()}
 		<Dialog.Footer>
-			<button type="button" class="btn variant-ghost-primary shrink-0">Cancel</button>
-			<button type="button" class="btn variant-filled-error shrink-0" onclick={() => onConfirm()}> Delete </button>
+			<Button variant="secondary" onclick={() => (open = false)}>Cancel</Button>
+			<Button
+				onclick={() => {
+					onConfirm();
+					open = false;
+				}}>Delete</Button
+			>
 		</Dialog.Footer>
 	</Dialog.Content>
 </Dialog.Root>

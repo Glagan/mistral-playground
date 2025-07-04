@@ -3,19 +3,19 @@
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import KeyRoundIcon from '@lucide/svelte/icons/key-round';
 	import InfoIcon from '@lucide/svelte/icons/info';
-	import { type ChatState } from '$lib/stores/chat.svelte';
+	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import type { SelectChatShare } from '$lib/server/schema';
 	import { findFirstTextNode } from '$lib/message';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
+	import ShareIcon from '@lucide/svelte/icons/share';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import { Input } from '$lib/components/ui/input/index.js';
+	import * as Alert from '$lib/components/ui/alert/index.js';
 
-	const {
-		chat
-	}: {
-		chat: ChatState;
-	} = $props();
 	let loading = $state(false);
+	let open = $state(false);
 	let shareId = $state('');
 	let deletionKey = $state('');
 
@@ -26,14 +26,14 @@
 			headers: {
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify(chat)
+			body: JSON.stringify(chat.state)
 		});
 		const body = (await response.json()) as { chatShare: SelectChatShare };
 		shareId = body.chatShare.id;
 		deletionKey = body.chatShare.deletionKey;
 		await db.share.add({
 			id: body.chatShare.id,
-			title: findFirstTextNode(chat.messages)?.text ?? '',
+			title: findFirstTextNode(chat.state.messages)?.text ?? '',
 			deletionKey: body.chatShare.deletionKey,
 			createdAt: body.chatShare.createdAt
 		});
@@ -54,66 +54,73 @@
 		await navigator.clipboard.writeText(deletionKey);
 		toast.success('Deletion key copied');
 	}
+
+	function close() {
+		open = false;
+		loading = false;
+		shareId = '';
+		deletionKey = '';
+	}
 </script>
 
-<Dialog.Root>
+<Dialog.Root bind:open>
 	<Dialog.Trigger>
-		<button type="button" class="btn variant-ghost-secondary px-2 py-1 text-xs"> Share </button>
+		<Button variant="outline">
+			<ShareIcon />
+			Share
+		</Button>
 	</Dialog.Trigger>
 	<Dialog.Content>
 		<Dialog.Header>
-			<Dialog.Title>Share</Dialog.Title>
+			<Dialog.Title>
+				{#if shareId}
+					Shared chat created
+				{:else}
+					Share chat
+				{/if}
+			</Dialog.Title>
 		</Dialog.Header>
-		<div>The created Shared link is public and can't be deleted without it's key.</div>
-		<div>Your API key is safe and <b>not</b> included in the share link.</div>
+		<div class="leading-7">The created Shared link is public and can't be deleted without it's key.</div>
+		<div class="leading-7">Your API key is safe and <b>not</b> included in the share link.</div>
 		{#if shareId}
-			<div>
-				<p>Chat share link</p>
-				<div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
-					<div class="input-group-shim">
-						<LinkIcon size={24} />
-					</div>
-					<input
+			<div class="space-y-2">
+				<div class="flex items-center gap-2 text-sm leading-none font-medium select-none">Chat share link</div>
+				<div class="flex w-full items-center space-x-2">
+					<LinkIcon size={24} />
+					<Input
 						type="text"
 						value={joinURL(window.location.host, 'share', shareId)}
 						readonly
 						placeholder="Chat share link"
+						class="shrink grow"
 					/>
 				</div>
 			</div>
 			<div class="grid grid-cols-2 items-center gap-2">
-				<button type="button" onclick={() => copyShareLink()} class="btn variant-ghost-secondary">Copy</button>
-				<button type="button" onclick={() => copyShareLink(true)} class="btn variant-ghost-success"
-					>Copy with deletion key</button
-				>
+				<Button variant="secondary" onclick={() => copyShareLink()}>Copy</Button>
+				<Button onclick={() => copyShareLink(true)}>Copy with deletion key</Button>
 			</div>
 		{/if}
 		{#if deletionKey}
-			<div>
-				<p>Deletion key</p>
-				<div class="input-group input-group-divider grid-cols-[auto_1fr_auto]">
-					<div class="input-group-shim">
-						<KeyRoundIcon size={24} />
-					</div>
-					<input type="text" value={deletionKey} readonly placeholder="Deletion key" />
-					<button type="button" onclick={copyDeletionKey} class="variant-filled-success">Copy</button>
+			<div class="space-y-2">
+				<div class="flex items-center gap-2 text-sm leading-none font-medium select-none">Deletion key</div>
+				<div class="flex w-full items-center space-x-2">
+					<KeyRoundIcon size={24} />
+					<Input type="text" value={deletionKey} readonly placeholder="Deletion key" class="shrink grow" />
+					<Button onclick={copyDeletionKey}>Copy</Button>
 				</div>
 			</div>
 		{/if}
 		{#if shareId}
-			<aside class="alert variant-ghost-tertiary p-2">
-				<div class="input-group-shim">
-					<InfoIcon size={24} />
-				</div>
-				<div class="alert-message">Your shared chats are saved in your shared chat history.</div>
-			</aside>
+			<Alert.Root>
+				<InfoIcon size={24} />
+				<Alert.Title>Your shared chats are saved in your shared chat history.</Alert.Title>
+			</Alert.Root>
 		{/if}
 		<Dialog.Footer>
-			<button type="button" class="btn variant-ghost-primary shrink-0" disabled={loading}> Close </button>
+			<Button variant={shareId ? 'default' : 'ghost'} disabled={loading} onclick={() => close()}>Close</Button>
 			{#if !shareId}
-				<button type="submit" class="btn variant-filled-success shrink-0" disabled={loading} onclick={() => generate()}>
-					Create
-				</button>
+				<Button type="submit" disabled={loading} onclick={() => generate()}>Create</Button>
 			{/if}
 		</Dialog.Footer>
 	</Dialog.Content>
