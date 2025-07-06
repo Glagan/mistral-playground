@@ -33,8 +33,8 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import { page } from '$app/state';
 	import { loadModels } from '$lib/stores/models.svelte';
-	import CodeIcon from '@lucide/svelte/icons/code';
 	import ShareModal from '$lib/components/File/ShareModal.svelte';
+	import ExportModal from '$lib/components/File/ExportModal.svelte';
 
 	const { data, children } = $props();
 
@@ -81,10 +81,7 @@
 			</div>
 			{#if page.url.pathname === '/chat'}
 				<div class="gap-2 px-4">
-					<Button variant="outline" onclick={() => apiKey.set('')}>
-						<CodeIcon />
-						<span>Export to code</span>
-					</Button>
+					<ExportModal />
 					<ShareModal />
 				</div>
 			{/if}

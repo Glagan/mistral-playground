@@ -10,7 +10,7 @@ export type ChatState = {
 	options: ChatOptions;
 };
 
-function defaultOptions(): ChatOptions {
+export function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {
 		model: get(settings).model ?? 'mistral-small-latest',
