@@ -14,6 +14,8 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import { toast } from 'svelte-sonner';
 	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Alert from '$lib/components/ui/alert/index.js';
 
 	let { data }: PageProps = $props();
 	let chat = data.chat;
@@ -33,7 +35,7 @@
 
 	async function deleteChat() {
 		await fetch(`/api/share/${page.params.uuid}?key=${deleteKey}`, { method: 'DELETE' });
-		toast.success('Chat share deleted');
+		toast.success('Shared chat deleted');
 		goto('/');
 	}
 
@@ -42,7 +44,13 @@
 	});
 </script>
 
-<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:max-h-screen">
+<svelte:head>
+	<title>Mistral Playground :: Shared chat</title>
+</svelte:head>
+
+<div
+	class="mx-auto flex max-h-[calc(100vh-80px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:w-[50vw]"
+>
 	{#if chat}
 		<div class="relative w-full shrink grow overflow-auto">
 			{#if chat}
@@ -50,20 +58,18 @@
 			{/if}
 			<div class="from-surface-900/0 to-surface-900 sticky right-0 bottom-0 left-0 h-4 bg-gradient-to-b"></div>
 		</div>
-		<div class="alert variant-ghost-tertiary flex-row items-center gap-3 p-2 text-sm lg:p-4">
-			<div>
-				<MessageCircleQuestionIcon size={24} />
-			</div>
-			<div class="alert-message !mt-0">
-				<h3 class="text-base">Shared chat</h3>
+		<Alert.Root>
+			<MessageCircleQuestionIcon size={24} />
+			<Alert.Title>Shared chat</Alert.Title>
+			<Alert.Description>
 				<p>
 					This chat was generated using the <a href="https://mistral.ai/" target="_blank" class="underline">Mistral</a>
 					model
 					<b>{chat.data.options.model}</b>.
 				</p>
 				<p>Be aware that this text could have been altered and not be the exact output of the model.</p>
-			</div>
-		</div>
+			</Alert.Description>
+		</Alert.Root>
 	{:else}
 		<div class="flex flex-col items-center gap-3 text-center">
 			<TriangleAlertIcon size={52} />
@@ -77,26 +83,26 @@
 			</div>
 		</div>
 	{/if}
-</div>
-<div class="flex flex-row items-center justify-center gap-4 p-4 lg:flex-col lg:justify-start">
 	{#if chat}
-		<button type="button" class="btn variant-ghost-primary shrink-0" onclick={copyShareLink}>
-			<LinkIcon size={24} />
-			<span>Copy link</span>
-		</button>
-		{#if deleteKey}
-			<ConfirmDialog
-				title="Confirm deletion"
-				description="Do you really want to delete this shared chat?"
-				onConfirm={deleteChat}
-			>
-				{#snippet trigger()}
-					<button type="button" class="btn variant-ghost-error shrink-0">
-						<Trash2Icon size={24} />
-						<span>Delete</span>
-					</button>
-				{/snippet}
-			</ConfirmDialog>
-		{/if}
+		<div class="flex flex-row items-center justify-center gap-4 p-2">
+			<Button onclick={copyShareLink}>
+				<LinkIcon size={24} />
+				<span>Copy link</span>
+			</Button>
+			{#if deleteKey}
+				<ConfirmDialog
+					title="Confirm deletion"
+					description="Do you really want to delete this shared chat?"
+					onConfirm={deleteChat}
+				>
+					{#snippet trigger()}
+						<Button variant="destructive">
+							<Trash2Icon size={24} />
+							<span>Delete</span>
+						</Button>
+					{/snippet}
+				</ConfirmDialog>
+			{/if}
+		</div>
 	{/if}
 </div>

@@ -47,13 +47,13 @@
 	}
 
 	const pages: Record<string, string> = {
-		'/chat': 'Chat completion',
-		'/ocr': 'OCR',
-		'/embeddings': 'Embeddings',
-		'/shared': 'Shared chats',
-		'/settings': 'Settings',
-		'/about': 'About',
-		'/': 'Login'
+		chat: 'Chat completion',
+		ocr: 'OCR',
+		embeddings: 'Embeddings',
+		share: 'Shared chat',
+		settings: 'Settings',
+		about: 'About',
+		'': 'Login'
 	};
 </script>
 
@@ -77,7 +77,7 @@
 						</Breadcrumb.Item>
 						<Breadcrumb.Separator class="hidden md:block" />
 						<Breadcrumb.Item>
-							<Breadcrumb.Page>{pages[page.url.pathname]}</Breadcrumb.Page>
+							<Breadcrumb.Page>{pages[page.url.pathname.split('/')[1]]}</Breadcrumb.Page>
 						</Breadcrumb.Item>
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
