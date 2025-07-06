@@ -8,7 +8,6 @@
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import shell from 'highlight.js/lib/languages/shell';
-	import ruby from 'highlight.js/lib/languages/ruby';
 	import sql from 'highlight.js/lib/languages/sql';
 	import python from 'highlight.js/lib/languages/python';
 
@@ -19,7 +18,6 @@
 	hljs.registerLanguage('typescript', typescript);
 	hljs.registerLanguage('shell', shell);
 	hljs.registerLanguage('bash', shell);
-	hljs.registerLanguage('ruby', ruby);
 	hljs.registerLanguage('sql', sql);
 	hljs.registerLanguage('python', python);
 
@@ -35,9 +33,8 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import { page } from '$app/state';
 	import { loadModels } from '$lib/stores/models.svelte';
-	import ShareIcon from '@lucide/svelte/icons/share';
 	import CodeIcon from '@lucide/svelte/icons/code';
-	import ShareModal from '$lib/components/ShareModal.svelte';
+	import ShareModal from '$lib/components/File/ShareModal.svelte';
 
 	const { data, children } = $props();
 

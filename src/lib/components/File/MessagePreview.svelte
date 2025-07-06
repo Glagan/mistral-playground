@@ -1,7 +1,7 @@
 <script lang="ts">
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
-	import ImageModal from '$lib/components/ImageModal.svelte';
+	import ImageModal from '$lib/components/Dialog/ImageModal.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import type { DocumentURLChunk, ImageURLChunk } from '@mistralai/mistralai/models/components';

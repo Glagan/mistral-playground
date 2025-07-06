@@ -6,7 +6,7 @@
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import { joinURL } from 'ufo';
 	import { toast } from 'svelte-sonner';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import ConfirmDialog from '$lib/components/Dialog/ConfirmDialog.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Card from '$lib/components/ui/card/index.js';
 

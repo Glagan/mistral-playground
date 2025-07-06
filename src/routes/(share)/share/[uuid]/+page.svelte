@@ -13,7 +13,7 @@
 	import LinkIcon from '@lucide/svelte/icons/link';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import { toast } from 'svelte-sonner';
-	import ConfirmDialog from '$lib/components/ConfirmDialog.svelte';
+	import ConfirmDialog from '$lib/components/Dialog/ConfirmDialog.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 
