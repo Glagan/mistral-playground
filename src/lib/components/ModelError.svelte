@@ -1,5 +1,4 @@
 <script lang="ts">
-	import { fade } from 'svelte/transition';
 	import { goto } from '$app/navigation';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
@@ -8,6 +7,7 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import Cookies from 'js-cookie';
 	import * as Alert from '$lib/components/ui/alert/index.js';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	function deleteApiKey() {
 		apiKey.set('');
@@ -28,26 +28,14 @@
 		<Alert.Description>
 			<p>{models.error.message}</p>
 			<div class="flex flex-row items-center gap-2">
-				<button
-					type="button"
-					class="btn variant-ringed-primary justify-start font-bold transition-all disabled:opacity-75"
-					transition:fade
-					disabled={models.loading}
-					onclick={deleteApiKey}
-				>
+				<Button variant="secondary" disabled={models.loading} onclick={deleteApiKey}>
 					<LogOutIcon class="shrink-0" />
 					<span class="truncate">Delete API key</span>
-				</button>
-				<button
-					type="button"
-					class="btn variant-ringed-secondary justify-start font-bold transition-all disabled:opacity-75"
-					transition:fade
-					disabled={models.loading}
-					onclick={reloadModels}
-				>
+				</Button>
+				<Button variant="destructive" disabled={models.loading} onclick={reloadModels}>
 					<Repeat2Icon class="shrink-0" />
 					<span class="truncate">Retry</span>
-				</button>
+				</Button>
 			</div>
 		</Alert.Description>
 	</Alert.Root>
