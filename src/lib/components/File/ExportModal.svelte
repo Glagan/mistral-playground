@@ -83,7 +83,7 @@
 	<Dialog.Trigger>
 		<Button variant="outline">
 			<CodeIcon />
-			<span>Export to code</span>
+			<span class="hidden md:inline">Export to code</span>
 		</Button>
 	</Dialog.Trigger>
 	<Dialog.Content>
