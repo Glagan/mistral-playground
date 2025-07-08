@@ -28,7 +28,7 @@
 			</Button>
 		{/if}
 	</Dialog.Trigger>
-	<Dialog.Content>
+	<Dialog.Content class="flex w-auto items-center justify-center p-8 sm:max-w-[60vw]">
 		<img src={image} alt={title} class="rounded-container-token max-h-[90vh] max-w-[90vw] overflow-hidden shadow-xl" />
 	</Dialog.Content>
 </Dialog.Root>
