@@ -17,6 +17,8 @@
 	import type { EmbeddingType } from '$lib/types';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
+	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -68,8 +70,10 @@
 </script>
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
-	<Options bind:model bind:outputDimensions bind:outputType />
-	<div class="relative flex h-full w-full shrink grow flex-col">
+	<div class="hidden md:flex">
+		<Options bind:model bind:outputDimensions bind:outputType />
+	</div>
+	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-4">
 			{#if error}
 				<Alert.Root variant="destructive">
@@ -89,7 +93,7 @@
 				</div>
 			{/if}
 		</div>
-		<form class="flex shrink-0 flex-col gap-2 px-4 pt-4" onsubmit={onSubmit}>
+		<form class="flex shrink-0 flex-col gap-2 px-4" onsubmit={onSubmit}>
 			<ModelError />
 			<label class="flex flex-col gap-1.5">
 				<div class="flex items-center justify-end gap-2">
@@ -108,7 +112,15 @@
 					/>
 				</div>
 			</label>
-			<div class="flex flex-row justify-end">
+			<div class="flex flex-row justify-between gap-2 lg:justify-end">
+				<Drawer.Root direction="right">
+					<Drawer.Trigger class="block md:hidden" type="button" onclick={(event) => event.stopImmediatePropagation()}>
+						<SlidersHorizontalIcon size={20} />
+					</Drawer.Trigger>
+					<Drawer.Content class="flex max-h-screen overflow-auto p-4">
+						<Options bind:model bind:outputDimensions bind:outputType />
+					</Drawer.Content>
+				</Drawer.Root>
 				<Button type="submit" disabled={loading || models.loading || !!models.error || !promptText}>
 					Submit
 					<SendHorizontalIcon />

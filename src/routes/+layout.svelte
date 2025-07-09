@@ -47,6 +47,7 @@
 		chat: 'Chat completion',
 		ocr: 'OCR',
 		embeddings: 'Embeddings',
+		shared: 'Shared chats',
 		share: 'Shared chat',
 		settings: 'Settings',
 		about: 'About',

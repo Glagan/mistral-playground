@@ -1,12 +1,10 @@
 <script lang="ts">
-	import { slide } from 'svelte/transition';
 	import { apiKey } from '$lib/stores/apiKey';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
 	import { ocr } from '$lib/stores/ocr.svelte';
-	import Settings2Icon from '@lucide/svelte/icons/settings-2';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
@@ -18,33 +16,18 @@
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
 	import { FileDropZone, MEGABYTE, type FileDropZoneProps } from '$lib/components/ui/file-drop-zone';
-	import * as Popover from '$lib/components/ui/popover/index.js';
 	import Button from '$lib/components/ui/button/button.svelte';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Select from '$lib/components/ui/select/index.js';
-	import Label from '$lib/components/ui/label/label.svelte';
-	import * as Command from '$lib/components/ui/command/index.js';
-	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import { tick } from 'svelte';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
+	import Options from './Options.svelte';
+	import * as Drawer from '$lib/components/ui/drawer/index.js';
+	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
 	}
 
 	let files = $state<File[] | undefined>(undefined);
-	let showOptions = $state(false);
 	let error: { text: string; body?: object } | null = $state(null);
-
-	let open = $state(false);
-	let triggerRef = $state<HTMLButtonElement>(null!);
-
-	function closeAndFocusTrigger() {
-		open = false;
-		tick().then(() => {
-			triggerRef.focus();
-		});
-	}
 
 	$effect(() => {
 		ocr.state.id;
@@ -75,12 +58,10 @@
 
 		const outputNode = document.getElementById('pages-container');
 		loading = true;
-		showOptions = false;
 
 		const b64File = await fileToB64(file);
 
 		abortController = new AbortController();
-		const startedAt = performance.now();
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
 			const ocrResponse = await client.ocr.process(
@@ -151,56 +132,10 @@
 </script>
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
-	<form class="flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]">
-		<div class="flex w-full flex-col gap-1.5">
-			<label for="topP" class="text-sm leading-none font-medium">Model</label>
-			<Popover.Root bind:open>
-				<Popover.Trigger bind:ref={triggerRef} class="w-full">
-					{#snippet child({ props })}
-						<Button variant="outline" class="w-full " {...props} role="combobox" aria-expanded={open}>
-							<span class="shrink grow text-left">{ocr.state.options.model || 'Select a model'}</span>
-							<ChevronsUpDownIcon class="ml-2 size-4 shrink-0 opacity-50" />
-						</Button>
-					{/snippet}
-				</Popover.Trigger>
-				<Popover.Content class="w-lg max-w-screen p-0">
-					<Command.Root>
-						<Command.Input placeholder="Search model..." />
-						<Command.List>
-							<Command.Empty>No model found.</Command.Empty>
-							{#each Object.entries(models.ocrGroups) as [groupName, items]}
-								<Command.Group>
-									<Select.Label>{groupName}</Select.Label>
-									{#each items as item (item.id)}
-										<Command.Item
-											value={item.id}
-											onSelect={() => {
-												ocr.state.options.model = item.id;
-												closeAndFocusTrigger();
-											}}
-										>
-											{item.id}
-										</Command.Item>
-									{/each}
-								</Command.Group>
-							{/each}
-						</Command.List>
-					</Command.Root>
-				</Popover.Content>
-			</Popover.Root>
-		</div>
-		<div class="flex w-full flex-col gap-1.5">
-			<Label for="seed">Image limit</Label>
-			<p class="text-muted-foreground text-sm">Max images to extract</p>
-			<Input id="seed" type="number" placeholder="Image limit" bind:value={ocr.state.options.imageLimit} />
-		</div>
-		<div class="flex w-full flex-col gap-1.5">
-			<Label for="seed">Image minimum size</Label>
-			<p class="text-muted-foreground text-sm">Minimum height and width of image to extract</p>
-			<Input id="seed" type="number" placeholder="Image minimum size" bind:value={ocr.state.options.minSize} />
-		</div>
-	</form>
-	<div class="relative flex h-full w-full shrink grow flex-col">
+	<div class="hidden md:flex">
+		<Options />
+	</div>
+	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-4">
 			{#if ocr.state.pages.length}
 				<PdfPages pages={ocr.state.pages} {loading} {error} />
@@ -255,10 +190,15 @@
 					</div>
 				{/if}
 			</label>
-			<div class="flex flex-row justify-end gap-2">
-				<!-- {#if ocr.state.messages.length}
-						<button type="button" class="btn variant-ghost-secondary mx-auto" onclick={() => openShare()}>Share</button>
-					{/if} -->
+			<div class="flex flex-row justify-between gap-2 lg:justify-end">
+				<Drawer.Root direction="right">
+					<Drawer.Trigger class="block md:hidden" type="button" onclick={(event) => event.stopImmediatePropagation()}>
+						<SlidersHorizontalIcon size={20} />
+					</Drawer.Trigger>
+					<Drawer.Content class="flex max-h-screen overflow-auto p-4">
+						<Options />
+					</Drawer.Content>
+				</Drawer.Root>
 				{#if loading}
 					<Button variant="destructive" type="button" onclick={stopGenerating}>Stop</Button>
 				{:else}

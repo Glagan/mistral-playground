@@ -26,7 +26,7 @@
 	import SendHorizontalIcon from '@lucide/svelte/icons/send-horizontal';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import ChatOptions from '$lib/components/Chat/Options.svelte';
+	import Options from './Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 
@@ -443,9 +443,9 @@
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
 	<div class="hidden md:flex">
-		<ChatOptions />
+		<Options />
 	</div>
-	<div class="relative flex h-full w-full shrink grow flex-col">
+	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-4">
 			{#if chat.state.messages.length}
 				<Messages
@@ -468,7 +468,7 @@
 				<div class="flex h-full w-full items-center justify-center"></div>
 			{/if}
 		</div>
-		<form class="flex shrink-0 flex-col gap-2 px-4 pt-4" onsubmit={onSubmit}>
+		<form class="flex shrink-0 flex-col gap-2 px-4" onsubmit={onSubmit}>
 			{#if !stateIsValid}
 				<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 					<div class="alert-message">
@@ -547,7 +547,7 @@
 							<SlidersHorizontalIcon size={20} />
 						</Drawer.Trigger>
 						<Drawer.Content class="flex max-h-screen overflow-auto p-4">
-							<ChatOptions />
+							<Options />
 						</Drawer.Content>
 					</Drawer.Root>
 					<label for="fileUpload">
