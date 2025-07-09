@@ -67,11 +67,18 @@
 			loading = false;
 		}
 	}
+
+	function onreset() {
+		embeddings = [];
+		promptText = '';
+		error = '';
+		loading = false;
+	}
 </script>
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
 	<div class="hidden md:flex">
-		<Options bind:model bind:outputDimensions bind:outputType />
+		<Options bind:model bind:outputDimensions bind:outputType {onreset} />
 	</div>
 	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-4">
@@ -118,7 +125,7 @@
 						<SlidersHorizontalIcon size={20} />
 					</Drawer.Trigger>
 					<Drawer.Content class="flex max-h-screen overflow-auto p-4">
-						<Options bind:model bind:outputDimensions bind:outputType />
+						<Options bind:model bind:outputDimensions bind:outputType {onreset} />
 					</Drawer.Content>
 				</Drawer.Root>
 				<Button type="submit" disabled={loading || models.loading || !!models.error || !promptText}>

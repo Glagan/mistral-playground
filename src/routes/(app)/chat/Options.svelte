@@ -24,10 +24,6 @@
 			triggerRef.focus();
 		});
 	}
-
-	function createNewChat() {
-		chat.reset();
-	}
 </script>
 
 <form class="flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]">
@@ -187,5 +183,5 @@
 		<Switch id="safePrompt" bind:checked={chat.state.options.safePrompt} />
 	</div>
 	<Textarea rows={5} placeholder="System prompt" bind:value={chat.state.options.systemPrompt} />
-	<Button class="mx-auto" onclick={createNewChat}>New chat</Button>
+	<Button class="mx-auto" onclick={() => chat.reset()}>New chat</Button>
 </form>

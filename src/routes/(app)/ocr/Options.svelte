@@ -69,4 +69,5 @@
 		<p class="text-muted-foreground text-sm">Minimum height and width of image to extract</p>
 		<Input id="minimumSize" type="number" placeholder="Image minimum size" bind:value={ocr.state.options.minSize} />
 	</div>
+	<Button class="mx-auto" onclick={() => ocr.reset()}>New scan</Button>
 </form>

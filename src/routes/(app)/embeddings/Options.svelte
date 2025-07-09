@@ -15,8 +15,9 @@
 	let {
 		model = $bindable(),
 		outputDimensions = $bindable(),
-		outputType = $bindable()
-	}: { model: string; outputDimensions: number | null; outputType: EmbeddingType } = $props();
+		outputType = $bindable(),
+		onreset
+	}: { model: string; outputDimensions: number | null; outputType: EmbeddingType; onreset: () => void } = $props();
 
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
@@ -119,4 +120,5 @@
 			</Alert.Root>
 		{/if}
 	</div>
+	<Button class="mx-auto" onclick={() => onreset()}>New embeddings</Button>
 </form>
