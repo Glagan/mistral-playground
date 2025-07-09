@@ -80,7 +80,7 @@
 				</Breadcrumb.Root>
 			</div>
 			{#if page.url.pathname === '/chat'}
-				<div class="gap-2 px-4">
+				<div class="flex flex-row gap-2 px-4">
 					<ExportModal />
 					<ShareModal />
 				</div>

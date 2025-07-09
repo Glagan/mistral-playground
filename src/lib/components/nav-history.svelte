@@ -42,7 +42,7 @@
 										sidebar.toggleOnMobile();
 									}}
 								>
-									<span class="grow cursor-pointer truncate">{title}</span>
+									<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
 									<Button
 										variant="ghost"
 										class="shrink cursor-pointer"

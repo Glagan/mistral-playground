@@ -67,7 +67,7 @@
 	<Dialog.Trigger>
 		<Button variant="outline">
 			<ShareIcon />
-			<span class="hidden md:inline">Share</span>
+			<span class="hidden lg:inline">Share</span>
 		</Button>
 	</Dialog.Trigger>
 	<Dialog.Content>

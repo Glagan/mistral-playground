@@ -132,7 +132,7 @@
 </script>
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
-	<div class="hidden md:flex">
+	<div class="hidden lg:flex">
 		<Options />
 	</div>
 	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
@@ -192,7 +192,7 @@
 			</label>
 			<div class="flex flex-row justify-between gap-2 lg:justify-end">
 				<Drawer.Root direction="right">
-					<Drawer.Trigger class="block md:hidden" type="button" onclick={(event) => event.stopImmediatePropagation()}>
+					<Drawer.Trigger class="block lg:hidden" type="button" onclick={(event) => event.stopImmediatePropagation()}>
 						<SlidersHorizontalIcon size={20} />
 					</Drawer.Trigger>
 					<Drawer.Content class="flex max-h-screen overflow-auto p-4">

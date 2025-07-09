@@ -83,10 +83,10 @@
 	<Dialog.Trigger>
 		<Button variant="outline">
 			<CodeIcon />
-			<span class="hidden md:inline">Export to code</span>
+			<span class="hidden lg:inline">Export to code</span>
 		</Button>
 	</Dialog.Trigger>
-	<Dialog.Content>
+	<Dialog.Content class="md:max-w-lg lg:max-w-3xl">
 		<Dialog.Header>
 			<Dialog.Title>Export chat to code</Dialog.Title>
 		</Dialog.Header>
