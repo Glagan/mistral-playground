@@ -19,7 +19,7 @@
 		onDestroy: (item: OCRState | ChatState) => void;
 	} = $props();
 
-	let loggedIn = $derived(!!$apiKey);
+	const sidebar = Sidebar.useSidebar();
 </script>
 
 <Sidebar.Group>
@@ -35,7 +35,13 @@
 							isActive={mainItem.id === chat.state.id || mainItem.id === ocr.state.id}
 						>
 							{#snippet child({ props })}
-								<div {...props} onclick={() => onLoad(mainItem)}>
+								<div
+									{...props}
+									onclick={() => {
+										onLoad(mainItem);
+										sidebar.toggleOnMobile();
+									}}
+								>
 									<span class="grow cursor-pointer truncate">{title}</span>
 									<Button
 										variant="ghost"

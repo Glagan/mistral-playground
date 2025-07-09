@@ -97,7 +97,7 @@
 
 <Sidebar.Root {collapsible} {...restProps}>
 	<Sidebar.Header>
-		<img class="block max-h-10 lg:mx-auto lg:max-h-max" src="/logo-dark.webp" alt="Mistral Playground" />
+		<img class="block lg:mx-auto lg:max-h-max" src="/logo-dark.webp" alt="Mistral Playground" />
 	</Sidebar.Header>
 	<Sidebar.Content>
 		<NavMain title="Playground" items={data.navMain} />

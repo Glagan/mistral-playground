@@ -26,6 +26,8 @@
 		}[];
 	} = $props();
 
+	const sidebar = Sidebar.useSidebar();
+
 	let loggedIn = $derived(!!$apiKey);
 </script>
 
@@ -44,7 +46,12 @@
 						>
 							<Sidebar.MenuButton tooltipContent={mainItem.title}>
 								{#snippet child({ props })}
-									<a href={mainItem.url} target={mainItem.url.startsWith('http') ? '_blank' : undefined} {...props}>
+									<a
+										href={mainItem.url}
+										target={mainItem.url.startsWith('http') ? '_blank' : undefined}
+										{...props}
+										onclick={() => sidebar.toggleOnMobile()}
+									>
 										{#if mainItem.icon}
 											<mainItem.icon />
 										{/if}

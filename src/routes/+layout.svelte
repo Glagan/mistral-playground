@@ -28,7 +28,6 @@
 	import { Separator } from '$lib/components/ui/separator/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import { Toaster } from '$lib/components/ui/sonner/index.js';
-	import Button from '$lib/components/ui/button/button.svelte';
 
 	import { apiKey } from '$lib/stores/apiKey';
 	import { page } from '$app/state';
