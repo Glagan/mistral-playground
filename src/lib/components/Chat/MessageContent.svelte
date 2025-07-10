@@ -14,7 +14,15 @@
 
 	const markdown = $derived.by(() => {
 		return content.map((part) =>
-			part.type === 'text' ? marked.parse(part.text.trim(), { async: false, gfm: true, breaks: true }).trim() : ''
+			part.type === 'text'
+				? marked
+						.parse(part.text.trim().replaceAll('<think>', '<div think>').replaceAll('</think>', '</div>'), {
+							async: false,
+							gfm: true,
+							breaks: true
+						})
+						.trim()
+				: ''
 		);
 	});
 

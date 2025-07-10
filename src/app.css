@@ -115,6 +115,7 @@
 	* {
 		@apply border-border outline-ring/50;
 	}
+
 	body {
 		@apply bg-background text-foreground;
 	}
@@ -122,4 +123,84 @@
 
 .shiki.github-dark {
 	@apply rounded p-4 wrap-anywhere whitespace-pre-wrap;
+}
+
+code {
+	@apply overflow-x-auto rounded px-[3px] py-[3px] font-mono text-base;
+	font-feature-settings: normal;
+	font-variation-settings: normal;
+	color: #c9d1d9;
+	background: #0d1117;
+}
+
+.rendered-markdown pre code,
+pre.codeblock-pre > code.codeblock-code {
+	@apply block w-full;
+}
+
+.rendered-markdown img {
+	@apply m-auto shadow shadow-neutral-600;
+}
+
+.rendered-markdown ul {
+	@apply list-disc [&>li]:mt-2;
+}
+
+.rendered-markdown ul li,
+.rendered-markdown ol li {
+	@apply ml-4;
+}
+
+.rendered-markdown ol {
+	@apply list-decimal [&>li]:mt-2;
+}
+
+.rendered-markdown table {
+	@apply border-primary w-full border-collapse rounded border;
+
+	thead > tr {
+		@apply even:bg-muted border-t;
+
+		th {
+			@apply border px-4 py-2 text-left font-bold;
+		}
+	}
+
+	tbody > tr,
+	& > tr {
+		@apply even:bg-muted border-t;
+
+		td {
+			@apply border px-4 py-2;
+		}
+	}
+}
+
+.rendered-markdown h1 {
+	@apply scroll-m-20 text-4xl font-extrabold tracking-tight lg:text-5xl;
+}
+
+.rendered-markdown h2 {
+	@apply scroll-m-20 text-3xl font-semibold tracking-tight transition-colors first:mt-0;
+}
+
+.rendered-markdown h3 {
+	@apply scroll-m-20 text-2xl font-semibold tracking-tight;
+}
+
+.rendered-markdown h4 {
+	@apply scroll-m-20 text-xl font-semibold tracking-tight;
+}
+
+.rendered-markdown a {
+	@apply text-primary font-medium underline underline-offset-4;
+}
+
+.rendered-markdown div[think] {
+	/* @apply bg-primary/20 border-primary block overflow-auto rounded-r border-l-2 p-2 font-light whitespace-pre-wrap; */
+	@apply block overflow-auto border-l-2 pl-6 whitespace-pre-wrap italic;
+}
+
+.rendered-markdown p {
+	@apply leading-7;
 }
