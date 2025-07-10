@@ -60,6 +60,18 @@
 					</Sidebar.MenuItem>
 				{/snippet}
 			</Collapsible.Root>
+		{:else}
+			<Collapsible.Root open={false}>
+				{#snippet child({ props })}
+					<Sidebar.MenuItem {...props} class="pointer-events-none opacity-50">
+						<Sidebar.MenuButton>
+							{#snippet child()}
+								<span class="p-2 text-sm text-muted-foreground">No entries yet...</span>
+							{/snippet}
+						</Sidebar.MenuButton>
+					</Sidebar.MenuItem>
+				{/snippet}
+			</Collapsible.Root>
 		{/each}
 	</Sidebar.Menu>
 </Sidebar.Group>
