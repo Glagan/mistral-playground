@@ -10,7 +10,7 @@ export type ChatState = {
 	options: ChatOptions;
 };
 
-function defaultOptions(): ChatOptions {
+export function defaultOptions(): ChatOptions {
 	const seed = get(settings).seed;
 	return {
 		model: get(settings).model ?? 'mistral-small-latest',
@@ -19,7 +19,9 @@ function defaultOptions(): ChatOptions {
 		maxTokens: undefined,
 		json: false,
 		safePrompt: false,
-		randomSeed: isNaN(Number(seed)) ? undefined : Number(seed)
+		seed: isNaN(Number(seed)) ? undefined : Number(seed),
+		frequencyPenalty: 0,
+		presencePenalty: 0
 	};
 }
 
@@ -36,8 +38,20 @@ export function createCurrent() {
 	function setFromEntry(entry: ChatState) {
 		state.id = entry.id;
 		state.options = entry.options;
+		// Add new options
+		if (state.options.frequencyPenalty === undefined) {
+			state.options.frequencyPenalty = 0;
+		}
+		if (state.options.presencePenalty === undefined) {
+			state.options.presencePenalty = 0;
+		}
 		state.usage = entry.usage;
 		state.messages = entry.messages;
+		// Migrate system prompts from the message list to the options
+		if (state.messages[0]?.role === 'system') {
+			state.options.systemPrompt = state.messages[0].versions[state.messages[0].index].content[0].text as string;
+			state.messages.splice(0, 1);
+		}
 	}
 
 	return { state, defaultOptions, setFromEntry, reset };

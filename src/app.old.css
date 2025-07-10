@@ -1,0 +1,83 @@
+@import 'tailwindcss';
+@plugin '@tailwindcss/forms';
+@plugin '@tailwindcss/typography';
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+.grid-layout {
+	grid-template-columns: 25% 50% 25%;
+	grid-auto-rows: minmax(50pc, auto);
+}
+
+code {
+	@apply overflow-x-auto rounded px-[3px] py-[3px] font-mono text-base;
+	font-feature-settings: normal;
+	font-variation-settings: normal;
+	color: #c9d1d9;
+	background: #0d1117;
+}
+
+.rendered-markdown pre code,
+pre.codeblock-pre > code.codeblock-code {
+	@apply block w-full;
+}
+
+.rendered-markdown img {
+	@apply m-auto shadow shadow-neutral-600;
+}
+
+.rendered-markdown ul {
+	list-style: disc;
+	margin-left: 1rem;
+}
+
+.rendered-markdown ol {
+	list-style: decimal;
+	margin-left: 1rem;
+}
+
+.rendered-markdown table {
+	@apply border-primary-300 w-full border-collapse rounded border;
+
+	thead > tr {
+		@apply bg-primary-900;
+
+		th {
+			@apply border-primary-300 border-y p-2 text-left;
+		}
+	}
+
+	tbody > tr:nth-child(2n + 1),
+	& > tr:nth-child(2n + 1) {
+		@apply bg-primary-900/50;
+
+		td {
+			@apply p-2 py-4;
+		}
+	}
+}
+
+.rendered-markdown h1 {
+	@apply text-3xl;
+}
+
+.rendered-markdown h2 {
+	@apply text-2xl;
+}
+
+.rendered-markdown h3 {
+	@apply text-xl;
+}
+
+.rendered-markdown h4 {
+	@apply text-lg;
+}
+
+.rendered-markdown a {
+	@apply text-primary-600 underline;
+}
+
+.rendered-markdown think {
+	@apply bg-primary-300/20 border-primary-300 block overflow-auto rounded-r border-l-2 p-2 font-light whitespace-pre-wrap;
+}

@@ -55,7 +55,10 @@ const chatOptionsSchema = z.object({
 	maxTokens: z.union([z.number(), z.undefined()]),
 	json: z.boolean(),
 	safePrompt: z.boolean(),
-	randomSeed: z.union([z.number(), z.undefined()])
+	randomSeed: z.union([z.number(), z.undefined()]),
+	frequencyPenalty: z.union([z.number(), z.undefined()]),
+	presencePenalty: z.union([z.number(), z.undefined()]),
+	systemPrompt: z.union([z.string(), z.undefined()])
 });
 
 const chatStateSchema = z.object({
@@ -80,6 +83,23 @@ export const POST: RequestHandler = async ({ request }) => {
 			message.versions = [message.versions[message.index]];
 			message.index = 0;
 		}
+	}
+
+	// Insert the system prompt inside the message
+	if (validated.data.options.systemPrompt) {
+		validated.data.messages = [
+			{
+				id: 'system',
+				role: 'system',
+				index: 0,
+				versions: [
+					{
+						content: [{ type: 'text', text: validated.data.options.systemPrompt }]
+					}
+				]
+			},
+			...validated.data.messages
+		];
 	}
 
 	const deletionKey = createHash('md5').update(Date.now().toString()).update(id).digest('hex');
