@@ -1,6 +1,6 @@
-import { localStorageStore } from '@skeletonlabs/skeleton';
 import type { Writable } from 'svelte/store';
 import { z } from 'zod';
+import { persisted } from 'svelte-persisted-store';
 
 export const defaultModel = 'mistral-small-latest';
 export const defaultTemperature = 0.7;
@@ -14,7 +14,7 @@ export const settingsSchema = z.object({
 
 export type Settings = z.infer<typeof settingsSchema>;
 
-export const settings: Writable<Settings> = localStorageStore(
+export const settings: Writable<Settings> = persisted(
 	'settings',
 	{ model: defaultModel, temperature: defaultTemperature, seed: undefined, endpoint: undefined },
 	{

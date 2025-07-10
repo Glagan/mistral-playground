@@ -1,92 +1,73 @@
 <script lang="ts">
-	import { getModalStore, getToastStore } from '@skeletonlabs/skeleton';
-	import ShareIcon from 'lucide-svelte/icons/share';
+	import ShareIcon from '@lucide/svelte/icons/share';
 	import { liveQuery } from 'dexie';
 	import { db, type ChatShareState } from '$lib/stores/db';
-	import Trash2Icon from 'lucide-svelte/icons/trash-2';
-	import LinkIcon from 'lucide-svelte/icons/link';
+	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import LinkIcon from '@lucide/svelte/icons/link';
 	import { joinURL } from 'ufo';
-
-	const modalStore = getModalStore();
-	const toastStore = getToastStore();
+	import { toast } from 'svelte-sonner';
+	import ConfirmDialog from '$lib/components/Dialog/ConfirmDialog.svelte';
+	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Card from '$lib/components/ui/card/index.js';
 
 	let loading = $state(false);
 	let sharedChats = liveQuery(() => db.share.reverse().toArray());
 
 	async function copyShareLink(entry: ChatShareState) {
 		await navigator.clipboard.writeText(joinURL(window.location.origin, 'share', entry.id));
-		toastStore.trigger({
-			classes: 'variant-filled-success',
-			message: 'Chat share link copied'
-		});
+		toast.success('Chat share link copied');
 	}
 
-	async function confirmDeletion(entry: ChatShareState) {
-		modalStore.trigger({
-			type: 'confirm',
-			backdropClasses: 'bg-gradient-to-tr from-surface-500/50 via-primary-500/50 to-secondary-500/50',
-			title: 'Confirm',
-			body: 'Do you really want to delete this shared chat?',
-			response: async (r: boolean) => {
-				if (r) {
-					loading = true;
-					try {
-						await fetch(`/api/share/${entry.id}?key=${entry.deletionKey}`, { method: 'DELETE' });
-						toastStore.trigger({
-							classes: 'variant-filled-success',
-							message: 'Chat share deleted'
-						});
-						db.share.delete(entry.id);
-					} catch (error) {
-						console.error('Failed to delete chat share:', error);
-					} finally {
-						loading = false;
-					}
-				}
-			}
-		});
+	async function deleteChat(entry: ChatShareState) {
+		loading = true;
+		try {
+			await fetch(`/api/share/${entry.id}?key=${entry.deletionKey}`, { method: 'DELETE' });
+			toast.success('Chat share deleted');
+			db.share.delete(entry.id);
+		} catch (error) {
+			console.error('Failed to delete chat share:', error);
+		} finally {
+			loading = false;
+		}
 	}
 </script>
 
-<div class="flex flex-grow flex-shrink items-stretch flex-col gap-4 p-4 max-h-[calc(100vh-88px)] lg:max-h-screen">
-	<h1 class="text-3xl">Shared chats</h1>
+<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
+	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-balance">Shared chats</h1>
 	{#if $sharedChats?.length}
-		<div class="grid grid-cols-1 lg:grid-cols-3 gap-4 items-center">
+		<div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-4">
 			{#each $sharedChats as share}
-				<div class="card flex flex-col gap-4 p-4 variant-ghost-primary">
-					{#if share.title}
-						<p class="line-clamp-3 whitespace-pre-wrap">{share.title}</p>
-					{:else}
-						<p class="text-neutral-200 italic">No title</p>
-					{/if}
-					<div class="border-t border-primary-500 border-dashed"></div>
-					<div class="flex flex-row gap-2 justify-between items-center">
-						<p class="text-neutral-300">{new Date(share.createdAt).toLocaleString()}</p>
-						<div>
-							<button
-								class="flex-shrink-0 btn btn-sm variant-ringed-error"
-								disabled={loading}
-								onclick={() => copyShareLink(share)}
-							>
-								<LinkIcon />
-							</button>
-							<button
-								class="flex-shrink-0 btn btn-sm variant-ringed-error"
-								disabled={loading}
-								onclick={() => confirmDeletion(share)}
-							>
-								<Trash2Icon />
-							</button>
-						</div>
-					</div>
-				</div>
+				<Card.Root class="w-full ">
+					<Card.Header>
+						{#if share.title}
+							<Card.Title>{share.title}</Card.Title>
+						{/if}
+						<Card.Description>{new Date(share.createdAt).toLocaleString()}</Card.Description>
+					</Card.Header>
+					<Card.Footer class="flex flex-row justify-end gap-2">
+						<Button onclick={() => copyShareLink(share)}>
+							<LinkIcon />
+						</Button>
+						<ConfirmDialog
+							title="Confirm deletion"
+							description="Do you really want to delete this shared chat?"
+							onConfirm={() => deleteChat(share)}
+						>
+							{#snippet trigger()}
+								<Button variant="destructive" disabled={loading}>
+									<Trash2Icon />
+								</Button>
+							{/snippet}
+						</ConfirmDialog>
+					</Card.Footer>
+				</Card.Root>
 			{/each}
 		</div>
 	{:else}
-		<div class="flex flex-col items-center justify-center flex-grow flex-shrink text-center gap-3">
+		<div class="flex shrink grow flex-col items-center justify-center gap-3 text-center">
 			<ShareIcon size={52} />
-			<h3 class="text-xl text-primary-500">No shared chats</h3>
-			<p>Chats you share will appear here.</p>
+			<h3 class=" text-2xl font-semibold tracking-tight">No shared chats</h3>
+			<p class="text-muted-foreground leading-7">You can manage your shared chats from here.</p>
 		</div>
 	{/if}
 </div>

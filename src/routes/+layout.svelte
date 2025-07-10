@@ -1,67 +1,94 @@
 <script lang="ts">
-	import { apiKey } from '$lib/stores/apiKey';
-	import { Drawer, initializeStores, Modal, getDrawerStore, Toast } from '@skeletonlabs/skeleton';
-	import { page } from '$app/stores';
-
 	import '../app.css';
 
 	import hljs from 'highlight.js/lib/core';
-	// hljs
-	import xml from 'highlight.js/lib/languages/xml'; // for HTML
+	import xml from 'highlight.js/lib/languages/xml';
 	import css from 'highlight.js/lib/languages/css';
 	import json from 'highlight.js/lib/languages/json';
 	import javascript from 'highlight.js/lib/languages/javascript';
 	import typescript from 'highlight.js/lib/languages/typescript';
 	import shell from 'highlight.js/lib/languages/shell';
-	import ruby from 'highlight.js/lib/languages/ruby';
 	import sql from 'highlight.js/lib/languages/sql';
 	import python from 'highlight.js/lib/languages/python';
 
-	const { data, children } = $props();
-
-	if (data.apiKey) {
-		apiKey.set(data.apiKey);
-	}
-
-	hljs.registerLanguage('xml', xml); // for HTML
+	hljs.registerLanguage('xml', xml);
 	hljs.registerLanguage('css', css);
 	hljs.registerLanguage('json', json);
 	hljs.registerLanguage('javascript', javascript);
 	hljs.registerLanguage('typescript', typescript);
 	hljs.registerLanguage('shell', shell);
 	hljs.registerLanguage('bash', shell);
-	hljs.registerLanguage('ruby', ruby);
 	hljs.registerLanguage('sql', sql);
 	hljs.registerLanguage('python', python);
 
 	import 'highlight.js/styles/github-dark.css';
-	import Navigation from '$lib/components/Navigation.svelte';
-	import ChatHistoryList from '$lib/components/ChatHistoryList.svelte';
-	import OCRHistoryList from '$lib/components/OCRHistoryList.svelte';
 
-	initializeStores();
-	const drawerStore = getDrawerStore();
+	import AppSidebar from '$lib/components/app-sidebar.svelte';
+	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
+	import { Separator } from '$lib/components/ui/separator/index.js';
+	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
+	import { Toaster } from '$lib/components/ui/sonner/index.js';
+
+	import { apiKey } from '$lib/stores/apiKey';
+	import { page } from '$app/state';
+	import { loadModels } from '$lib/stores/models.svelte';
+	import ShareModal from '$lib/components/File/ShareModal.svelte';
+	import ExportModal from '$lib/components/File/ExportModal.svelte';
+
+	const { data, children } = $props();
+
+	if (data.apiKey) {
+		apiKey.set(data.apiKey);
+		loadModels();
+	}
+
+	const pages: Record<string, string> = {
+		chat: 'Chat completion',
+		ocr: 'OCR',
+		embeddings: 'Embeddings',
+		shared: 'Shared chats',
+		share: 'Shared chat',
+		settings: 'Settings',
+		about: 'About',
+		'': 'Login'
+	};
 </script>
 
 <svelte:head>
 	<title>Mistral Playground</title>
 </svelte:head>
 
-<div class="flex flex-col flex-nowrap lg:grid grid-layout min-h-screen max-h-screen">
-	{@render children()}
-</div>
-<Drawer>
-	{#if $drawerStore.id === 'navigation'}
-		<Navigation isFromRoot={false} />
-	{:else if $drawerStore.id === 'history'}
-		<div class="p-2">
-			{#if $page.url.pathname === '/chat' && $apiKey}
-				<ChatHistoryList mobile={true} />
-			{:else if $page.url.pathname === '/ocr' && $apiKey}
-				<OCRHistoryList mobile={true} />
+<Sidebar.Provider>
+	<AppSidebar />
+	<Sidebar.Inset>
+		<header
+			class="flex h-16 shrink-0 grow-0 items-center justify-between gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+		>
+			<div class="flex items-center gap-2 px-4">
+				<Sidebar.Trigger class="-ml-1" />
+				<Separator orientation="vertical" class="mr-2 data-[orientation=vertical]:h-4" />
+				<Breadcrumb.Root>
+					<Breadcrumb.List>
+						<Breadcrumb.Item class="hidden md:block">
+							<Breadcrumb.Link href="#">Mistral Playground</Breadcrumb.Link>
+						</Breadcrumb.Item>
+						<Breadcrumb.Separator class="hidden md:block" />
+						<Breadcrumb.Item>
+							<Breadcrumb.Page>{pages[page.url.pathname.split('/')[1]]}</Breadcrumb.Page>
+						</Breadcrumb.Item>
+					</Breadcrumb.List>
+				</Breadcrumb.Root>
+			</div>
+			{#if page.url.pathname === '/chat'}
+				<div class="flex flex-row gap-2 px-4">
+					<ExportModal />
+					<ShareModal />
+				</div>
 			{/if}
+		</header>
+		<div class="flex flex-1 shrink grow flex-col gap-4 p-4 pt-0">
+			{@render children()}
 		</div>
-	{/if}
-</Drawer>
-<Modal />
-<Toast />
+	</Sidebar.Inset>
+</Sidebar.Provider>
+<Toaster />

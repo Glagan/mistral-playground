@@ -1,4 +1,4 @@
-import type { ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
+import { type ContentChunk, type TextChunk } from '@mistralai/mistralai/models/components';
 
 export type Usage = { promptTokens: number; completionTokens: number; totalTokens: number; tps?: number };
 
@@ -27,10 +27,13 @@ export type ChatOptions = {
 	model: string;
 	temperature: number;
 	topP: number;
-	maxTokens: undefined | number;
+	presencePenalty: number | undefined;
+	frequencyPenalty: number | undefined;
+	maxTokens: number | undefined;
 	json?: boolean;
 	safePrompt: boolean;
-	randomSeed: undefined | number;
+	seed?: number | undefined;
+	systemPrompt?: string | undefined;
 };
 
 export type Page = {
@@ -47,4 +50,7 @@ export type Page = {
 	dimensions: { dpi: number; height: number; width: number };
 };
 
-export type OCROptions = { model: string };
+export type OCROptions = { model: string; minSize: number | undefined; imageLimit: number | undefined };
+
+export const embeddingTypes = ['float', 'int8', 'uint8', 'binary', 'ubinary'] as const;
+export type EmbeddingType = (typeof embeddingTypes)[number];
