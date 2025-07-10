@@ -1,4 +1,4 @@
-import { EmbeddingDtype, type ContentChunk, type TextChunk } from '@mistralai/mistralai/models/components';
+import { type ContentChunk, type TextChunk } from '@mistralai/mistralai/models/components';
 
 export type Usage = { promptTokens: number; completionTokens: number; totalTokens: number; tps?: number };
 

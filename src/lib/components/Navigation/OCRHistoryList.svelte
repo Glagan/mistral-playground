@@ -29,7 +29,7 @@
 		if (!('pages' in entry)) {
 			return;
 		}
-		await db.chat.delete(entry.id);
+		await db.ocr.delete(entry.id);
 		if (ocr.state.id === entry.id) {
 			ocr.reset();
 		}
