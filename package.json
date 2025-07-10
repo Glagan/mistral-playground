@@ -54,6 +54,7 @@
 	"dependencies": {
 		"@mistralai/mistralai": "^1.7.3",
 		"@neondatabase/serverless": "^1.0.1",
+		"@sentry/sveltekit": "^9",
 		"@sveltejs/adapter-node": "^5.2.13",
 		"@sveltejs/enhanced-img": "^0.6.1",
 		"dexie": "^4.0.11",
