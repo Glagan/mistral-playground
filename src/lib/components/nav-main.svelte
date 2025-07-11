@@ -50,7 +50,7 @@
 										href={mainItem.url}
 										target={mainItem.url.startsWith('http') ? '_blank' : undefined}
 										{...props}
-										onclick={() => sidebar.toggleOnMedium()}
+										onclick={() => sidebar.closeOnMedium()}
 									>
 										{#if mainItem.icon}
 											<mainItem.icon />
