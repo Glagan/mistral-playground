@@ -39,7 +39,7 @@
 									{...props}
 									onclick={() => {
 										onLoad(mainItem);
-										sidebar.toggleOnMedium();
+										sidebar.closeOnMedium();
 									}}
 								>
 									<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
