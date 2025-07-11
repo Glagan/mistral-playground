@@ -35,7 +35,7 @@
 			<Popover.Trigger bind:ref={triggerRef} class="w-full">
 				{#snippet child({ props })}
 					<Button variant="outline" class="w-full " {...props} role="combobox" aria-expanded={open}>
-						<span class="shrink grow text-left">{$settings.model || 'Select a model'}</span>
+						<span class="shrink grow text-left">{chat.state.options.model || 'Select a model'}</span>
 						<ChevronsUpDownIcon class="ml-2 size-4 shrink-0 opacity-50" />
 					</Button>
 				{/snippet}

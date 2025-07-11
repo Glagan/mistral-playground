@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { persisted } from 'svelte-persisted-store';
 
 export const defaultModel = 'mistral-small-latest';
-export const defaultTemperature = 0.7;
+export const defaultTemperature = 0.3;
 
 export const settingsSchema = z.object({
 	model: z.string().min(1).default(defaultModel),
