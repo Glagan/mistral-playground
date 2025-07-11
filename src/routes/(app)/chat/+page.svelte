@@ -442,11 +442,9 @@
 </script>
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
-	<div class="hidden lg:flex">
-		<Options />
-	</div>
+	<Options class="hidden lg:flex" />
 	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
-		<div class="flex-1 overflow-y-auto px-4">
+		<div class="flex-1 overflow-y-auto px-2 lg:px-4">
 			{#if chat.state.messages.length}
 				<Messages
 					messages={chat.state.messages}
@@ -468,7 +466,7 @@
 				<div class="flex h-full w-full items-center justify-center"></div>
 			{/if}
 		</div>
-		<form class="flex shrink-0 flex-col gap-2 px-4" onsubmit={onSubmit}>
+		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
 			{#if !stateIsValid}
 				<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
 					<div class="alert-message">

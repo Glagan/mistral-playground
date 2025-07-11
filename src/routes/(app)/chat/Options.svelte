@@ -15,6 +15,8 @@
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 
+	const { class: className = '' }: { class?: string } = $props();
+
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
 
@@ -26,7 +28,7 @@
 	}
 </script>
 
-<form class="flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]">
+<form class={['flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className]}>
 	<div class="flex w-full flex-col gap-1.5">
 		<label for="topP" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>

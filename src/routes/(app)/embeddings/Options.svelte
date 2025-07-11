@@ -16,8 +16,15 @@
 		model = $bindable(),
 		outputDimensions = $bindable(),
 		outputType = $bindable(),
-		onreset
-	}: { model: string; outputDimensions: number | null; outputType: EmbeddingType; onreset: () => void } = $props();
+		onreset,
+		class: className = ''
+	}: {
+		model: string;
+		outputDimensions: number | null;
+		outputType: EmbeddingType;
+		onreset: () => void;
+		class?: string;
+	} = $props();
 
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
@@ -30,7 +37,7 @@
 	}
 </script>
 
-<form class="flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]">
+<form class={['flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className]}>
 	<div class="flex w-full flex-col gap-1.5">
 		<label for="topP" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
