@@ -54,3 +54,9 @@ export type OCROptions = { model: string; minSize: number | undefined; imageLimi
 
 export const embeddingTypes = ['float', 'int8', 'uint8', 'binary', 'ubinary'] as const;
 export type EmbeddingType = (typeof embeddingTypes)[number];
+
+export type EmbeddingsOptions = {
+	model: string;
+	outputDimension: number | undefined;
+	outputDtype: EmbeddingType | undefined;
+};

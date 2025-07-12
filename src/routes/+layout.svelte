@@ -10,6 +10,7 @@
 	import shell from 'highlight.js/lib/languages/shell';
 	import sql from 'highlight.js/lib/languages/sql';
 	import python from 'highlight.js/lib/languages/python';
+	import Button from '$lib/components/ui/button/button.svelte';
 
 	hljs.registerLanguage('xml', xml);
 	hljs.registerLanguage('css', css);
@@ -34,6 +35,12 @@
 	import { loadModels } from '$lib/stores/models.svelte';
 	import ShareModal from '$lib/components/File/ShareModal.svelte';
 	import ExportModal from '$lib/components/File/ExportModal.svelte';
+	import { chat } from '$lib/stores/chat.svelte';
+	import MessageCirclePlusIcon from '@lucide/svelte/icons/message-circle-plus';
+	import { ocr } from '$lib/stores/ocr.svelte';
+	import ScanSearchIcon from '@lucide/svelte/icons/scan-search';
+	import { embeddings } from '$lib/stores/embeddings.svelte';
+	import SquareTerminalIcon from '@lucide/svelte/icons/square-terminal';
 
 	const { data, children } = $props();
 
@@ -79,10 +86,26 @@
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
 			</div>
-			{#if page.url.pathname === '/chat'}
+			{#if page.url.pathname === '/chat' || page.url.pathname === '/ocr' || page.url.pathname === '/embeddings'}
 				<div class="flex flex-row gap-2 px-4">
-					<ExportModal />
-					<ShareModal />
+					{#if page.url.pathname === '/chat'}
+						<Button variant="secondary" onclick={() => chat.reset()}>
+							<MessageCirclePlusIcon />
+							<span class="hidden lg:inline">New chat</span>
+						</Button>
+						<ExportModal />
+						<ShareModal />
+					{:else if page.url.pathname === '/ocr'}
+						<Button variant="secondary" onclick={() => ocr.reset()}>
+							<ScanSearchIcon />
+							<span class="hidden lg:inline">New scan</span>
+						</Button>
+					{:else if page.url.pathname === '/embeddings'}
+						<Button variant="secondary" onclick={() => embeddings.reset()}>
+							<SquareTerminalIcon />
+							<span class="hidden lg:inline">New embeddings</span>
+						</Button>
+					{/if}
 				</div>
 			{/if}
 		</header>

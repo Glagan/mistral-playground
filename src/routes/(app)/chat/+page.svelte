@@ -29,6 +29,7 @@
 	import Options from './Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
+	import { emitter } from '$lib/emitter';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -164,6 +165,7 @@
 						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
 				}
 			}
+			emitter.emit('message:complete');
 			scrollDown(outputNode);
 		} catch (__error) {
 			const _error = __error as Error;
@@ -443,7 +445,7 @@
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
 	<Options class="hidden lg:flex" />
-	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
+	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-2 lg:px-4">
 			{#if chat.state.messages.length}
 				<Messages

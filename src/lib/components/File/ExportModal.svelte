@@ -62,7 +62,7 @@
 					return `\t${key}: ${value},`;
 				})
 				.join('\n'),
-			`    messages: ${JSON.stringify(messageCopy, undefined, 4)}`,
+			`    messages: [${JSON.stringify(messageCopy, undefined, 4).slice(6).slice(0, -2)}]`,
 			'});',
 			''
 		];

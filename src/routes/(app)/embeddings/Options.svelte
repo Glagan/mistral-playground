@@ -11,20 +11,10 @@
 	import { embeddingTypes, type EmbeddingType } from '$lib/types';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import InfoIcon from '@lucide/svelte/icons/info';
+	import { cn } from '$lib/utils';
+	import { embeddings } from '$lib/stores/embeddings.svelte';
 
-	let {
-		model = $bindable(),
-		outputDimensions = $bindable(),
-		outputType = $bindable(),
-		onreset,
-		class: className = ''
-	}: {
-		model: string;
-		outputDimensions: number | null;
-		outputType: EmbeddingType;
-		onreset: () => void;
-		class?: string;
-	} = $props();
+	let { class: className = '' }: { class?: string } = $props();
 
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
@@ -37,14 +27,14 @@
 	}
 </script>
 
-<form class={['flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className]}>
+<form class={cn('flex h-full shrink-0 grow flex-col gap-6 overflow-auto lg:w-[25vw] lg:max-w-[25vw]', className)}>
 	<div class="flex w-full flex-col gap-1.5">
 		<label for="topP" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
 			<Popover.Trigger bind:ref={triggerRef} class="w-full">
 				{#snippet child({ props })}
 					<Button variant="outline" class="w-full " {...props} role="combobox" aria-expanded={open}>
-						<span class="shrink grow text-left">{model}</span>
+						<span class="shrink grow text-left">{embeddings.state.options.model}</span>
 						<ChevronsUpDownIcon class="ml-2 size-4 shrink-0 opacity-50" />
 					</Button>
 				{/snippet}
@@ -61,7 +51,7 @@
 									<Command.Item
 										value={item.id}
 										onSelect={() => {
-											model = item.id;
+											embeddings.state.options.model = item.id;
 											closeAndFocusTrigger();
 										}}
 									>
@@ -86,10 +76,10 @@
 			type="number"
 			min={1}
 			max={3072}
-			disabled={model === 'mistral-embed'}
-			bind:value={outputDimensions}
+			disabled={embeddings.state.options.model === 'mistral-embed'}
+			bind:value={embeddings.state.options.outputDimension}
 		/>
-		{#if model === 'mistral-embed'}
+		{#if embeddings.state.options.model === 'mistral-embed'}
 			<Alert.Root>
 				<InfoIcon />
 				<Alert.Description>
@@ -102,9 +92,14 @@
 	</div>
 	<div class="flex w-full flex-col gap-1.5">
 		<Label for="outputType">Output type</Label>
-		<Select.Root type="single" name="outputType" disabled={model === 'mistral-embed'} bind:value={outputType}>
+		<Select.Root
+			type="single"
+			name="outputType"
+			disabled={embeddings.state.options.model === 'mistral-embed'}
+			bind:value={embeddings.state.options.outputDtype}
+		>
 			<Select.Trigger class="w-full">
-				{outputType}
+				{embeddings.state.options.outputDtype}
 			</Select.Trigger>
 			<Select.Content>
 				<Select.Group>
@@ -116,7 +111,7 @@
 				</Select.Group>
 			</Select.Content>
 		</Select.Root>
-		{#if model === 'mistral-embed'}
+		{#if embeddings.state.options.model === 'mistral-embed'}
 			<Alert.Root>
 				<InfoIcon />
 				<Alert.Description>
@@ -127,5 +122,5 @@
 			</Alert.Root>
 		{/if}
 	</div>
-	<Button class="mx-auto" onclick={() => onreset()}>New embeddings</Button>
+	<Button class="mx-auto" onclick={() => embeddings.reset()}>New embeddings</Button>
 </form>

@@ -125,7 +125,7 @@
 	@apply rounded p-4 wrap-anywhere whitespace-pre-wrap;
 }
 
-code {
+.rendered-markdown code {
 	@apply overflow-x-auto rounded px-[3px] py-[3px] font-mono text-base;
 	font-feature-settings: normal;
 	font-variation-settings: normal;
@@ -197,7 +197,6 @@ pre.codeblock-pre > code.codeblock-code {
 }
 
 .rendered-markdown div[think] {
-	/* @apply bg-primary/20 border-primary block overflow-auto rounded-r border-l-2 p-2 font-light whitespace-pre-wrap; */
 	@apply block overflow-auto border-l-2 pl-6 whitespace-pre-wrap italic;
 }
 

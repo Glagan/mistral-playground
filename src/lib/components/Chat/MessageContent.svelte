@@ -3,6 +3,8 @@
 	import { marked } from 'marked';
 	import hljs from 'highlight.js/lib/core';
 	import FileMessagePreview from '$lib/components/File/MessagePreview.svelte';
+	import { emitter } from '$lib/emitter';
+	import { onDestroy, onMount } from 'svelte';
 
 	let {
 		message
@@ -26,9 +28,15 @@
 		);
 	});
 
-	$effect(() => {
-		message.versions[message.index].content;
+	onMount(() => {
+		emitter.on('message:complete', () => {
+			hljs.highlightAll();
+		});
 		hljs.highlightAll();
+	});
+
+	onDestroy(() => {
+		emitter.off('message:complete');
 	});
 </script>
 
