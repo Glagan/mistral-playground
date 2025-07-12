@@ -29,6 +29,7 @@
 	import Options from './Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
+	import { emitter } from '$lib/emitter';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -164,6 +165,7 @@
 						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
 				}
 			}
+			emitter.emit('message:complete');
 			scrollDown(outputNode);
 		} catch (__error) {
 			const _error = __error as Error;
