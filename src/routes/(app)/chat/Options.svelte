@@ -14,6 +14,7 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
+	import { cn } from '$lib/utils';
 
 	const { class: className = '' }: { class?: string } = $props();
 
@@ -28,7 +29,7 @@
 	}
 </script>
 
-<form class={['flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className]}>
+<form class={cn('flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className)}>
 	<div class="flex w-full flex-col gap-1.5">
 		<label for="topP" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
@@ -185,5 +186,4 @@
 		<Switch id="safePrompt" bind:checked={chat.state.options.safePrompt} />
 	</div>
 	<Textarea rows={5} placeholder="System prompt" bind:value={chat.state.options.systemPrompt} />
-	<Button class="mx-auto" onclick={() => chat.reset()}>New chat</Button>
 </form>
