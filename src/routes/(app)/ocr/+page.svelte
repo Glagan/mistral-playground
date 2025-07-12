@@ -133,7 +133,7 @@
 
 <div class="flex max-h-[calc(100vh-80px)] shrink grow flex-row gap-0">
 	<Options class="hidden lg:flex" />
-	<div class="relative flex h-full w-full shrink grow flex-col gap-4">
+	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto lg:px-4">
 			{#if ocr.state.pages.length}
 				<PdfPages pages={ocr.state.pages} {loading} {error} />

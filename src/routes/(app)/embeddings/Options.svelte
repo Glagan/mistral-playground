@@ -27,7 +27,7 @@
 	}
 </script>
 
-<form class={cn('flex h-full shrink grow flex-col gap-6 overflow-auto lg:w-[30vw]', className)}>
+<form class={cn('flex h-full shrink-0 grow flex-col gap-6 overflow-auto lg:w-[25vw] lg:max-w-[25vw]', className)}>
 	<div class="flex w-full flex-col gap-1.5">
 		<label for="topP" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
