@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-
 @import 'tw-animate-css';
 
 @custom-variant dark (&:is(.dark *));
@@ -202,4 +201,10 @@ pre.codeblock-pre > code.codeblock-code {
 
 .rendered-markdown p {
 	@apply leading-7;
+}
+
+.main-background {
+	@apply bg-repeat;
+	background-size: 100px;
+	background-image: url('/noise.png');
 }
