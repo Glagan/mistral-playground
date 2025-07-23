@@ -1,7 +1,6 @@
 <script lang="ts">
 	import * as Collapsible from '$lib/components/ui/collapsible/index.js';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
-	import { apiKey } from '$lib/stores/apiKey';
 	import { ocr, type OCRState } from '$lib/stores/ocr.svelte';
 	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import { findFirstTextNode } from '$lib/message';
@@ -37,23 +36,26 @@
 							{#snippet child({ props })}
 								<div
 									{...props}
+									class={['group/row', props.class ?? '']}
 									onclick={() => {
 										onLoad(mainItem);
 										sidebar.closeOnMedium();
 									}}
 								>
 									<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
-									<Button
-										variant="ghost"
-										class="shrink cursor-pointer"
-										onclick={(event) => {
-											event.preventDefault();
-											event.stopPropagation();
-											onDestroy(mainItem);
-										}}
-									>
-										<Trash2Icon size={12} class="text-red-400" />
-									</Button>
+									<div class="w-0 shrink transition-all group-hover/row:w-10">
+										<Button
+											variant="ghost"
+											class="cursor-pointer"
+											onclick={(event) => {
+												event.preventDefault();
+												event.stopPropagation();
+												onDestroy(mainItem);
+											}}
+										>
+											<Trash2Icon size={12} class="text-red-400" />
+										</Button>
+									</div>
 								</div>
 							{/snippet}
 						</Sidebar.MenuButton>
