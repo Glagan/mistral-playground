@@ -10,6 +10,7 @@
 	import BookTextIcon from '@lucide/svelte/icons/book-text';
 	import FileCodeIcon from '@lucide/svelte/icons/file-code';
 	import Share2Icon from '@lucide/svelte/icons/share-2';
+	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
 	const data = {
 		navMain: [
@@ -71,6 +72,10 @@
 				title: 'About',
 				url: '/about',
 				icon: BadgeInfoIcon
+			},
+			{
+				title: 'Toggle theme',
+				component: ThemeToggle
 			},
 			{
 				title: 'Settings',

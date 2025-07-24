@@ -557,17 +557,17 @@
 				<div class="flex items-center justify-between gap-2">
 					<div class="flex items-center gap-2">
 						{#if chat.state.usage}
-							<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
+							<div class="text-foreground flex items-center gap-2 text-right text-xs opacity-75">
 								<Badge>Tokens</Badge>
 								<div>
-									Prompt: <span class="text-stone-400">{chat.state.usage.promptTokens}</span> / Completion:
-									<span class="text-stone-400">{chat.state.usage.completionTokens}</span>
-									/ Total: <span class="text-stone-400">{chat.state.usage.totalTokens}</span>
+									Prompt: <span class="text-muted-background">{chat.state.usage.promptTokens}</span> / Completion:
+									<span class="text-muted-background">{chat.state.usage.completionTokens}</span>
+									/ Total: <span class="text-muted-background">{chat.state.usage.totalTokens}</span>
 								</div>
 								{#if chat.state.usage.tps}
 									<div>
-										<span class="text-stone-400">(</span>{chat.state.usage.tps}
-										<span class="text-stone-400">tk/s</span><span class="text-stone-400">)</span>
+										<span class="text-muted-background">(</span>{chat.state.usage.tps}
+										<span class="text-muted-background">tk/s</span><span class="text-muted-background">)</span>
 									</div>
 								{/if}
 								<span></span>

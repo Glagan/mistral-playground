@@ -4,26 +4,30 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
+	import type { SvelteComponent } from 'svelte';
 
 	let {
 		title,
 		items
 	}: {
 		title?: string;
-		items: {
-			title: string;
-			url: string;
-			// This should be `Component` after @lucide/svelte updates types
-			// eslint-disable-next-line @typescript-eslint/no-explicit-any
-			icon?: any;
-			isActive?: boolean;
-			items?: {
-				title: string;
-				url: string;
-			}[];
-			disableLoggedOut?: boolean;
-			hideLoggedOut?: boolean;
-		}[];
+		items: (
+			| { title: string; component: any }
+			| {
+					title: string;
+					url: string;
+					// This should be `Component` after @lucide/svelte updates types
+					// eslint-disable-next-line @typescript-eslint/no-explicit-any
+					icon?: any;
+					isActive?: boolean;
+					items?: {
+						title: string;
+						url: string;
+					}[];
+					disableLoggedOut?: boolean;
+					hideLoggedOut?: boolean;
+			  }
+		)[];
 	} = $props();
 
 	const sidebar = Sidebar.useSidebar();
@@ -37,7 +41,9 @@
 	{/if}
 	<Sidebar.Menu>
 		{#each items as mainItem (mainItem.title)}
-			{#if loggedIn || !mainItem.hideLoggedOut}
+			{#if 'component' in mainItem}
+				<mainItem.component item={mainItem} />
+			{:else if loggedIn || !mainItem.hideLoggedOut}
 				<Collapsible.Root open={mainItem.isActive}>
 					{#snippet child({ props })}
 						<Sidebar.MenuItem
