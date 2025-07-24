@@ -199,9 +199,9 @@
 		}
 	}
 
-	async function onSubmit(event: Event) {
+	async function onSubmit(event?: Event) {
 		const outputNode = document.getElementById('messages-container');
-		event.preventDefault();
+		event?.preventDefault();
 		error = null;
 		if (promptText.length || files.length) {
 			const message: Message = {
@@ -351,6 +351,16 @@
 
 	// * < Message events
 
+	let isInvalid = $derived(
+		loading ||
+			models.loading ||
+			!!models.error ||
+			(!promptText &&
+				(chat.state.messages.length === 0 ||
+					(chat.state.messages.length > 0 && chat.state.messages[chat.state.messages.length - 1].role !== 'user')) &&
+				files.length === 0)
+	);
+
 	function handleUploadedFiles(uploadedFiles: File[]) {
 		const { files: validFiles, errors } = handleFileUpload(uploadedFiles);
 		files.push(...validFiles);
@@ -366,6 +376,15 @@
 	) {
 		handleUploadedFiles(event.currentTarget.files ? Array.from(event.currentTarget.files) : []);
 		event.currentTarget.files = null;
+	}
+
+	function onKeypress(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			if (!isInvalid) {
+				onSubmit();
+			}
+		}
 	}
 
 	onMount(() => {
@@ -512,8 +531,9 @@
 				<div class="relative">
 					<Textarea
 						rows={5}
-						disabled={loading || !!models.error}
+						readonly={loading || !!models.error}
 						placeholder="Type something or drag and drop images..."
+						onkeypress={onKeypress}
 						bind:value={promptText}
 					/>
 					{#if isDragging}
@@ -574,17 +594,7 @@
 					{#if loading}
 						<Button variant="destructive" onclick={stopGenerating}>Stop</Button>
 					{:else}
-						<Button
-							type="submit"
-							disabled={loading ||
-								models.loading ||
-								!!models.error ||
-								(!promptText &&
-									(chat.state.messages.length === 0 ||
-										(chat.state.messages.length > 0 &&
-											chat.state.messages[chat.state.messages.length - 1].role !== 'user')) &&
-									files.length === 0)}
-						>
+						<Button type="submit" disabled={isInvalid}>
 							Submit
 							<SendHorizontalIcon />
 						</Button>

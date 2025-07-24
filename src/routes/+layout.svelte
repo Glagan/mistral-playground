@@ -109,7 +109,7 @@
 				</div>
 			{/if}
 		</header>
-		<div class="flex flex-1 shrink grow flex-col gap-4 p-4 pt-0">
+		<div class="main-background flex flex-1 shrink grow flex-col gap-4 p-4 pt-0">
 			{@render children()}
 		</div>
 	</Sidebar.Inset>

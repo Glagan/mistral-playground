@@ -34,9 +34,10 @@
 	let renderedError = $derived(
 		(marked.parse(error.trim(), { async: false, gfm: true, breaks: true }) as string).trim()
 	);
+	let isInvalid = $derived(loading || models.loading || !!models.error || !embeddings.state.promptText);
 
-	async function onSubmit(event: Event) {
-		event.preventDefault();
+	async function onSubmit(event?: Event) {
+		event?.preventDefault();
 
 		loading = true;
 		embeddings.state.result = [];
@@ -58,6 +59,15 @@
 			return;
 		} finally {
 			loading = false;
+		}
+	}
+
+	function onKeypress(event: KeyboardEvent) {
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			if (!isInvalid) {
+				onSubmit();
+			}
 		}
 	}
 
@@ -109,8 +119,9 @@
 				<div class="relative">
 					<Textarea
 						rows={5}
-						disabled={loading || !!models.error}
+						readonly={loading || !!models.error}
 						placeholder="Type something..."
+						onkeypress={onKeypress}
 						bind:value={embeddings.state.promptText}
 					/>
 				</div>
@@ -124,7 +135,7 @@
 						<Options />
 					</Drawer.Content>
 				</Drawer.Root>
-				<Button type="submit" disabled={loading || models.loading || !!models.error || !embeddings.state.promptText}>
+				<Button type="submit" disabled={isInvalid}>
 					Submit
 					<SendHorizontalIcon />
 				</Button>
