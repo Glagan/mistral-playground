@@ -60,11 +60,17 @@ export function createCurrent() {
 		defaultOptions,
 		setFromEntry,
 		reset,
+		get model() {
+			return models.byName[state.options.model];
+		},
 		get hasMultimediaContent() {
 			return (
 				state.messages.find((m) =>
 					m.versions.find((v) =>
-						v.content.find((c) => c.type === 'image_url' || c.type === 'document_url' || c.type === 'file')
+						v.content.find(
+							(c) =>
+								c.type === 'image_url' || c.type === 'input_audio' || c.type === 'document_url' || c.type === 'file'
+						)
 					)
 				) !== undefined
 			);
@@ -73,6 +79,10 @@ export function createCurrent() {
 			// No flags, so we can only check for the name
 			const definition = models.byName[state.options.model];
 			return definition?.capabilities?.vision === true;
+		},
+		get hasTranscribe() {
+			// No flags, so we can only check for the name
+			return state.options.model.includes('voxtral');
 		},
 		get isThinking() {
 			// No flags, so we can only check for the name

@@ -54,6 +54,42 @@ function groupModels(models: (BaseModelCard | FTModelCard)[]): Record<string, (B
 	return groups;
 }
 
+// There is no prices in the API, so we need to hardcode them for each models (when they give the information)
+export const prices: Record<string, { input: number; output: number }> = {
+	'mistral-medium-latest': { input: 0.4, output: 2 },
+	'magistral-medium-latest': { input: 2, output: 5 },
+	'mistral-large-latest': { input: 2, output: 6 },
+	'devstral-medium-2507': { input: 0.4, output: 2 },
+	'codestral-latest': { input: 0.3, output: 0.9 },
+	'mistral-small-latest': { input: 0.1, output: 0.3 },
+	'magistral-small-latest': { input: 0.5, output: 1.5 },
+	'devstral-small-2507': { input: 0.1, output: 0.3 },
+	'voxtral-small-latest': { input: 0.1, output: 0 },
+	'voxtral-mini-latest': { input: 0.04, output: 0.04 },
+	'pixtral-large-latest': { input: 2, output: 6 },
+	'pixtral-12b': { input: 0.15, output: 0.15 },
+	'mistral-nemo': { input: 0.15, output: 0.15 },
+	'mistral-saba-latest': { input: 0.25, output: 0.25 },
+	'open-mistral-7b': { input: 0.2, output: 0.6 },
+	'open-mixtral-8x7b': { input: 0.7, output: 0.7 },
+	'open-mixtral-8x22b': { input: 2, output: 6 },
+	'ministral-8b-latest': { input: 0.1, output: 1 },
+	'ministral-3b-latest': { input: 0.04, output: 0.04 }
+};
+
+export function priceForModel(model: BaseModelCard | FTModelCard) {
+	if (prices[model.id]) {
+		return prices[model.id];
+	}
+	if (model.aliases) {
+		const fromAlias = model.aliases.find((alias) => prices[alias]);
+		if (fromAlias) {
+			return prices[fromAlias];
+		}
+	}
+	return null;
+}
+
 export async function loadModels() {
 	try {
 		models.loading = true;

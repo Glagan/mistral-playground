@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { settings } from '$lib/stores/settings';
 	import { chat } from '$lib/stores/chat.svelte';
-	import { models } from '$lib/stores/models.svelte';
+	import { models, priceForModel } from '$lib/stores/models.svelte';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
@@ -15,11 +15,19 @@
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import { cn } from '$lib/utils';
+	import { Badge } from '$lib/components/ui/badge/index.js';
+	import EyeIcon from '@lucide/svelte/icons/eye';
+	import BrainIcon from '@lucide/svelte/icons/brain';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
 
 	const { class: className = '' }: { class?: string } = $props();
 
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
+	const formatter = new Intl.NumberFormat('en-US', {
+		style: 'currency',
+		currency: 'USD'
+	});
 
 	function closeAndFocusTrigger() {
 		open = false;
@@ -67,6 +75,70 @@
 					</Command.Root>
 				</Popover.Content>
 			</Popover.Root>
+			{#if chat.model}
+				{@const price = priceForModel(chat.model)}
+				<div class="flex flex-row flex-wrap items-center gap-2">
+					{#if chat.model.capabilities.completionChat}
+						<Badge>Chat</Badge>
+					{/if}
+					{#if chat.model.capabilities.vision}
+						<Tooltip.Provider>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<Badge>
+										<EyeIcon />
+										Vision
+									</Badge>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p>Has image capabilities</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</Tooltip.Provider>
+					{/if}
+					{#if chat.isThinking}
+						<Tooltip.Provider>
+							<Tooltip.Root>
+								<Tooltip.Trigger>
+									<Badge>
+										<BrainIcon />
+										Reasoning
+									</Badge>
+								</Tooltip.Trigger>
+								<Tooltip.Content>
+									<p>Supports advanced reasoning</p>
+								</Tooltip.Content>
+							</Tooltip.Root>
+						</Tooltip.Provider>
+					{/if}
+					{#if chat.model.capabilities.functionCalling}
+						<Badge variant="outline">Function calling</Badge>
+					{/if}
+					{#if chat.model.capabilities.fineTuning}
+						<Badge variant="outline">Finetune</Badge>
+					{/if}
+					{#if chat.model.capabilities.classification}
+						<Badge variant="outline">Classification</Badge>
+					{/if}
+				</div>
+				<div class="flex flex-row flex-wrap items-center gap-2">
+					<div>
+						<Badge>{chat.model.maxContextLength}</Badge> <span>Context length</span>
+					</div>
+					{#if price}
+						<div>
+							<Badge class="bg-sky-200">Input</Badge>
+							<span>{formatter.format(price.input)}</span>
+							<span class="text-muted-foreground">/ 1M tokens</span>
+						</div>
+						<div>
+							<Badge class="bg-lime-200">Output</Badge>
+							<span>{formatter.format(price.output)}</span>
+							<span class="text-muted-foreground">/ 1M tokens</span>
+						</div>
+					{/if}
+				</div>
+			{/if}
 		</div>
 		<div class="flex w-full flex-col gap-1.5">
 			<label for="topP" class="text-sm leading-none font-medium">
