@@ -2,6 +2,7 @@ import { get } from 'svelte/store';
 import type { ChatOptions, Usage, Message } from '../types';
 import { settings } from './settings';
 import { v7 as uuid } from 'uuid';
+import { models } from './models.svelte';
 
 export type ChatState = {
 	id: string;
@@ -54,7 +55,21 @@ export function createCurrent() {
 		}
 	}
 
-	return { state, defaultOptions, setFromEntry, reset };
+	return {
+		state,
+		defaultOptions,
+		setFromEntry,
+		reset,
+		get hasVision() {
+			// No flags, so we can only check for the name
+			const definition = models.list.find((m) => m.id === state.options.model);
+			return definition?.capabilities?.vision === true;
+		},
+		get isThinking() {
+			// No flags, so we can only check for the name
+			return state.options.model.includes('magistral');
+		}
+	};
 }
 
 export const chat = createCurrent();

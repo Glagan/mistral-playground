@@ -6,6 +6,7 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import InfoIcon from '@lucide/svelte/icons/info';
+	import { chat } from '$lib/stores/chat.svelte';
 
 	let {
 		message = $bindable(),
@@ -55,9 +56,20 @@
 	{/if}
 </div>
 <div class="space-y-2">
+	{#if chat.isThinking && message.role === 'assistant'}
+		<label for="message-{message.id}-thoughts" class="text-sm leading-none font-medium">Assistant thoughts</label>
+		<Textarea
+			id="message-{message.id}-thoughts"
+			rows={5}
+			placeholder="Thoughts of the assistant..."
+			bind:value={message.versions[message.index].thinking}
+		/>
+		<label for="message-{message.id}-content" class="text-sm leading-none font-medium">Assistant response</label>
+	{/if}
 	{#each message.versions[message.index].content as item, index}
 		{#if item.type === 'text'}
 			<Textarea
+				id="message-{message.id}-content"
 				bind:ref={textarea[index]}
 				rows={5}
 				placeholder="Type something or drag and drop images..."

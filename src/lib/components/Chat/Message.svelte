@@ -48,7 +48,12 @@
 	}
 
 	function stopEditing() {
-		interact?.updateMessage(message, messageCopy.role, messageCopy.versions[messageCopy.index].content);
+		interact?.updateMessage(
+			message,
+			messageCopy.role,
+			messageCopy.versions[messageCopy.index].content,
+			messageCopy.role === 'assistant' ? messageCopy.versions[messageCopy.index].thinking : undefined
+		);
 		editing.id = '';
 	}
 

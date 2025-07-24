@@ -18,7 +18,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
-	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
+	import type { ChatCompletionStreamRequest, ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
@@ -30,6 +30,8 @@
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { emitter } from '$lib/emitter';
+	import * as Alert from '$lib/components/ui/alert/index.js';
+	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -118,10 +120,14 @@
 						content: message.versions[message.index].content
 					};
 				} else if (message.role === 'assistant') {
-					return {
-						role: message.role,
-						content: message.versions[message.index].content
-					};
+					const content = message.versions[message.index].content;
+					if (chat.isThinking && message.versions[message.index].thinking) {
+						content.unshift({
+							type: 'thinking',
+							thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
+						});
+					}
+					return { role: message.role, content };
 				}
 				return {
 					role: message.role,
@@ -149,12 +155,39 @@
 			for await (const message of chatStreamResponse) {
 				const data = message.data;
 				if (data.choices[0].delta.content !== undefined) {
-					const text = data.choices[0].delta.content;
-					(answer.versions[answer.index].content[0] as TextChunk).text += text ?? '';
+					const content = data.choices[0].delta.content;
+					if (Array.isArray(content)) {
+						for (let index = 0; index < content.length; index++) {
+							const entry = content[index];
+							if (entry.type === 'text') {
+								(answer.versions[answer.index].content[index] as TextChunk).text += entry.text;
+							} else if (entry.type === 'thinking') {
+								if (!answer.versions[answer.index].thinking) {
+									answer.versions[answer.index].thinking = '';
+								}
+								for (let j = 0; j < entry.thinking.length; j++) {
+									const block = entry.thinking[j];
+									if (block.type === 'text') {
+										answer.versions[answer.index].thinking += block.text;
+									} else {
+										console.log('unsupported content in chunk', entry, block);
+									}
+								}
+							} else {
+								console.log('unsupported chunk content', entry);
+							}
+						}
+					} else {
+						(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
+					}
 				}
 				if (data.usage) {
 					const completionTime = performance.now() - startedAt;
-					chat.state.usage = data.usage;
+					chat.state.usage = {
+						promptTokens: data.usage.promptTokens ?? 0,
+						completionTokens: data.usage.completionTokens ?? 0,
+						totalTokens: data.usage.totalTokens ?? 0
+					};
 					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
 				}
 				scrollDown(outputNode);
@@ -325,12 +358,18 @@
 		}
 	}
 
-	async function updateMessage(message: Message, role: MessageRole, content: MessageContent) {
+	async function updateMessage(message: Message, role: MessageRole, content: MessageContent, thinking?: string) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const active = chat.state.messages[index];
 			active.role = role;
+			if (active.role === 'assistant') {
+				active.versions[active.index].thinking = thinking;
+			} else {
+				// @ts-expect-error We delete the value since it should not exists
+				delete active.versions[active.index].thinking;
+			}
 			active.versions[active.index].content = content;
 			await updateOrInsertHistory();
 		}
@@ -489,14 +528,15 @@
 		</div>
 		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
 			{#if !stateIsValid}
-				<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-					<div class="alert-message">
+				<Alert.Root variant="destructive">
+					<AlertCircleIcon />
+					<Alert.Description>
 						<p>
 							Your input is invalid, the first message can only be a system prompt or a question and the last message
 							must be a question or system prompt.
 						</p>
-					</div>
-				</aside>
+					</Alert.Description>
+				</Alert.Root>
 			{/if}
 			<ModelError />
 			<label class="flex flex-col gap-1.5">

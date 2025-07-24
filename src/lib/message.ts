@@ -7,7 +7,7 @@ export type MessageInteraction = {
 	previousVersion: (message: Message) => void;
 	nextVersion: (message: Message) => void;
 	deleteVersion: (message: Message) => void;
-	updateMessage: (message: Message, role: MessageRole, content: MessageContent) => void;
+	updateMessage: (message: Message, role: MessageRole, content: MessageContent, thinking?: string) => void;
 	deleteMessage: (message: Message) => void;
 	generate: (event: Event) => void;
 };
