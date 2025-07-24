@@ -9,6 +9,7 @@ export const models: {
 	loaded: boolean;
 	error: { title: string; message: string } | null;
 	list: (BaseModelCard | FTModelCard)[];
+	byName: Record<string, BaseModelCard | FTModelCard>;
 	chat: (BaseModelCard | FTModelCard)[];
 	chatGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
 	vision: (BaseModelCard | FTModelCard)[];
@@ -22,6 +23,7 @@ export const models: {
 	loaded: false,
 	error: null,
 	list: [],
+	byName: {},
 	chat: [],
 	chatGroups: {},
 	vision: [],
@@ -58,6 +60,11 @@ export async function loadModels() {
 		const client = getClientForRequest({ apiKey: get(apiKey), endpoint: get(settings).endpoint });
 		const response = await client.models.list();
 		models.list = response.data ?? [];
+		models.byName = {};
+		for (let index = 0; index < models.list.length; index++) {
+			const model = models.list[index];
+			models.byName[model.id] = model;
+		}
 		models.chat = models.list.filter((model) => model.capabilities?.completionChat && !model.id.includes('ocr'));
 		models.chatGroups = groupModels(models.chat);
 		models.vision = models.chat.filter(

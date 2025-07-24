@@ -466,6 +466,13 @@
 		};
 
 		const handleDrop = (e: DragEvent) => {
+			if (!chat.hasVision) {
+				e.preventDefault();
+				e.stopPropagation();
+				dragCounter = 0;
+				isDragging = false;
+				return toast.error('This model does not support multimedia content.');
+			}
 			if (editing.id) {
 				return;
 			}
@@ -610,25 +617,27 @@
 							<Options />
 						</Drawer.Content>
 					</Drawer.Root>
-					<label for="fileUpload">
-						<input
-							id="fileUpload"
-							class="hidden"
-							type="file"
-							multiple
-							accept="image/png,image/jpeg,image/jpg,image/webp"
-							disabled={loading || models.loading || !!models.error}
-							onchange={onFileChange}
-						/>
-						<Button
-							variant="secondary"
-							disabled={loading || models.loading || !!models.error}
-							onclick={() => document.getElementById('fileUpload')?.click()}
-						>
-							<ImageUpIcon size={20} />
-							<span class="hidden md:inline-block">Upload image</span>
-						</Button>
-					</label>
+					{#if chat.hasVision}
+						<label for="fileUpload">
+							<input
+								id="fileUpload"
+								class="hidden"
+								type="file"
+								multiple
+								accept="image/png,image/jpeg,image/jpg,image/webp"
+								disabled={loading || models.loading || !!models.error}
+								onchange={onFileChange}
+							/>
+							<Button
+								variant="secondary"
+								disabled={loading || models.loading || !!models.error}
+								onclick={() => document.getElementById('fileUpload')?.click()}
+							>
+								<ImageUpIcon size={20} />
+								<span class="hidden md:inline-block">Upload image</span>
+							</Button>
+						</label>
+					{/if}
 				</div>
 				<div class="flex flex-row gap-2">
 					{#if loading}

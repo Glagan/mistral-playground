@@ -46,10 +46,16 @@
 <div class="mb-2 flex flex-row items-center gap-2">
 	<ToggleGroup.Root bind:value={message.role} variant="outline" type="single">
 		<ToggleGroup.Item value="user" disabled={hasAnyFile} class="w-24">User</ToggleGroup.Item>
-		<ToggleGroup.Item value="assistant" disabled={hasAnyFile} class="w-24">Assistant</ToggleGroup.Item>
+		<ToggleGroup.Item value="assistant" disabled={hasAnyFile || index === 0} class="w-24">Assistant</ToggleGroup.Item>
 	</ToggleGroup.Root>
+	{#if index === 0}
+		<Alert.Root class="w-auto">
+			<InfoIcon />
+			<Alert.Title>The first message can't be an assitant message.</Alert.Title>
+		</Alert.Root>
+	{/if}
 	{#if hasAnyFile}
-		<Alert.Root>
+		<Alert.Root class="w-auto">
 			<InfoIcon />
 			<Alert.Title>Delete the files to change the message type.</Alert.Title>
 		</Alert.Root>

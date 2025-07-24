@@ -60,9 +60,18 @@ export function createCurrent() {
 		defaultOptions,
 		setFromEntry,
 		reset,
+		get hasMultimediaContent() {
+			return (
+				state.messages.find((m) =>
+					m.versions.find((v) =>
+						v.content.find((c) => c.type === 'image_url' || c.type === 'document_url' || c.type === 'file')
+					)
+				) !== undefined
+			);
+		},
 		get hasVision() {
 			// No flags, so we can only check for the name
-			const definition = models.list.find((m) => m.id === state.options.model);
+			const definition = models.byName[state.options.model];
 			return definition?.capabilities?.vision === true;
 		},
 		get isThinking() {
