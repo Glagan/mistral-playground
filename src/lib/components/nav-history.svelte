@@ -43,7 +43,7 @@
 									}}
 								>
 									<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
-									<div class="w-0 shrink transition-all group-hover/row:w-10">
+									<div class="w-8 shrink transition-all group-hover/row:w-8 group-[[data-active=true]]/row:w-8 xl:w-0">
 										<Button
 											variant="ghost"
 											class="cursor-pointer"

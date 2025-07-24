@@ -594,7 +594,7 @@
 					{#if loading}
 						<Button variant="destructive" onclick={stopGenerating}>Stop</Button>
 					{:else}
-						<Button type="submit" disabled={!isInvalid}>
+						<Button type="submit" disabled={isInvalid}>
 							Submit
 							<SendHorizontalIcon />
 						</Button>
