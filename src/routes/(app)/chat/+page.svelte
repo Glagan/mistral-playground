@@ -7,7 +7,7 @@
 	import { browser } from '$app/environment';
 	import Messages from '$lib/components/Chat/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
@@ -32,6 +32,7 @@
 	import { emitter } from '$lib/emitter';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
+	import autosize from 'autosize';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -417,11 +418,17 @@
 		event.currentTarget.files = null;
 	}
 
+	let chatInput = $state<HTMLTextAreaElement | null>(null);
 	function onKeypress(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			if (!isInvalid) {
 				onSubmit();
+				tick().then(() => {
+					if (chatInput) {
+						autosize.update(chatInput);
+					}
+				});
 			}
 		}
 	}
@@ -577,6 +584,7 @@
 				</div>
 				<div class="relative">
 					<Textarea
+						bind:ref={chatInput}
 						rows={5}
 						readonly={loading || !!models.error}
 						placeholder="Type something or drag and drop images..."
