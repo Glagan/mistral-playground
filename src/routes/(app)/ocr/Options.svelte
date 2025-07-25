@@ -10,6 +10,7 @@
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
 	import { tick } from 'svelte';
 	import { cn } from '$lib/utils';
+	import ModelInformations from '$lib/components/model-informations.svelte';
 
 	const { class: className = '' }: { class?: string } = $props();
 
@@ -26,7 +27,7 @@
 
 <form class={cn('flex h-full shrink-0 grow flex-col gap-6 overflow-auto lg:w-[25vw] lg:max-w-[25vw]', className)}>
 	<div class="flex w-full flex-col gap-1.5">
-		<label for="topP" class="text-sm leading-none font-medium">Model</label>
+		<label for="model" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
 			<Popover.Trigger bind:ref={triggerRef} class="w-full">
 				{#snippet child({ props })}
@@ -61,6 +62,11 @@
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
+		{#if ocr.model}
+			<div>
+				<ModelInformations model={ocr.model} />
+			</div>
+		{/if}
 	</div>
 	<div class="flex w-full flex-col gap-1.5">
 		<Label for="minSize">Image limit</Label>

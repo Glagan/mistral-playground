@@ -1,5 +1,6 @@
 import type { EmbeddingsOptions } from '../types';
 import { v7 as uuid } from 'uuid';
+import { models } from './models.svelte';
 
 export type EmbeddingsState = {
 	id: string;
@@ -30,7 +31,15 @@ export function createCurrent() {
 		state.options = entry.options;
 	}
 
-	return { state, defaultOptions, setFromEntry, reset };
+	return {
+		state,
+		defaultOptions,
+		setFromEntry,
+		reset,
+		get model() {
+			return models.byName[state.options.model];
+		}
+	};
 }
 
 export const embeddings = createCurrent();
