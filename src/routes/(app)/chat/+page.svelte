@@ -122,7 +122,7 @@
 					};
 				} else if (message.role === 'assistant') {
 					const content = message.versions[message.index].content;
-					if (chat.isThinking && message.versions[message.index].thinking) {
+					if (chat.model.reasoning && message.versions[message.index].thinking) {
 						content.unshift({
 							type: 'thinking',
 							thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
@@ -473,7 +473,7 @@
 		};
 
 		const handleDrop = (e: DragEvent) => {
-			if (!chat.hasVision) {
+			if (!chat.model.capabilities.vision) {
 				e.preventDefault();
 				e.stopPropagation();
 				dragCounter = 0;
@@ -625,7 +625,7 @@
 							<Options />
 						</Drawer.Content>
 					</Drawer.Root>
-					{#if chat.hasVision}
+					{#if chat.model?.capabilities.vision}
 						<label for="fileUpload">
 							<input
 								id="fileUpload"

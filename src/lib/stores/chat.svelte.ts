@@ -74,19 +74,6 @@ export function createCurrent() {
 					)
 				) !== undefined
 			);
-		},
-		get hasVision() {
-			// No flags, so we can only check for the name
-			const definition = models.byName[state.options.model];
-			return definition?.capabilities?.vision === true;
-		},
-		get hasTranscribe() {
-			// No flags, so we can only check for the name
-			return state.options.model.includes('voxtral');
-		},
-		get isThinking() {
-			// No flags, so we can only check for the name
-			return state.options.model.includes('magistral');
 		}
 	};
 }

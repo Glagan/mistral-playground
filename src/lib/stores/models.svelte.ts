@@ -2,22 +2,27 @@ import { get } from 'svelte/store';
 import { apiKey } from './apiKey';
 import { settings } from './settings';
 import { getClientForRequest } from '$lib/mistral';
-import type { BaseModelCard, FTModelCard, ModelList } from '@mistralai/mistralai/models/components';
+import type { BaseModelCard, FTModelCard } from '@mistralai/mistralai/models/components';
+
+export type MergedModel = (BaseModelCard | FTModelCard) & {
+	reasoning?: boolean;
+	transcribe?: boolean;
+};
 
 export const models: {
 	loading: boolean;
 	loaded: boolean;
 	error: { title: string; message: string } | null;
-	list: (BaseModelCard | FTModelCard)[];
-	byName: Record<string, BaseModelCard | FTModelCard>;
-	chat: (BaseModelCard | FTModelCard)[];
-	chatGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
-	vision: (BaseModelCard | FTModelCard)[];
-	visionGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
-	ocr: (BaseModelCard | FTModelCard)[];
-	ocrGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
-	embed: (BaseModelCard | FTModelCard)[];
-	embedGroups: Record<string, (BaseModelCard | FTModelCard)[]>;
+	list: MergedModel[];
+	byName: Record<string, MergedModel>;
+	chat: MergedModel[];
+	chatGroups: Record<string, MergedModel[]>;
+	vision: MergedModel[];
+	visionGroups: Record<string, MergedModel[]>;
+	ocr: MergedModel[];
+	ocrGroups: Record<string, MergedModel[]>;
+	embed: MergedModel[];
+	embedGroups: Record<string, MergedModel[]>;
 } = $state({
 	loading: false,
 	loaded: false,
@@ -64,7 +69,7 @@ export const prices: Record<string, { input: number; output: number }> = {
 	'mistral-small-latest': { input: 0.1, output: 0.3 },
 	'magistral-small-latest': { input: 0.5, output: 1.5 },
 	'devstral-small-2507': { input: 0.1, output: 0.3 },
-	'voxtral-small-latest': { input: 0.1, output: 0 },
+	'voxtral-small-latest': { input: 0.1, output: 0.3 },
 	'voxtral-mini-latest': { input: 0.04, output: 0.04 },
 	'pixtral-large-latest': { input: 2, output: 6 },
 	'pixtral-12b': { input: 0.15, output: 0.15 },
@@ -77,7 +82,7 @@ export const prices: Record<string, { input: number; output: number }> = {
 	'ministral-3b-latest': { input: 0.04, output: 0.04 }
 };
 
-export function priceForModel(model: BaseModelCard | FTModelCard) {
+export function priceForModel(model: MergedModel) {
 	if (prices[model.id]) {
 		return prices[model.id];
 	}
@@ -100,6 +105,13 @@ export async function loadModels() {
 		for (let index = 0; index < models.list.length; index++) {
 			const model = models.list[index];
 			models.byName[model.id] = model;
+			// No flags, so we add our own
+			if (model.id.includes('magistral')) {
+				model.reasoning = true;
+			}
+			if (model.id.includes('voxtral')) {
+				model.transcribe = true;
+			}
 		}
 		models.chat = models.list.filter((model) => model.capabilities?.completionChat && !model.id.includes('ocr'));
 		models.chatGroups = groupModels(models.chat);
