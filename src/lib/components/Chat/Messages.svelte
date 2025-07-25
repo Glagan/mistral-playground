@@ -2,10 +2,11 @@
 	import MessageSvelte from '$lib/components/Chat/Message.svelte';
 	import type { Message } from '$lib/types';
 	import RefreshCwIcon from '@lucide/svelte/icons/refresh-cw';
-	import { slide } from 'svelte/transition';
 	import type { MessageInteraction } from '$lib/message';
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
+	import * as Alert from '$lib/components/ui/alert/index.js';
+	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 
 	let {
 		messages,
@@ -44,13 +45,14 @@
 		</div>
 	{/if}
 	{#if error}
-		<aside class="alert variant-ghost-error flex flex-col items-start gap-2" transition:slide={{ axis: 'y' }}>
-			<div class="alert-message rendered-markdown space-y-4">
-				{error.text}
-			</div>
-			{#if error.body}
-				<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} />
-			{/if}
-		</aside>
+		<Alert.Root variant="destructive">
+			<AlertCircleIcon />
+			<Alert.Description>
+				<p>{error.text}</p>
+				{#if error.body}
+					<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} />
+				{/if}
+			</Alert.Description>
+		</Alert.Root>
 	{/if}
 </div>

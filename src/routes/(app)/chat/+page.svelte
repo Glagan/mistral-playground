@@ -7,7 +7,7 @@
 	import { browser } from '$app/environment';
 	import Messages from '$lib/components/Chat/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
-	import { onDestroy, onMount } from 'svelte';
+	import { onDestroy, onMount, tick } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
@@ -18,7 +18,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
-	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
+	import type { ChatCompletionStreamRequest, ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
@@ -30,6 +30,9 @@
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { emitter } from '$lib/emitter';
+	import * as Alert from '$lib/components/ui/alert/index.js';
+	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
+	import autosize from 'autosize';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -118,10 +121,14 @@
 						content: message.versions[message.index].content
 					};
 				} else if (message.role === 'assistant') {
-					return {
-						role: message.role,
-						content: message.versions[message.index].content
-					};
+					const content = message.versions[message.index].content;
+					if (chat.model.reasoning && message.versions[message.index].thinking) {
+						content.unshift({
+							type: 'thinking',
+							thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
+						});
+					}
+					return { role: message.role, content };
 				}
 				return {
 					role: message.role,
@@ -149,12 +156,39 @@
 			for await (const message of chatStreamResponse) {
 				const data = message.data;
 				if (data.choices[0].delta.content !== undefined) {
-					const text = data.choices[0].delta.content;
-					(answer.versions[answer.index].content[0] as TextChunk).text += text ?? '';
+					const content = data.choices[0].delta.content;
+					if (Array.isArray(content)) {
+						for (let index = 0; index < content.length; index++) {
+							const entry = content[index];
+							if (entry.type === 'text') {
+								(answer.versions[answer.index].content[index] as TextChunk).text += entry.text;
+							} else if (entry.type === 'thinking') {
+								if (!answer.versions[answer.index].thinking) {
+									answer.versions[answer.index].thinking = '';
+								}
+								for (let j = 0; j < entry.thinking.length; j++) {
+									const block = entry.thinking[j];
+									if (block.type === 'text') {
+										answer.versions[answer.index].thinking += block.text;
+									} else {
+										console.log('unsupported content in chunk', entry, block);
+									}
+								}
+							} else {
+								console.log('unsupported chunk content', entry);
+							}
+						}
+					} else {
+						(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
+					}
 				}
 				if (data.usage) {
 					const completionTime = performance.now() - startedAt;
-					chat.state.usage = data.usage;
+					chat.state.usage = {
+						promptTokens: data.usage.promptTokens ?? 0,
+						completionTokens: data.usage.completionTokens ?? 0,
+						totalTokens: data.usage.totalTokens ?? 0
+					};
 					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
 				}
 				scrollDown(outputNode);
@@ -325,12 +359,18 @@
 		}
 	}
 
-	async function updateMessage(message: Message, role: MessageRole, content: MessageContent) {
+	async function updateMessage(message: Message, role: MessageRole, content: MessageContent, thinking?: string) {
 		error = null;
 		const index = chat.state.messages.findIndex((m) => m.id === message.id);
 		if (index >= 0) {
 			const active = chat.state.messages[index];
 			active.role = role;
+			if (active.role === 'assistant') {
+				active.versions[active.index].thinking = thinking;
+			} else {
+				// @ts-expect-error We delete the value since it should not exists
+				delete active.versions[active.index].thinking;
+			}
 			active.versions[active.index].content = content;
 			await updateOrInsertHistory();
 		}
@@ -378,11 +418,17 @@
 		event.currentTarget.files = null;
 	}
 
+	let chatInput = $state<HTMLTextAreaElement | null>(null);
 	function onKeypress(event: KeyboardEvent) {
 		if (event.key === 'Enter' && !event.shiftKey) {
 			event.preventDefault();
 			if (!isInvalid) {
 				onSubmit();
+				tick().then(() => {
+					if (chatInput) {
+						autosize.update(chatInput);
+					}
+				});
 			}
 		}
 	}
@@ -427,6 +473,13 @@
 		};
 
 		const handleDrop = (e: DragEvent) => {
+			if (!chat.model.capabilities.vision) {
+				e.preventDefault();
+				e.stopPropagation();
+				dragCounter = 0;
+				isDragging = false;
+				return toast.error('This model does not support multimedia content.');
+			}
 			if (editing.id) {
 				return;
 			}
@@ -489,31 +542,32 @@
 		</div>
 		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
 			{#if !stateIsValid}
-				<aside class="alert variant-ghost-error" transition:slide={{ axis: 'y' }}>
-					<div class="alert-message">
+				<Alert.Root variant="destructive">
+					<AlertCircleIcon />
+					<Alert.Description>
 						<p>
 							Your input is invalid, the first message can only be a system prompt or a question and the last message
 							must be a question or system prompt.
 						</p>
-					</div>
-				</aside>
+					</Alert.Description>
+				</Alert.Root>
 			{/if}
 			<ModelError />
 			<label class="flex flex-col gap-1.5">
 				<div class="flex items-center justify-between gap-2">
 					<div class="flex items-center gap-2">
 						{#if chat.state.usage}
-							<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
+							<div class="text-foreground flex items-center gap-2 text-right text-xs opacity-75">
 								<Badge>Tokens</Badge>
 								<div>
-									Prompt: <span class="text-stone-400">{chat.state.usage.promptTokens}</span> / Completion:
-									<span class="text-stone-400">{chat.state.usage.completionTokens}</span>
-									/ Total: <span class="text-stone-400">{chat.state.usage.totalTokens}</span>
+									Prompt: <span class="text-muted-background">{chat.state.usage.promptTokens}</span> / Completion:
+									<span class="text-muted-background">{chat.state.usage.completionTokens}</span>
+									/ Total: <span class="text-muted-background">{chat.state.usage.totalTokens}</span>
 								</div>
 								{#if chat.state.usage.tps}
 									<div>
-										<span class="text-stone-400">(</span>{chat.state.usage.tps}
-										<span class="text-stone-400">tk/s</span><span class="text-stone-400">)</span>
+										<span class="text-muted-background">(</span>{chat.state.usage.tps}
+										<span class="text-muted-background">tk/s</span><span class="text-muted-background">)</span>
 									</div>
 								{/if}
 								<span></span>
@@ -530,6 +584,7 @@
 				</div>
 				<div class="relative">
 					<Textarea
+						bind:ref={chatInput}
 						rows={5}
 						readonly={loading || !!models.error}
 						placeholder="Type something or drag and drop images..."
@@ -570,25 +625,27 @@
 							<Options />
 						</Drawer.Content>
 					</Drawer.Root>
-					<label for="fileUpload">
-						<input
-							id="fileUpload"
-							class="hidden"
-							type="file"
-							multiple
-							accept="image/png,image/jpeg,image/jpg,image/webp"
-							disabled={loading || models.loading || !!models.error}
-							onchange={onFileChange}
-						/>
-						<Button
-							variant="secondary"
-							disabled={loading || models.loading || !!models.error}
-							onclick={() => document.getElementById('fileUpload')?.click()}
-						>
-							<ImageUpIcon size={20} />
-							<span class="hidden md:inline-block">Upload image</span>
-						</Button>
-					</label>
+					{#if chat.model?.capabilities.vision}
+						<label for="fileUpload">
+							<input
+								id="fileUpload"
+								class="hidden"
+								type="file"
+								multiple
+								accept="image/png,image/jpeg,image/jpg,image/webp"
+								disabled={loading || models.loading || !!models.error}
+								onchange={onFileChange}
+							/>
+							<Button
+								variant="secondary"
+								disabled={loading || models.loading || !!models.error}
+								onclick={() => document.getElementById('fileUpload')?.click()}
+							>
+								<ImageUpIcon size={20} />
+								<span class="hidden md:inline-block">Upload image</span>
+							</Button>
+						</label>
+					{/if}
 				</div>
 				<div class="flex flex-row gap-2">
 					{#if loading}

@@ -15,6 +15,8 @@
 	import * as Command from '$lib/components/ui/command/index.js';
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { tick } from 'svelte';
+	import * as Tooltip from '$lib/components/ui/tooltip/index.js';
+	import ModelInformations from '$lib/components/model-informations.svelte';
 
 	let open = $state(false);
 	let triggerRef = $state<HTMLButtonElement>(null!);
@@ -25,6 +27,8 @@
 			triggerRef.focus();
 		});
 	}
+
+	let defaultModel = $derived(models.byName[$settings.model]);
 </script>
 
 <form class="flex flex-col items-stretch gap-4 lg:max-w-[30vw]">
@@ -33,7 +37,7 @@
 		Default options replace the Mistral default values and are always applied in new chat sessions.
 	</p>
 	{#if $apiKey}
-		<label for="topP" class="text-sm leading-none font-medium">Default chat model</label>
+		<label for="model" class="text-sm leading-none font-medium">Default chat model</label>
 		<Popover.Root bind:open>
 			<Popover.Trigger bind:ref={triggerRef} class="w-full">
 				{#snippet child({ props })}
@@ -52,15 +56,28 @@
 							<Command.Group>
 								<Select.Label>{groupName}</Select.Label>
 								{#each items as item (item.id)}
-									<Command.Item
-										value={item.id}
-										onSelect={() => {
-											$settings.model = item.id;
-											closeAndFocusTrigger();
-										}}
-									>
-										{item.id}
-									</Command.Item>
+									<Tooltip.Provider delayDuration={0}>
+										<Tooltip.Root>
+											<Tooltip.Trigger class="block w-full">
+												<Command.Item
+													value={item.id}
+													onSelect={() => {
+														$settings.model = item.id;
+														closeAndFocusTrigger();
+													}}
+												>
+													{item.id}
+												</Command.Item>
+											</Tooltip.Trigger>
+											<Tooltip.Content
+												arrowClasses="bg-card dark:bg-sidebar"
+												class="bg-card dark:bg-sidebar border-background flex flex-col gap-2 border"
+												side="right"
+											>
+												<ModelInformations model={item} />
+											</Tooltip.Content>
+										</Tooltip.Root>
+									</Tooltip.Provider>
 								{/each}
 							</Command.Group>
 						{/each}
@@ -68,6 +85,11 @@
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
+		{#if defaultModel}
+			<div>
+				<ModelInformations model={defaultModel} />
+			</div>
+		{/if}
 	{:else}
 		<Alert.Root>
 			<TriangleAlertIcon />

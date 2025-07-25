@@ -19,6 +19,7 @@
 	import type { ContentChunk } from '@mistralai/mistralai/models/components';
 	import { fileToB64, handleFileUpload } from '$lib/files';
 	import { toast } from 'svelte-sonner';
+	import { chat } from '$lib/stores/chat.svelte';
 
 	let {
 		message,
@@ -48,7 +49,12 @@
 	}
 
 	function stopEditing() {
-		interact?.updateMessage(message, messageCopy.role, messageCopy.versions[messageCopy.index].content);
+		interact?.updateMessage(
+			message,
+			messageCopy.role,
+			messageCopy.versions[messageCopy.index].content,
+			messageCopy.role === 'assistant' ? messageCopy.versions[messageCopy.index].thinking : undefined
+		);
 		editing.id = '';
 	}
 
@@ -165,24 +171,26 @@
 			{/if}
 			<div class="flex shrink-0 flex-row flex-wrap items-center gap-2 {editing.id === message.id ? 'w-full' : ''}">
 				{#if editing.id === message.id}
-					<label for="messageFileUpload">
-						<input
-							id="messageFileUpload"
-							type="file"
-							multiple
-							accept="image/png,image/jpeg,image/jpg,image/webp"
-							onchange={(e) => onUpload(e.currentTarget.files)}
-							class="hidden"
-						/>
-						<Button
-							variant="secondary"
-							disabled={loading || models.loading || !!models.error || message.role !== 'user'}
-							onclick={() => document.getElementById('messageFileUpload')?.click()}
-						>
-							<ImageUpIcon size={20} />
-							<span class="hidden md:inline-block">Upload image</span>
-						</Button>
-					</label>
+					{#if chat.hasVision}
+						<label for="messageFileUpload">
+							<input
+								id="messageFileUpload"
+								type="file"
+								multiple
+								accept="image/png,image/jpeg,image/jpg,image/webp"
+								onchange={(e) => onUpload(e.currentTarget.files)}
+								class="hidden"
+							/>
+							<Button
+								variant="secondary"
+								disabled={loading || models.loading || !!models.error || message.role !== 'user'}
+								onclick={() => document.getElementById('messageFileUpload')?.click()}
+							>
+								<ImageUpIcon size={20} />
+								<span class="hidden md:inline-block">Upload image</span>
+							</Button>
+						</label>
+					{/if}
 					<span class="shrink grow"></span>
 					<Button variant="destructive" disabled={loading} onclick={cancelEdit}>Cancel</Button>
 					<Button disabled={loading} onclick={stopEditing}>Save</Button>

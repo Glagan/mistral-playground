@@ -2,6 +2,7 @@ import { get } from 'svelte/store';
 import type { ChatOptions, Usage, Message } from '../types';
 import { settings } from './settings';
 import { v7 as uuid } from 'uuid';
+import { models } from './models.svelte';
 
 export type ChatState = {
 	id: string;
@@ -54,7 +55,27 @@ export function createCurrent() {
 		}
 	}
 
-	return { state, defaultOptions, setFromEntry, reset };
+	return {
+		state,
+		defaultOptions,
+		setFromEntry,
+		reset,
+		get model() {
+			return models.byName[state.options.model];
+		},
+		get hasMultimediaContent() {
+			return (
+				state.messages.find((m) =>
+					m.versions.find((v) =>
+						v.content.find(
+							(c) =>
+								c.type === 'image_url' || c.type === 'input_audio' || c.type === 'document_url' || c.type === 'file'
+						)
+					)
+				) !== undefined
+			);
+		}
+	};
 }
 
 export const chat = createCurrent();

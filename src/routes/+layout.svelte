@@ -41,6 +41,7 @@
 	import ScanSearchIcon from '@lucide/svelte/icons/scan-search';
 	import { embeddings } from '$lib/stores/embeddings.svelte';
 	import SquareTerminalIcon from '@lucide/svelte/icons/square-terminal';
+	import { ModeWatcher } from 'mode-watcher';
 
 	const { data, children } = $props();
 
@@ -65,6 +66,7 @@
 	<title>Mistral Playground</title>
 </svelte:head>
 
+<ModeWatcher defaultMode="system" />
 <Sidebar.Provider>
 	<AppSidebar />
 	<Sidebar.Inset>

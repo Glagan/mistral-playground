@@ -40,6 +40,13 @@
 	});
 </script>
 
+{#if message.role === 'assistant' && message.versions[message.index].thinking}
+	<div
+		class="text-muted-foreground border-muted-foreground max-h-80 overflow-y-scroll border-l-2 pl-2 whitespace-pre-wrap italic"
+	>
+		{message.versions[message.index].thinking}
+	</div>
+{/if}
 <div class="rendered-markdown space-y-4">
 	{#each content as item, index (index)}
 		{#if item.type === 'text'}

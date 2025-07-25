@@ -1,8 +1,9 @@
 <script lang="ts">
 	import type { OCRPageObject } from '@mistralai/mistralai/models/components';
-	import { slide } from 'svelte/transition';
 	import PdfPage from './PdfPage.svelte';
 	import CodeBlock from '$lib/components/CodeBlock.svelte';
+	import * as Alert from '$lib/components/ui/alert/index.js';
+	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 
 	let {
 		pages,
@@ -18,11 +19,14 @@
 		{/each}
 	{/if}
 	{#if error}
-		<aside class="alert variant-ghost-error flex flex-col items-start gap-2" transition:slide={{ axis: 'y' }}>
-			<div class="alert-message rendered-markdown space-y-4">
-				{error.text}
-			</div>
-			<CodeBlock code={JSON.stringify(error.body, undefined, 4)} language="json" />
-		</aside>
+		<Alert.Root variant="destructive">
+			<AlertCircleIcon />
+			<Alert.Description>
+				<p>{error.text}</p>
+				{#if error.body}
+					<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} />
+				{/if}
+			</Alert.Description>
+		</Alert.Root>
 	{/if}
 </div>

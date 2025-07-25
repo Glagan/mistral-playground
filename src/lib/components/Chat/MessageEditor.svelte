@@ -6,6 +6,7 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import InfoIcon from '@lucide/svelte/icons/info';
+	import { chat } from '$lib/stores/chat.svelte';
 
 	let {
 		message = $bindable(),
@@ -45,19 +46,36 @@
 <div class="mb-2 flex flex-row items-center gap-2">
 	<ToggleGroup.Root bind:value={message.role} variant="outline" type="single">
 		<ToggleGroup.Item value="user" disabled={hasAnyFile} class="w-24">User</ToggleGroup.Item>
-		<ToggleGroup.Item value="assistant" disabled={hasAnyFile} class="w-24">Assistant</ToggleGroup.Item>
+		<ToggleGroup.Item value="assistant" disabled={hasAnyFile || index === 0} class="w-24">Assistant</ToggleGroup.Item>
 	</ToggleGroup.Root>
+	{#if index === 0}
+		<Alert.Root class="w-auto">
+			<InfoIcon />
+			<Alert.Title>The first message can't be an assitant message.</Alert.Title>
+		</Alert.Root>
+	{/if}
 	{#if hasAnyFile}
-		<Alert.Root>
+		<Alert.Root class="w-auto">
 			<InfoIcon />
 			<Alert.Title>Delete the files to change the message type.</Alert.Title>
 		</Alert.Root>
 	{/if}
 </div>
 <div class="space-y-2">
+	{#if chat.isThinking && message.role === 'assistant'}
+		<label for="message-{message.id}-thoughts" class="text-sm leading-none font-medium">Assistant thoughts</label>
+		<Textarea
+			id="message-{message.id}-thoughts"
+			rows={5}
+			placeholder="Thoughts of the assistant..."
+			bind:value={message.versions[message.index].thinking}
+		/>
+		<label for="message-{message.id}-content" class="text-sm leading-none font-medium">Assistant response</label>
+	{/if}
 	{#each message.versions[message.index].content as item, index}
 		{#if item.type === 'text'}
 			<Textarea
+				id="message-{message.id}-content"
 				bind:ref={textarea[index]}
 				rows={5}
 				placeholder="Type something or drag and drop images..."
