@@ -11,7 +11,7 @@
 	import { chat } from '$lib/stores/chat.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
-	import ImageUpIcon from '@lucide/svelte/icons/image-up';
+	import FileUpIcon from '@lucide/svelte/icons/file-up';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
@@ -632,7 +632,7 @@
 								class="hidden"
 								type="file"
 								multiple
-								accept="image/png,image/jpeg,image/jpg,image/webp"
+								accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
 								disabled={loading || models.loading || !!models.error}
 								onchange={onFileChange}
 							/>
@@ -641,8 +641,8 @@
 								disabled={loading || models.loading || !!models.error}
 								onclick={() => document.getElementById('fileUpload')?.click()}
 							>
-								<ImageUpIcon size={20} />
-								<span class="hidden md:inline-block">Upload image</span>
+								<FileUpIcon size={20} />
+								<span class="hidden md:inline-block">Upload file</span>
 							</Button>
 						</label>
 					{/if}

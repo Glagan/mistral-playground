@@ -32,8 +32,18 @@
 		if (chat.state.options.json) {
 			options.responseFormat = "{ type: 'json_object' }";
 		}
+		let usedFiles = 1;
 		const messageCopy = JSON.parse(
-			JSON.stringify(chat.state.messages.map((m) => ({ role: m.role, content: m.versions[m.index].content })))
+			JSON.stringify(
+				chat.state.messages.map((m) => ({
+					role: m.role,
+					content: m.versions[m.index].content.map((c) =>
+						c.type === 'document_url' || c.type === 'image_url' || c.type === 'input_audio'
+							? { type: c.type, documentUrl: `usedFile${usedFiles++}` }
+							: c
+					)
+				}))
+			)
 		);
 		if (chat.state.options.systemPrompt) {
 			messageCopy.unshift({ role: 'system', content: chat.state.options.systemPrompt });
@@ -62,7 +72,10 @@
 					return `\t${key}: ${value},`;
 				})
 				.join('\n'),
-			`    messages: [${JSON.stringify(messageCopy, undefined, 4).slice(6).slice(0, -2)}]`,
+			`    messages: [${JSON.stringify(messageCopy, undefined, 4)
+				.slice(6)
+				.slice(0, -2)
+				.replaceAll(/"(usedFile\d+)"/g, '$1')}]`,
 			'});',
 			''
 		];

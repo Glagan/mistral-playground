@@ -32,7 +32,7 @@
 		<Card.Title>{file.name}</Card.Title>
 		<Card.Description>{prettyBytes(file.size)}</Card.Description>
 	</Card.Header>
-	<Card.Content class="flex items-center justify-center px-2">
+	<Card.Content class="flex grow items-center justify-center px-2">
 		{#if isImage}
 			<img src={URL.createObjectURL(file)} alt={file.name} class="h-32 w-32 object-cover" />
 		{:else}
@@ -45,10 +45,8 @@
 		{#if isImage}
 			<ImageModal image={imagePreview} title={file.name} />
 		{/if}
-		<div>
-			<Button variant="destructive" disabled={loading} onclick={remove}>
-				<Trash2Icon size={16} />
-			</Button>
-		</div>
+		<Button variant="destructive" disabled={loading} onclick={remove}>
+			<Trash2Icon size={16} />
+		</Button>
 	</Card.Footer>
 </Card.Root>

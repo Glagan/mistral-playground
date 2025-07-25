@@ -62,7 +62,7 @@
 	{/if}
 </div>
 <div class="space-y-2">
-	{#if chat.isThinking && message.role === 'assistant'}
+	{#if chat.model.reasoning && message.role === 'assistant'}
 		<label for="message-{message.id}-thoughts" class="text-sm leading-none font-medium">Assistant thoughts</label>
 		<Textarea
 			id="message-{message.id}-thoughts"

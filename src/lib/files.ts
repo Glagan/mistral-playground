@@ -7,7 +7,7 @@ export function fileToB64(file: File) {
 	});
 }
 
-export const validFileTypes = [/* 'application/pdf', */ 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+export const validFileTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
 
 export function handleFileUpload(uploadedFiles: File[]) {
 	let hasError = false;
@@ -36,10 +36,10 @@ export function handleFileUpload(uploadedFiles: File[]) {
 		}
 	}
 	if (hasError) {
-		errors.push('Unsupported file type, only images are supported (.png, .jpeg, .jpg and .webp).');
+		errors.push('Unsupported file type, only images (.png, .jpeg, .jpg and .webp) and PDF are supporte.');
 	}
 	if (hasSizeError) {
-		errors.push('Image size should be less than 10MB.');
+		errors.push('File size should be less than 10MB.');
 	}
 	if (hasSize2Error) {
 		errors.push('PDF size should be less than 50MB.');
