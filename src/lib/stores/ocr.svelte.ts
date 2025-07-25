@@ -1,6 +1,7 @@
 import type { OCROptions } from '../types';
 import { v7 as uuid } from 'uuid';
 import type { OCRPageObject, OCRUsageInfo } from '@mistralai/mistralai/models/components';
+import { models } from './models.svelte';
 
 export type OCRState = {
 	id: string;
@@ -34,7 +35,15 @@ export function createCurrent() {
 		state.pages = entry.pages;
 	}
 
-	return { state, defaultOptions, setFromEntry, reset };
+	return {
+		state,
+		defaultOptions,
+		setFromEntry,
+		reset,
+		get model() {
+			return models.byName[state.options.model];
+		}
+	};
 }
 
 export const ocr = createCurrent();

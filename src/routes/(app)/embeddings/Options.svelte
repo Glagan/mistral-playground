@@ -8,11 +8,12 @@
 	import * as Popover from '$lib/components/ui/popover/index.js';
 	import { tick } from 'svelte';
 	import ChevronsUpDownIcon from '@lucide/svelte/icons/chevrons-up-down';
-	import { embeddingTypes, type EmbeddingType } from '$lib/types';
+	import { embeddingTypes } from '$lib/types';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import InfoIcon from '@lucide/svelte/icons/info';
 	import { cn } from '$lib/utils';
 	import { embeddings } from '$lib/stores/embeddings.svelte';
+	import ModelInformations from '$lib/components/model-informations.svelte';
 
 	let { class: className = '' }: { class?: string } = $props();
 
@@ -29,7 +30,7 @@
 
 <form class={cn('flex h-full shrink-0 grow flex-col gap-6 overflow-auto lg:w-[25vw] lg:max-w-[25vw]', className)}>
 	<div class="flex w-full flex-col gap-1.5">
-		<label for="topP" class="text-sm leading-none font-medium">Model</label>
+		<label for="model" class="text-sm leading-none font-medium">Model</label>
 		<Popover.Root bind:open>
 			<Popover.Trigger bind:ref={triggerRef} class="w-full">
 				{#snippet child({ props })}
@@ -64,6 +65,11 @@
 				</Command.Root>
 			</Popover.Content>
 		</Popover.Root>
+		{#if embeddings.model}
+			<div>
+				<ModelInformations model={embeddings.model} />
+			</div>
+		{/if}
 	</div>
 	<div class="flex w-full flex-col gap-1.5">
 		<Label for="outputDimensions">Output dimension</Label>
@@ -122,5 +128,4 @@
 			</Alert.Root>
 		{/if}
 	</div>
-	<Button class="mx-auto" onclick={() => embeddings.reset()}>New embeddings</Button>
 </form>

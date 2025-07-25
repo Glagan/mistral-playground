@@ -11,12 +11,12 @@
 	import { chat } from '$lib/stores/chat.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
-	import ImageUpIcon from '@lucide/svelte/icons/image-up';
+	import FileUpIcon from '@lucide/svelte/icons/file-up';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import { defaultChatModel } from '$lib/const';
-	import { fileToB64, handleFileUpload } from '$lib/files';
+	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
 	import type { ChatCompletionStreamRequest, ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
@@ -123,10 +123,18 @@
 				} else if (message.role === 'assistant') {
 					const content = message.versions[message.index].content;
 					if (chat.model.reasoning && message.versions[message.index].thinking) {
-						content.unshift({
-							type: 'thinking',
-							thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
-						});
+						// Sadly we need to check for this model specifically to re-insert the <think> tag
+						if (chat.model.id === 'magistral-medium-2506') {
+							const firstChunkText = content.find((c) => c.type === 'text');
+							if (firstChunkText) {
+								firstChunkText.text = `<think>${message.versions[message.index].thinking}</think>\n${firstChunkText.text}`;
+							}
+						} else {
+							content.unshift({
+								type: 'thinking',
+								thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
+							});
+						}
 					}
 					return { role: message.role, content };
 				}
@@ -153,6 +161,11 @@
 				},
 				{ fetchOptions: { signal: abortController.signal } }
 			);
+			if (chat.model.reasoning) {
+				answer.versions[answer.index].thinking = '';
+			}
+			let reasoningStep = 0;
+			let reasoningBuffer = '';
 			for await (const message of chatStreamResponse) {
 				const data = message.data;
 				if (data.choices[0].delta.content !== undefined) {
@@ -163,9 +176,6 @@
 							if (entry.type === 'text') {
 								(answer.versions[answer.index].content[index] as TextChunk).text += entry.text;
 							} else if (entry.type === 'thinking') {
-								if (!answer.versions[answer.index].thinking) {
-									answer.versions[answer.index].thinking = '';
-								}
 								for (let j = 0; j < entry.thinking.length; j++) {
 									const block = entry.thinking[j];
 									if (block.type === 'text') {
@@ -179,7 +189,38 @@
 							}
 						}
 					} else {
-						(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
+						// If the model is reasoning (in the old way with <think> blocks), we add a special logic to convert it to the new way
+						if (chat.model.reasoning && reasoningStep < 2) {
+							if (!content) {
+								continue;
+							}
+							reasoningBuffer += content;
+							if (reasoningStep === 0) {
+								const start = reasoningBuffer.indexOf('<think>');
+								if (start >= 0) {
+									reasoningBuffer = reasoningBuffer.slice(start + 7).trim();
+									reasoningStep = 1;
+									if (reasoningBuffer.length) {
+										answer.versions[answer.index].thinking = reasoningBuffer;
+									}
+								}
+							} else if (reasoningStep === 1) {
+								const end = reasoningBuffer.indexOf('</think>');
+								if (end >= 0) {
+									answer.versions[answer.index].thinking += reasoningBuffer.slice(0, end);
+									answer.versions[answer.index].thinking = answer.versions[answer.index].thinking?.trim();
+									reasoningStep = 2;
+									reasoningBuffer = reasoningBuffer.slice(end + 8).trim();
+									if (reasoningBuffer.length) {
+										(answer.versions[answer.index].content[0] as TextChunk).text += reasoningBuffer;
+									}
+								} else {
+									answer.versions[answer.index].thinking += content;
+								}
+							}
+						} else {
+							(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
+						}
 					}
 				}
 				if (data.usage) {
@@ -602,7 +643,7 @@
 								<div class="flex shrink grow flex-col gap-1">
 									<span class="label-text"><strong>Drop a file</strong></span>
 								</div>
-								<span>Images (.png, .jpeg, .jpg and .webp) allowed.</span>
+								<span>Images (.png, .jpeg, .jpg, .webp and .avif), PDF, text and documents files allowed.</span>
 							</div>
 						</div>
 					{/if}
@@ -632,7 +673,7 @@
 								class="hidden"
 								type="file"
 								multiple
-								accept="image/png,image/jpeg,image/jpg,image/webp"
+								accept={mimeTypesAccept}
 								disabled={loading || models.loading || !!models.error}
 								onchange={onFileChange}
 							/>
@@ -641,8 +682,8 @@
 								disabled={loading || models.loading || !!models.error}
 								onclick={() => document.getElementById('fileUpload')?.click()}
 							>
-								<ImageUpIcon size={20} />
-								<span class="hidden md:inline-block">Upload image</span>
+								<FileUpIcon size={20} />
+								<span class="hidden md:inline-block">Upload file</span>
 							</Button>
 						</label>
 					{/if}

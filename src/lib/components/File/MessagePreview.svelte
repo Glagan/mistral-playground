@@ -17,44 +17,47 @@
 	const isImage = chunk.type === 'image_url';
 </script>
 
-<Card.Root class="py-2">
+<Card.Root class="gap-2 py-2">
 	{#if (chunk.type === 'image_url' && typeof chunk.imageUrl !== 'string' && chunk.imageUrl.detail) || (chunk.type === 'document_url' && chunk.documentName)}
-		<Card.Header class="px-2">
-			<Card.Title>
-				{#if chunk.type === 'image_url' && typeof chunk.imageUrl !== 'string' && chunk.imageUrl.detail}
-					{chunk.imageUrl.detail}
-				{:else if chunk.type === 'document_url' && chunk.documentName}
-					{chunk.documentName}
+		<Card.Header class="block px-2">
+			<Card.Title class="flex flex-row flex-wrap items-center justify-between gap-2">
+				<span class="flex grow flex-row flex-wrap items-center gap-2">
+					{#if chunk.type === 'image_url' && typeof chunk.imageUrl !== 'string' && chunk.imageUrl.detail}
+						{chunk.imageUrl.detail}
+					{:else if chunk.type === 'document_url' && chunk.documentName}
+						<FileTextIcon size="24" /> {chunk.documentName}
+					{/if}
+				</span>
+				{#if !isImage && remove}
+					<Button variant="destructive" onclick={remove}>
+						<Trash2Icon size={16} />
+					</Button>
 				{/if}
 			</Card.Title>
 		</Card.Header>
 	{/if}
-	<Card.Content class="flex items-center justify-between px-2">
-		{#if isImage}
-			<img
-				src={typeof chunk.imageUrl === 'string' ? chunk.imageUrl : chunk.imageUrl.url}
-				alt={typeof chunk.imageUrl === 'string' ? 'Image' : (chunk.imageUrl.detail ?? 'Image')}
-				class="h-32 w-32 object-cover"
-			/>
-		{:else}
-			<div class="shrink-0 grow-0">
-				<FileTextIcon class="mx-auto" size="32" />
-			</div>
-		{/if}
-		<div class="flex flex-row gap-1.5">
+	{#if isImage}
+		<Card.Content class="flex items-center justify-between px-2">
 			{#if isImage}
+				<img
+					src={typeof chunk.imageUrl === 'string' ? chunk.imageUrl : chunk.imageUrl.url}
+					alt={typeof chunk.imageUrl === 'string' ? 'Image' : (chunk.imageUrl.detail ?? 'Image')}
+					class="h-32 w-32 object-cover"
+				/>
+			{/if}
+			<div class="flex flex-row gap-1.5">
 				<ImageModal
 					image={typeof chunk.imageUrl === 'string' ? chunk.imageUrl : chunk.imageUrl.url}
 					title={typeof chunk.imageUrl === 'string' ? 'Image' : (chunk.imageUrl.detail ?? 'Image')}
 				/>
-			{/if}
-			{#if remove}
-				<div>
-					<Button variant="destructive" onclick={remove}>
-						<Trash2Icon size={16} />
-					</Button>
-				</div>
-			{/if}
-		</div>
-	</Card.Content>
+				{#if remove}
+					<div>
+						<Button variant="destructive" onclick={remove}>
+							<Trash2Icon size={16} />
+						</Button>
+					</div>
+				{/if}
+			</div>
+		</Card.Content>
+	{/if}
 </Card.Root>

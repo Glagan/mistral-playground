@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { settings } from '$lib/stores/settings';
 	import { chat } from '$lib/stores/chat.svelte';
-	import { models, priceForModel } from '$lib/stores/models.svelte';
+	import { models } from '$lib/stores/models.svelte';
 	import { Switch } from '$lib/components/ui/switch/index.js';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
@@ -32,9 +32,9 @@
 </script>
 
 <form class={cn('flex h-full shrink-0 grow flex-col gap-6 lg:w-[25vw] lg:max-w-[25vw]', className)}>
-	<div class="flex shrink flex-col gap-6 overflow-auto">
+	<div class="flex min-h-[30svh] shrink flex-col gap-6 overflow-auto">
 		<div class="flex w-full flex-col gap-1.5">
-			<label for="topP" class="text-sm leading-none font-medium">Model</label>
+			<label for="model" class="text-sm leading-none font-medium">Model</label>
 			<Popover.Root bind:open>
 				<Popover.Trigger bind:ref={triggerRef} class="w-full">
 					{#snippet child({ props })}
