@@ -1,40 +1,38 @@
 <script lang="ts">
-	import { ocr, type OCRState } from '$lib/stores/ocr.svelte';
+	import { transcribe, type TranscribeState } from '$lib/stores/transcribe.svelte';
 	import NavHistory from '$lib/components/nav-history.svelte';
 	import { tick } from 'svelte';
-	import hljs from 'highlight.js/lib/core';
 	import { liveQuery } from 'dexie';
 	import { db } from '$lib/stores/db';
 	import type { ChatState } from '$lib/stores/chat.svelte';
-	import type { TranscribeState } from '$lib/stores/transcribe.svelte';
+	import type { OCRState } from '$lib/stores/ocr.svelte';
 
 	const { mobile = false }: { mobile?: boolean } = $props();
 
-	let ocrHistory = liveQuery(() => db.ocr.reverse().toArray());
+	let transcribeHistory = liveQuery(() => db.transcribe.reverse().toArray());
 
 	function onLoad(entry: ChatState | OCRState | TranscribeState) {
-		if (!('pages' in entry)) {
+		if (!('text' in entry)) {
 			return;
 		}
-		ocr.setFromEntry(entry);
+		transcribe.setFromEntry(entry);
 		tick().then(() => {
-			const outputNode = document.getElementById('pages-container')!;
+			const outputNode = document.getElementById('text-container')!;
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
-			hljs.highlightAll();
 		});
 	}
 
 	async function onDestroy(entry: ChatState | OCRState | TranscribeState) {
-		if (!('pages' in entry)) {
+		if (!('text' in entry)) {
 			return;
 		}
-		await db.ocr.delete(entry.id);
-		if (ocr.state.id === entry.id) {
-			ocr.reset();
+		await db.transcribe.delete(entry.id);
+		if (transcribe.state.id === entry.id) {
+			transcribe.reset();
 		}
 	}
 </script>
 
-<NavHistory items={ocrHistory} {onLoad} {onDestroy} />
+<NavHistory items={transcribeHistory} {onLoad} {onDestroy} />

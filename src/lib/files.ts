@@ -27,6 +27,21 @@ export const validFileTypes = [
 ];
 export const mimeTypesAccept = validFileTypes.join(',');
 
+export const validTranscribeFileTypes = [
+	'audio/mpeg',
+	'audio/ogg',
+	'audio/aac',
+	'audio/midi',
+	'audio/x-midi',
+	'audio/wav',
+	'audio/webm',
+	'audio/3gpp',
+	'audio/3gpp2',
+	'audio/flac',
+	'audio/x-flac'
+];
+export const mimeTypesAcceptTranscribe = validTranscribeFileTypes.join(',');
+
 export function handleFileUpload(uploadedFiles: File[]) {
 	let hasError = false;
 	let hasImageSizeError = false;

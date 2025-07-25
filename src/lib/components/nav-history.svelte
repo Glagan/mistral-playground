@@ -7,15 +7,16 @@
 	import type { Observable } from 'dexie';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import type { TranscribeState } from '$lib/stores/transcribe.svelte';
 
 	let {
 		items,
 		onLoad,
 		onDestroy
 	}: {
-		items: Observable<OCRState[] | ChatState[]>;
-		onLoad: (item: OCRState | ChatState) => void;
-		onDestroy: (item: OCRState | ChatState) => void;
+		items: Observable<OCRState[] | ChatState[] | TranscribeState[]>;
+		onLoad: (item: OCRState | ChatState | TranscribeState) => void;
+		onDestroy: (item: OCRState | ChatState | TranscribeState) => void;
 	} = $props();
 
 	const sidebar = Sidebar.useSidebar();

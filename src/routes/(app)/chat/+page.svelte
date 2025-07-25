@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { fade, slide } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
 	import type { Usage, Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
@@ -18,7 +18,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
-	import type { ChatCompletionStreamRequest, ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
+	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';

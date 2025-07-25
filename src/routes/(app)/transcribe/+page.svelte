@@ -4,15 +4,13 @@
 	import { browser } from '$app/environment';
 	import { settings } from '$lib/stores/settings';
 	import { onMount } from 'svelte';
-	import { ocr } from '$lib/stores/ocr.svelte';
+	import { transcribe } from '$lib/stores/transcribe.svelte';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import { defaultChatModel } from '$lib/const';
-	import PdfPages from '$lib/components/OCR/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
-	import { fileToB64, mimeTypesAcceptOcr } from '$lib/files';
+	import { mimeTypesAcceptTranscribe } from '$lib/files';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
 	import { FileDropZone, MEGABYTE, type FileDropZoneProps } from '$lib/components/ui/file-drop-zone';
@@ -21,6 +19,8 @@
 	import Options from './Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
+	import TranscribeResult from '$lib/components/Transcribe/Result.svelte';
+	import { Duration } from 'luxon';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -30,17 +30,19 @@
 	let error: { text: string; body?: object } | null = $state(null);
 
 	$effect(() => {
-		ocr.state.id;
+		transcribe.state.id;
 		error = null;
 	});
 
 	async function updateOrInsertHistory() {
-		await db.ocr.put({
-			id: ocr.state.id,
-			filename: ocr.state.filename,
-			pages: JSON.parse(JSON.stringify(ocr.state.pages)),
-			usage: ocr.state.usage ? JSON.parse(JSON.stringify(ocr.state.usage)) : undefined,
-			options: JSON.parse(JSON.stringify(ocr.state.options))
+		await db.transcribe.put({
+			id: transcribe.state.id,
+			filename: transcribe.state.filename,
+			text: transcribe.state.text,
+			segments: JSON.parse(JSON.stringify(transcribe.state.segments)),
+			language: transcribe.state.language,
+			usage: transcribe.state.usage ? JSON.parse(JSON.stringify(transcribe.state.usage)) : undefined,
+			options: JSON.parse(JSON.stringify(transcribe.state.options))
 		});
 	}
 
@@ -49,7 +51,7 @@
 
 	async function generate(file: File) {
 		error = null;
-		ocr.resetResult();
+		transcribe.resetResult();
 
 		if (file.size > 50 * 1024 * 1024) {
 			toast.info('File size should be less than 50MB.');
@@ -59,26 +61,27 @@
 		const outputNode = document.getElementById('pages-container');
 		loading = true;
 
-		const b64File = await fileToB64(file);
-
 		abortController = new AbortController();
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
-			const ocrResponse = await client.ocr.process(
+			const transcribeResponse = await client.audio.transcriptions.complete(
 				{
-					model: ocr.state.options.model ? ocr.state.options.model : defaultChatModel,
-					document: file.type.includes('image')
-						? { imageUrl: b64File, type: 'image_url' }
-						: { documentUrl: b64File, type: 'document_url' },
-					includeImageBase64: true,
-					imageMinSize: ocr.state.options.minSize,
-					imageLimit: ocr.state.options.imageLimit
+					model: transcribe.state.options.model,
+					file: {
+						fileName: file.name,
+						content: await file.arrayBuffer()
+					},
+					language: transcribe.state.options.language,
+					timestampGranularities: transcribe.state.options.timestampGranularities ? ['segment'] : [],
+					temperature: transcribe.state.options.temperature
 				},
 				{ fetchOptions: { signal: abortController.signal } }
 			);
-			ocr.state.filename = file.name;
-			ocr.state.pages = ocrResponse.pages;
-			ocr.state.usage = ocrResponse.usageInfo;
+			transcribe.state.filename = file.name;
+			transcribe.state.text = transcribeResponse.text;
+			transcribe.state.segments = transcribeResponse.segments ?? [];
+			transcribe.state.language = transcribeResponse.language;
+			transcribe.state.usage = transcribeResponse.usage;
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
@@ -135,8 +138,9 @@
 	<Options class="hidden lg:flex" />
 	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto lg:px-4">
-			{#if ocr.state.pages.length}
-				<PdfPages pages={ocr.state.pages} {loading} {error} />
+			<!-- {JSON.stringify(transcribe.state)} -->
+			{#if transcribe.state.text.length || transcribe.state.segments.length}
+				<TranscribeResult text={transcribe.state.text} segments={transcribe.state.segments} {error} />
 			{:else}
 				<div class="flex w-full shrink grow items-center justify-center overflow-auto"></div>
 			{/if}
@@ -146,16 +150,31 @@
 			<label class="flex flex-col gap-1.5">
 				<div class="flex items-center justify-between gap-2">
 					<div class="flex items-center gap-2 truncate">
-						{#if ocr.state.usage}
+						{#if transcribe.state.usage}
 							<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
-								<Badge>Document</Badge>
+								{#if transcribe.state.usage.promptAudioSeconds}
+									<Badge>Audio</Badge>
+									<div>
+										<span class="text-primary-400"
+											>{Duration.fromObject({ seconds: transcribe.state.usage.promptAudioSeconds })
+												.rescale()
+												.toHuman()
+												.replace(/,/g, '')}</span
+										>
+									</div>
+								{/if}
+								<Badge>Tokens</Badge>
 								<div>
-									Pages: <span class="text-primary-400">{ocr.state.usage.pagesProcessed}</span>
+									Prompt: <span class="text-muted-background">{transcribe.state.usage.promptTokens}</span> / Completion:
+									<span class="text-muted-background">{transcribe.state.usage.completionTokens}</span>
+									/ Total: <span class="text-muted-background">{transcribe.state.usage.totalTokens}</span>
 								</div>
 							</div>
 						{/if}
-						{#if ocr.state.filename}
-							<div class="text-primary-500 truncate text-xs" title={ocr.state.filename}>{ocr.state.filename}</div>
+						{#if transcribe.state.filename}
+							<div class="text-primary-500 truncate text-xs" title={transcribe.state.filename}>
+								{transcribe.state.filename}
+							</div>
 						{/if}
 					</div>
 				</div>
@@ -165,7 +184,7 @@
 						name="files"
 						maxFiles={1}
 						maxFileSize={10 * MEGABYTE}
-						accept={mimeTypesAcceptOcr}
+						accept={mimeTypesAcceptTranscribe}
 						fileCount={files?.length ?? 0}
 					/>
 				{:else}
