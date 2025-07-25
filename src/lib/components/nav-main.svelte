@@ -4,7 +4,6 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
-	import type { SvelteComponent } from 'svelte';
 
 	let {
 		title,

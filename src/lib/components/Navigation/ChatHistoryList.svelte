@@ -6,11 +6,12 @@
 	import { db } from '$lib/stores/db';
 	import NavHistory from '$lib/components/nav-history.svelte';
 	import type { OCRState } from '$lib/stores/ocr.svelte';
+	import type { TranscribeState } from '$lib/stores/transcribe.svelte';
 
 	let chatHistory = liveQuery(() => db.chat.reverse().toArray());
 
-	function onLoad(entry: ChatState | OCRState) {
-		if ('pages' in entry) {
+	function onLoad(entry: ChatState | OCRState | TranscribeState) {
+		if ('pages' in entry || 'text' in entry) {
 			return;
 		}
 		chat.setFromEntry(entry);
@@ -23,7 +24,7 @@
 		});
 	}
 
-	async function onDestroy(entry: ChatState | OCRState) {
+	async function onDestroy(entry: ChatState | OCRState | TranscribeState) {
 		if ('pages' in entry) {
 			return;
 		}

@@ -10,6 +10,7 @@
 	import BookTextIcon from '@lucide/svelte/icons/book-text';
 	import FileCodeIcon from '@lucide/svelte/icons/file-code';
 	import Share2Icon from '@lucide/svelte/icons/share-2';
+	import MicIcon from '@lucide/svelte/icons/mic';
 	import ThemeToggle from '$lib/components/theme-toggle.svelte';
 
 	const data = {
@@ -30,6 +31,12 @@
 				title: 'OCR',
 				url: '/ocr',
 				icon: ScanSearchIcon,
+				disableLoggedOut: true
+			},
+			{
+				title: 'Transcribe',
+				url: '/transcribe',
+				icon: MicIcon,
 				disableLoggedOut: true
 			},
 			{
@@ -93,11 +100,13 @@
 	import { page } from '$app/state';
 	import ChatHistoryList from './Navigation/ChatHistoryList.svelte';
 	import OcrHistoryList from './Navigation/OCRHistoryList.svelte';
+	import TranscribeHistoryList from './Navigation/TranscribeHistoryList.svelte';
 
 	let { ref = $bindable(null), collapsible = 'icon', ...restProps }: ComponentProps<typeof Sidebar.Root> = $props();
 
 	const isInChat = $derived(page.url.pathname === '/chat');
 	const isInOcr = $derived(page.url.pathname === '/ocr');
+	const isInTranscribe = $derived(page.url.pathname === '/transcribe');
 </script>
 
 <Sidebar.Root {collapsible} {...restProps}>
@@ -110,6 +119,8 @@
 			<ChatHistoryList />
 		{:else if isInOcr}
 			<OcrHistoryList />
+		{:else if isInTranscribe}
+			<TranscribeHistoryList />
 		{/if}
 		<NavMain title="Documentation" items={data.navSecondary} />
 	</Sidebar.Content>

@@ -57,6 +57,13 @@ export type Page = {
 
 export type OCROptions = { model: string; minSize: number | undefined; imageLimit: number | undefined };
 
+export type TranscribeOptions = {
+	model: string;
+	language: string | undefined;
+	temperature: number;
+	timestampGranularities: boolean;
+};
+
 export const embeddingTypes = ['float', 'int8', 'uint8', 'binary', 'ubinary'] as const;
 export type EmbeddingType = (typeof embeddingTypes)[number];
 

@@ -21,6 +21,8 @@ export const models: {
 	visionGroups: Record<string, MergedModel[]>;
 	ocr: MergedModel[];
 	ocrGroups: Record<string, MergedModel[]>;
+	transcribe: MergedModel[];
+	transcribeGroups: Record<string, MergedModel[]>;
 	embed: MergedModel[];
 	embedGroups: Record<string, MergedModel[]>;
 } = $state({
@@ -35,6 +37,8 @@ export const models: {
 	visionGroups: {},
 	ocr: [],
 	ocrGroups: {},
+	transcribe: [],
+	transcribeGroups: {},
 	embed: [],
 	embedGroups: {}
 });
@@ -69,8 +73,8 @@ export const prices: Record<string, { input?: number; pageInput?: number; audioI
 	'mistral-small-latest': { input: 0.1, output: 0.3 },
 	'magistral-small-latest': { input: 0.5, output: 1.5 },
 	'devstral-small-2507': { input: 0.1, output: 0.3 },
-	'voxtral-small-latest': { input: 0.1, audioInput: 0.0004, output: 0.3 },
-	'voxtral-mini-latest': { input: 0.04, output: 0.04 },
+	'voxtral-small-latest': { input: 0.1, output: 0.3 },
+	'voxtral-mini-latest': { input: 0.04, audioInput: 0.0004, output: 0.04 },
 	'pixtral-large-latest': { input: 2, output: 6 },
 	'pixtral-12b': { input: 0.15, output: 0.15 },
 	'mistral-nemo': { input: 0.15, output: 0.15 },
@@ -127,6 +131,8 @@ export async function loadModels() {
 		models.visionGroups = groupModels(models.vision);
 		models.ocr = models.list.filter((model) => model.id.includes('ocr'));
 		models.ocrGroups = groupModels(models.ocr);
+		models.transcribe = models.list.filter((model) => model.id.includes('voxtral-mini'));
+		models.transcribeGroups = groupModels(models.transcribe);
 		models.embed = models.list.filter((model) => model.id.includes('embed'));
 		models.embedGroups = groupModels(models.embed);
 		models.loaded = true;

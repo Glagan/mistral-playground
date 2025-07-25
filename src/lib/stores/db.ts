@@ -1,6 +1,7 @@
 import Dexie, { type EntityTable } from 'dexie';
 import type { ChatState } from './chat.svelte';
 import type { OCRState } from './ocr.svelte';
+import type { TranscribeState } from './transcribe.svelte';
 
 export type ChatShareState = {
 	id: string;
@@ -12,6 +13,7 @@ export type ChatShareState = {
 export const db = new Dexie('MistralPlayground') as Dexie & {
 	chat: EntityTable<ChatState, 'id'>;
 	ocr: EntityTable<OCRState, 'id'>;
+	transcribe: EntityTable<TranscribeState, 'id'>;
 	share: EntityTable<ChatShareState, 'id'>;
 };
 
@@ -19,5 +21,6 @@ export const db = new Dexie('MistralPlayground') as Dexie & {
 db.version(1).stores({
 	chat: '++id, messages, usage, options',
 	ocr: '++id, filename, pages, usage, options',
+	transcribe: '++id, filename, text, language, segments, usage, options',
 	share: '++id, title, deletionKey, createdAt'
 });

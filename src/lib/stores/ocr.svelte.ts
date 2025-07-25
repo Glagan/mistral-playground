@@ -20,11 +20,15 @@ export function createCurrent() {
 	const state: OCRState = $state({ id: uuid(), filename: '', pages: [], options: defaultOptions() });
 
 	function reset() {
+		resetResult();
+		state.options = defaultOptions();
+	}
+
+	function resetResult() {
 		state.id = uuid();
 		state.filename = '';
 		state.usage = undefined;
 		state.pages = [];
-		state.options = defaultOptions();
 	}
 
 	function setFromEntry(entry: OCRState) {
@@ -40,6 +44,7 @@ export function createCurrent() {
 		defaultOptions,
 		setFromEntry,
 		reset,
+		resetResult,
 		get model() {
 			return models.byName[state.options.model];
 		}

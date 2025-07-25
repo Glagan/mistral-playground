@@ -41,7 +41,9 @@
 	import ScanSearchIcon from '@lucide/svelte/icons/scan-search';
 	import { embeddings } from '$lib/stores/embeddings.svelte';
 	import SquareTerminalIcon from '@lucide/svelte/icons/square-terminal';
+	import MicIcon from '@lucide/svelte/icons/mic';
 	import { ModeWatcher } from 'mode-watcher';
+	import { transcribe } from '$lib/stores/transcribe.svelte';
 
 	const { data, children } = $props();
 
@@ -88,7 +90,7 @@
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
 			</div>
-			{#if page.url.pathname === '/chat' || page.url.pathname === '/ocr' || page.url.pathname === '/embeddings'}
+			{#if page.url.pathname === '/chat' || page.url.pathname === '/ocr' || page.url.pathname === '/embeddings' || page.url.pathname === '/transcribe'}
 				<div class="flex flex-row gap-2 px-4">
 					{#if page.url.pathname === '/chat'}
 						<Button variant="secondary" onclick={() => chat.reset()}>
@@ -106,6 +108,11 @@
 						<Button variant="secondary" onclick={() => embeddings.reset()}>
 							<SquareTerminalIcon />
 							<span class="hidden lg:inline">New embeddings</span>
+						</Button>
+					{:else if page.url.pathname === '/transcribe'}
+						<Button variant="secondary" onclick={() => transcribe.reset()}>
+							<MicIcon />
+							<span class="hidden lg:inline">New transcription</span>
 						</Button>
 					{/if}
 				</div>
