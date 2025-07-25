@@ -7,12 +7,30 @@ export function fileToB64(file: File) {
 	});
 }
 
-export const validFileTypes = ['application/pdf', 'image/png', 'image/jpeg', 'image/jpg', 'image/webp'];
+export const validOcrFileTypes = [
+	// Documents
+	'text/plain',
+	'application/pdf',
+	// Images
+	'image/png',
+	'image/jpeg',
+	'image/jpg',
+	'image/webp',
+	'image/avif'
+];
+export const mimeTypesAcceptOcr = validOcrFileTypes.join(',');
+
+export const validFileTypes = [
+	...validOcrFileTypes,
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+];
+export const mimeTypesAccept = validFileTypes.join(',');
 
 export function handleFileUpload(uploadedFiles: File[]) {
 	let hasError = false;
-	let hasSizeError = false;
-	let hasSize2Error = false;
+	let hasImageSizeError = false;
+	let hasFileSizeError = false;
 	let files: File[] = [];
 	let errors: string[] = [];
 	for (let index = 0; index < uploadedFiles.length; index++) {
@@ -23,26 +41,28 @@ export function handleFileUpload(uploadedFiles: File[]) {
 		}
 		if (file.type.includes('image/')) {
 			if (file.size > 10 * 1024 * 1024) {
-				hasSizeError = true;
+				hasImageSizeError = true;
 			} else {
 				files.push(file);
 			}
 		} else {
 			if (file.size > 50 * 1024 * 1024) {
-				hasSize2Error = true;
+				hasFileSizeError = true;
 			} else {
 				files.push(file);
 			}
 		}
 	}
 	if (hasError) {
-		errors.push('Unsupported file type, only images (.png, .jpeg, .jpg and .webp) and PDF are supporte.');
+		errors.push(
+			'Unsupported file type, only images (.png, .jpeg, .jpg, .webp and .avif), PDF, text and documents files are supported.'
+		);
 	}
-	if (hasSizeError) {
-		errors.push('File size should be less than 10MB.');
+	if (hasImageSizeError) {
+		errors.push('Image size should be less than 10MB.');
 	}
-	if (hasSize2Error) {
-		errors.push('PDF size should be less than 50MB.');
+	if (hasFileSizeError) {
+		errors.push('File size should be less than 50MB.');
 	}
 	return { files, errors };
 }

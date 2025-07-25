@@ -16,7 +16,7 @@
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import { defaultChatModel } from '$lib/const';
-	import { fileToB64, handleFileUpload } from '$lib/files';
+	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
 	import type { ChatCompletionStreamRequest, ContentChunk, TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
@@ -602,7 +602,7 @@
 								<div class="flex shrink grow flex-col gap-1">
 									<span class="label-text"><strong>Drop a file</strong></span>
 								</div>
-								<span>Images (.png, .jpeg, .jpg and .webp) allowed.</span>
+								<span>Images (.png, .jpeg, .jpg, .webp and .avif), PDF, text and documents files allowed.</span>
 							</div>
 						</div>
 					{/if}
@@ -632,7 +632,7 @@
 								class="hidden"
 								type="file"
 								multiple
-								accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+								accept={mimeTypesAccept}
 								disabled={loading || models.loading || !!models.error}
 								onchange={onFileChange}
 							/>

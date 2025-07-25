@@ -17,7 +17,7 @@
 	import FileUpIcon from '@lucide/svelte/icons/file-up';
 	import { models } from '$lib/stores/models.svelte';
 	import type { ContentChunk } from '@mistralai/mistralai/models/components';
-	import { fileToB64, handleFileUpload } from '$lib/files';
+	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import { toast } from 'svelte-sonner';
 	import { chat } from '$lib/stores/chat.svelte';
 
@@ -177,7 +177,7 @@
 								id="messageFileUpload"
 								type="file"
 								multiple
-								accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+								accept={mimeTypesAccept}
 								onchange={(e) => onUpload(e.currentTarget.files)}
 								class="hidden"
 							/>

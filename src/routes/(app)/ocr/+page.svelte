@@ -12,7 +12,7 @@
 	import { defaultChatModel } from '$lib/const';
 	import PdfPages from '$lib/components/OCR/PdfPages.svelte';
 	import prettyBytes from 'pretty-bytes';
-	import { fileToB64 } from '$lib/files';
+	import { fileToB64, mimeTypesAcceptOcr } from '$lib/files';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
 	import { FileDropZone, MEGABYTE, type FileDropZoneProps } from '$lib/components/ui/file-drop-zone';
@@ -165,7 +165,7 @@
 						name="files"
 						maxFiles={1}
 						maxFileSize={10 * MEGABYTE}
-						accept="application/pdf,image/png,image/jpeg,image/jpg,image/webp"
+						accept={mimeTypesAcceptOcr}
 						fileCount={files?.length ?? 0}
 					/>
 				{:else}
