@@ -25,7 +25,7 @@
 	}
 
 	async function onDestroy(entry: ChatState | OCRState | TranscribeState) {
-		if (!('pages' in entry)) {
+		if (!('text' in entry)) {
 			return;
 		}
 		await db.transcribe.delete(entry.id);
