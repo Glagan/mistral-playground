@@ -1,16 +1,9 @@
 <script lang="ts">
 	import * as Card from '$lib/components/ui/card/index.js';
-	import CodeBlock from '$lib/components/CodeBlock.svelte';
-	import * as Alert from '$lib/components/ui/alert/index.js';
-	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 	import type { TranscriptionSegmentChunk } from '@mistralai/mistralai/models/components';
 	import { Duration } from 'luxon';
 
-	let {
-		text,
-		segments,
-		error
-	}: { text: string; segments: TranscriptionSegmentChunk[]; error: { text: string; body?: object } | null } = $props();
+	let { text, segments }: { text: string; segments: TranscriptionSegmentChunk[] } = $props();
 
 	function toFormattedTimestamp(seconds: number) {
 		return Duration.fromObject({ seconds }).toFormat('hh:mm:ss');
@@ -36,16 +29,5 @@
 				</div>
 			{/each}
 		</div>
-	{/if}
-	{#if error}
-		<Alert.Root variant="destructive">
-			<AlertCircleIcon />
-			<Alert.Description>
-				<p>{error.text}</p>
-				{#if error.body}
-					<CodeBlock language="json" code={JSON.stringify(error.body, undefined, 4)} />
-				{/if}
-			</Alert.Description>
-		</Alert.Root>
 	{/if}
 </div>

@@ -32,7 +32,9 @@
 	import { emitter } from '$lib/emitter';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
+	import MessageSquareMoreIcon from '@lucide/svelte/icons/message-square-more';
 	import autosize from 'autosize';
+	import { extractErrorContent } from '$lib/utils/error';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -254,17 +256,7 @@
 						answer.index -= 1;
 					}
 				}
-				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
-				if (responseBody) {
-					try {
-						const body = JSON.parse(responseBody[2].trim());
-						error = { text: `Failed to generate: ${responseBody[1].trim()}`, body };
-					} catch (jsonError) {
-						error = { text: `Failed to generate: ${_error.message}` };
-					}
-				} else {
-					error = { text: `Failed to generate: ${_error.message}` };
-				}
+				error = extractErrorContent(_error);
 			}
 		} finally {
 			loading = false;
@@ -578,7 +570,13 @@
 					{error}
 				/>
 			{:else}
-				<div class="flex h-full w-full items-center justify-center"></div>
+				<div
+					class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-3 text-center"
+					style="background: radial-gradient(circle,rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 30%) ;"
+				>
+					<MessageSquareMoreIcon size={52} />
+					<p class="text-muted-foreground leading-7">Your messages will appear here...</p>
+				</div>
 			{/if}
 		</div>
 		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
