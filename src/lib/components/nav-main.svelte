@@ -24,6 +24,7 @@
 						url: string;
 					}[];
 					disableLoggedOut?: boolean;
+					hideLoggedIn?: boolean;
 					hideLoggedOut?: boolean;
 			  }
 		)[];
@@ -42,7 +43,7 @@
 		{#each items as mainItem (mainItem.title)}
 			{#if 'component' in mainItem}
 				<mainItem.component item={mainItem} />
-			{:else if loggedIn || !mainItem.hideLoggedOut}
+			{:else if (loggedIn && !mainItem.hideLoggedIn) || (!loggedIn && !mainItem.hideLoggedOut)}
 				<Collapsible.Root open={mainItem.isActive}>
 					{#snippet child({ props })}
 						<Sidebar.MenuItem
