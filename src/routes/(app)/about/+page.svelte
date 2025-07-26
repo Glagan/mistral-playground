@@ -1,7 +1,7 @@
 <script lang="ts">
 </script>
 
-<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
+<div class="flex max-h-[calc(100svh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-balance">About</h1>
 	<p class="leading-7">
 		<strong>Mistral playground</strong> is not affiliated with <strong>MistralAI</strong>.
