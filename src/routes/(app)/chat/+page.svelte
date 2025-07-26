@@ -164,7 +164,7 @@
 			if (chat.model.reasoning) {
 				answer.versions[answer.index].thinking = '';
 			}
-			let reasoningStep = 0;
+			let reasoningStep = chat.model.id === 'magistral-medium-2506' ? 0 : 2;
 			let reasoningBuffer = '';
 			for await (const message of chatStreamResponse) {
 				const data = message.data;
