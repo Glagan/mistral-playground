@@ -32,7 +32,7 @@
 	}
 </script>
 
-<div class="flex max-h-[calc(100vh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
+<div class="flex max-h-[calc(100svh-88px)] shrink grow flex-col items-stretch gap-4 lg:max-h-screen">
 	<h1 class="scroll-m-20 text-4xl font-extrabold tracking-tight text-balance">Shared chats</h1>
 	{#if $sharedChats?.length}
 		<div class="grid grid-cols-1 items-center gap-4 lg:grid-cols-4">

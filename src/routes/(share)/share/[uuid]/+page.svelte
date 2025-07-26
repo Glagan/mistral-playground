@@ -49,7 +49,7 @@
 </svelte:head>
 
 <div
-	class="mx-auto flex max-h-[calc(100vh-80px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:w-[50vw]"
+	class="mx-auto flex max-h-[calc(100svh-80px)] shrink grow flex-col items-stretch justify-center gap-4 p-4 lg:w-[50vw]"
 >
 	{#if chat}
 		<div class="relative w-full shrink grow overflow-auto">
