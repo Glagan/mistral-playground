@@ -1,6 +1,5 @@
 <script lang="ts">
 	import type { Message, MessageRole } from '$lib/types';
-	import { slide } from 'svelte/transition';
 	import ArrowDownIcon from '@lucide/svelte/icons/arrow-down';
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
 	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
@@ -20,6 +19,7 @@
 	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import { toast } from 'svelte-sonner';
 	import { chat } from '$lib/stores/chat.svelte';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 
 	let {
 		message,
@@ -137,6 +137,8 @@
 	<Card.Content class="relative px-3">
 		{#if editing.id === message.id}
 			<MessageEditor bind:message={messageCopy} {index} />
+		{:else if message.role === 'assistant' && loading && !message.versions[message.index].thinking && !(message.versions[message.index].content[0] as any).text}
+			<Skeleton class="h-7 w-full" />
 		{:else}
 			<MessageContent {message} />
 		{/if}

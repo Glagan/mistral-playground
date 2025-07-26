@@ -7,6 +7,7 @@
 	import GithubIcon from '@lucide/svelte/icons/github';
 	import CoffeeIcon from '@lucide/svelte/icons/coffee';
 	import LogOutIcon from '@lucide/svelte/icons/log-out';
+	import LogInIcon from '@lucide/svelte/icons/log-in';
 	import BookTextIcon from '@lucide/svelte/icons/book-text';
 	import FileCodeIcon from '@lucide/svelte/icons/file-code';
 	import Share2Icon from '@lucide/svelte/icons/share-2';
@@ -59,6 +60,12 @@
 			}
 		],
 		navFooter: [
+			{
+				title: 'Add API key',
+				url: '/',
+				icon: LogInIcon,
+				hideLoggedIn: true
+			},
 			{
 				title: 'Delete API key',
 				url: '/logout',

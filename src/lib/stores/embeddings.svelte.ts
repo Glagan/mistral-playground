@@ -11,7 +11,7 @@ export type EmbeddingsState = {
 
 function defaultOptions(): EmbeddingsOptions {
 	// return { model: get(settings).model ?? 'mistral-ocr-latest' };
-	return { model: 'mistral-embed', outputDimension: undefined, outputDtype: undefined };
+	return { model: 'mistral-embed', outputDimension: undefined, outputDtype: 'float' };
 }
 
 export function createCurrent() {

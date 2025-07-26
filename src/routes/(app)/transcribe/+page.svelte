@@ -21,6 +21,10 @@
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import TranscribeResult from '$lib/components/Transcribe/Result.svelte';
 	import { Duration } from 'luxon';
+	import ErrorBlock from '$lib/components/ErrorBlock.svelte';
+	import { extractErrorContent } from '$lib/utils/error';
+	import MicIcon from '@lucide/svelte/icons/mic';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -91,17 +95,7 @@
 			const _error = __error as Error;
 			// Ignore abort errors
 			if (_error.name !== 'AbortError') {
-				const responseBody = _error.message.match(/([\s\S]+?)({[\s\S]+?})/is);
-				if (responseBody) {
-					try {
-						const body = JSON.parse(responseBody[2].trim());
-						error = { text: `Failed to generate: ${responseBody[1].trim()}`, body };
-					} catch (jsonError) {
-						error = { text: `Failed to generate: ${_error.message}` };
-					}
-				} else {
-					error = { text: `Failed to generate: ${_error.message}` };
-				}
+				error = extractErrorContent(_error);
 			}
 		} finally {
 			loading = false;
@@ -110,6 +104,10 @@
 
 	const onUpload: FileDropZoneProps['onUpload'] = async (uploadedFiles) => {
 		files = uploadedFiles;
+	};
+
+	const onFileRejected: FileDropZoneProps['onFileRejected'] = async (opts) => {
+		toast.error(opts.reason);
 	};
 
 	async function onSubmit(event: Event) {
@@ -138,10 +136,24 @@
 	<Options class="hidden lg:flex" />
 	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto lg:px-4">
-			{#if transcribe.state.text.length || transcribe.state.segments.length}
-				<TranscribeResult text={transcribe.state.text} segments={transcribe.state.segments} {error} />
+			{#if error}
+				<ErrorBlock {error} />
+			{:else if transcribe.state.text.length || transcribe.state.segments.length}
+				<TranscribeResult text={transcribe.state.text} segments={transcribe.state.segments} />
+			{:else if loading}
+				<div class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-3 text-center">
+					<Skeleton class="h-7 w-1/3" />
+					<Skeleton class="h-7 w-1/2" />
+					<Skeleton class="h-7 w-1/3" />
+				</div>
 			{:else}
-				<div class="flex w-full shrink grow items-center justify-center overflow-auto"></div>
+				<div
+					class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-3 text-center"
+					style="background: radial-gradient(circle,rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 30%) ;"
+				>
+					<MicIcon size={52} />
+					<p class="text-muted-foreground leading-7">Your transcription will appear here...</p>
+				</div>
 			{/if}
 		</div>
 		<form class="flex shrink-0 flex-col gap-2" onsubmit={onSubmit}>
@@ -179,12 +191,13 @@
 				</div>
 				{#if !files?.length}
 					<FileDropZone
-						{onUpload}
 						name="files"
 						maxFiles={1}
 						maxFileSize={10 * MEGABYTE}
 						accept={mimeTypesAcceptTranscribe}
 						fileCount={files?.length ?? 0}
+						{onUpload}
+						{onFileRejected}
 					/>
 				{:else}
 					{@const file = files[0]}
