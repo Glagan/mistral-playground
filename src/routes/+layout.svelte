@@ -53,12 +53,13 @@
 	}
 
 	const pages: Record<string, string> = {
-		chat: 'Chat completion',
+		chat: 'Chat',
 		ocr: 'OCR',
 		embeddings: 'Embeddings',
 		shared: 'Shared chats',
 		share: 'Shared chat',
 		settings: 'Settings',
+		transcribe: 'Transcribe',
 		about: 'About',
 		'': 'Login'
 	};

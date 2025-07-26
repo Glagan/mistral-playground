@@ -138,7 +138,6 @@
 	<Options class="hidden lg:flex" />
 	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto lg:px-4">
-			<!-- {JSON.stringify(transcribe.state)} -->
 			{#if transcribe.state.text.length || transcribe.state.segments.length}
 				<TranscribeResult text={transcribe.state.text} segments={transcribe.state.segments} {error} />
 			{:else}
@@ -149,22 +148,22 @@
 			<ModelError />
 			<label class="flex flex-col gap-1.5">
 				<div class="flex items-center justify-between gap-2">
-					<div class="flex items-center gap-2 truncate">
+					<div class="flex flex-col items-start gap-2 truncate xl:flex-row xl:items-center">
 						{#if transcribe.state.usage}
-							<div class="text-primary-500 flex items-center gap-2 text-right text-xs opacity-75">
-								{#if transcribe.state.usage.promptAudioSeconds}
+							{#if transcribe.state.usage.promptAudioSeconds}
+								<div class="text-sm">
 									<Badge>Audio</Badge>
-									<div>
-										<span class="text-primary-400"
-											>{Duration.fromObject({ seconds: transcribe.state.usage.promptAudioSeconds })
-												.rescale()
-												.toHuman()
-												.replace(/,/g, '')}</span
-										>
-									</div>
-								{/if}
+									<span class="text-primary-400">
+										{Duration.fromObject({ seconds: transcribe.state.usage.promptAudioSeconds })
+											.rescale()
+											.toHuman()
+											.replace(/,/g, '')}
+									</span>
+								</div>
+							{/if}
+							<div class="text-sm">
 								<Badge>Tokens</Badge>
-								<div>
+								<div class="inline-block">
 									Prompt: <span class="text-muted-background">{transcribe.state.usage.promptTokens}</span> / Completion:
 									<span class="text-muted-background">{transcribe.state.usage.completionTokens}</span>
 									/ Total: <span class="text-muted-background">{transcribe.state.usage.totalTokens}</span>
@@ -172,7 +171,7 @@
 							</div>
 						{/if}
 						{#if transcribe.state.filename}
-							<div class="text-primary-500 truncate text-xs" title={transcribe.state.filename}>
+							<div class="text-primary-500 truncate text-sm" title={transcribe.state.filename}>
 								{transcribe.state.filename}
 							</div>
 						{/if}

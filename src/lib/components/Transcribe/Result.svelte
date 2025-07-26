@@ -26,9 +26,9 @@
 		</Card.Root>
 	{/if}
 	{#if segments.length}
-		<div class="flex flex-col gap-2">
+		<div class="flex flex-col gap-3 xl:gap-2">
 			{#each segments as segment}
-				<div class="flex flex-row gap-4">
+				<div class="flex flex-col gap-1 xl:flex-row xl:gap-4">
 					<span class="text-muted-foreground shrink-0 grow-0"
 						>{toFormattedTimestamp(segment.start)} - {toFormattedTimestamp(segment.end)}</span
 					>

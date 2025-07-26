@@ -20,13 +20,6 @@ export const validOcrFileTypes = [
 ];
 export const mimeTypesAcceptOcr = validOcrFileTypes.join(',');
 
-export const validFileTypes = [
-	...validOcrFileTypes,
-	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-	'application/vnd.openxmlformats-officedocument.presentationml.presentation'
-];
-export const mimeTypesAccept = validFileTypes.join(',');
-
 export const validTranscribeFileTypes = [
 	'audio/mpeg',
 	'audio/ogg',
@@ -41,6 +34,13 @@ export const validTranscribeFileTypes = [
 	'audio/x-flac'
 ];
 export const mimeTypesAcceptTranscribe = validTranscribeFileTypes.join(',');
+
+export const validFileTypes = [
+	...validOcrFileTypes,
+	'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+	'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+];
+export const mimeTypesAccept = validFileTypes.join(',');
 
 export function handleFileUpload(uploadedFiles: File[]) {
 	let hasError = false;
