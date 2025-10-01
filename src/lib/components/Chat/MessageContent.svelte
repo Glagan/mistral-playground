@@ -1,43 +1,33 @@
 <script lang="ts">
 	import type { Message } from '$lib/types';
-	import { marked } from 'marked';
-	import hljs from 'highlight.js/lib/core';
 	import FileMessagePreview from '$lib/components/File/MessagePreview.svelte';
-	import { emitter } from '$lib/emitter';
-	import { onDestroy, onMount } from 'svelte';
+	import { Streamdown } from 'svelte-streamdown';
+	import { mode } from 'mode-watcher';
 
-	let {
-		message
-	}: {
-		message: Message;
-	} = $props();
+	let { message }: { message: Message } = $props();
 
 	const content = $state(message.versions[message.index].content);
 
-	const markdown = $derived.by(() => {
-		return content.map((part) =>
-			part.type === 'text'
-				? marked
-						.parse(part.text.trim().replaceAll('<think>', '<div think>').replaceAll('</think>', '</div>'), {
-							async: false,
-							gfm: true,
-							breaks: true
-						})
-						.trim()
-				: ''
-		);
-	});
+	const parts = $derived(
+		content.map((part) => {
+			if (part.type === 'text') {
+				return part.text.trim().replaceAll('<think>', '<div think>').replaceAll('</think>', '</div>');
+			}
+			return '';
+		})
+	);
 
-	onMount(() => {
-		emitter.on('message:complete', () => {
-			hljs.highlightAll();
-		});
-		hljs.highlightAll();
-	});
-
-	onDestroy(() => {
-		emitter.off('message:complete');
-	});
+	const shikiTheme = $derived(mode.current === 'light' ? 'github-light' : 'github-dark');
+	const theme = $derived(
+		mode.current === 'light'
+			? {
+					code: {
+						container: 'bg-muted/20',
+						pre: 'bg-transparent'
+					}
+				}
+			: {}
+	);
 </script>
 
 {#if message.role === 'assistant' && message.versions[message.index].thinking}
@@ -47,10 +37,19 @@
 		{message.versions[message.index].thinking}
 	</div>
 {/if}
-<div class="rendered-markdown space-y-4">
+<div class="rendered-markdown">
 	{#each content as item, index (index)}
 		{#if item.type === 'text'}
-			{@html markdown[index]}
+			{#each parts as part}
+				<Streamdown
+					content={part}
+					baseTheme="shadcn"
+					{shikiTheme}
+					animation={{ enabled: true, type: 'fade' }}
+					class="space-y-4"
+					{theme}
+				/>
+			{/each}
 		{:else if item.type === 'image_url' || item.type === 'document_url'}
 			<FileMessagePreview chunk={item} />
 		{/if}

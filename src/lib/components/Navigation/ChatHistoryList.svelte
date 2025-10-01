@@ -1,7 +1,6 @@
 <script lang="ts">
 	import { chat, type ChatState } from '$lib/stores/chat.svelte';
 	import { tick } from 'svelte';
-	import hljs from 'highlight.js/lib/core';
 	import { liveQuery } from 'dexie';
 	import { db } from '$lib/stores/db';
 	import NavHistory from '$lib/components/nav-history.svelte';
@@ -20,7 +19,6 @@
 			if (outputNode) {
 				outputNode.scroll({ top: outputNode.scrollHeight, behavior: 'smooth' });
 			}
-			hljs.highlightAll();
 		});
 	}
 
