@@ -108,17 +108,13 @@
 				<Tabs.Trigger value="javascript">Javascript</Tabs.Trigger>
 			</Tabs.List>
 			<Tabs.Content value="javascript">
-				<div class="max-h-[384px] overflow-y-auto">
-					<CodeBlock {code} language="javascript" />
-				</div>
+				<CodeBlock
+					class="export-code sm:max-w-[calc(512px-48px)] md:max-w-[calc(512px-48px)] lg:max-w-[calc(768px-48px)]"
+					{code}
+					language="javascript"
+				/>
 			</Tabs.Content>
 		</Tabs.Root>
-		<div class="flex flex-row items-center justify-center">
-			<Button onclick={copyCode}>
-				<Clipboard size={16} />
-				<span>Copy code</span>
-			</Button>
-		</div>
 		<Dialog.Footer>
 			<Button onclick={() => close()}>Close</Button>
 		</Dialog.Footer>

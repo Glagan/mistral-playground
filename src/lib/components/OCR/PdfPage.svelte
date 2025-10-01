@@ -1,12 +1,9 @@
 <script lang="ts">
 	import type { OCRPageObject } from '@mistralai/mistralai/models/components';
-	import hljs from 'highlight.js/lib/core';
-	import { marked } from 'marked';
-	import markedKatex from 'marked-katex-extension';
 	import * as Card from '$lib/components/ui/card/index.js';
+	import { Streamdown } from 'svelte-streamdown';
 
 	let { page, loading }: { page: OCRPageObject; loading: boolean } = $props();
-	marked.use(markedKatex({ throwOnError: false }));
 
 	const markdown = $derived.by(() => {
 		let markdown = page.markdown;
@@ -14,12 +11,7 @@
 			const image = page.images[index];
 			markdown = markdown.replaceAll(`(${image.id})`, `(${image.imageBase64})`);
 		}
-		return (marked.parse(markdown, { async: false, gfm: true, breaks: true }) as string).trim();
-	});
-
-	$effect(() => {
-		page.markdown;
-		hljs.highlightAll();
+		return markdown.trim();
 	});
 </script>
 
@@ -29,6 +21,12 @@
 
 <Card.Root class="w-full gap-3 py-3">
 	<Card.Content class="rendered-markdown relative max-w-full space-y-4 overflow-x-hidden px-3">
-		{@html markdown}
+		<Streamdown
+			content={markdown}
+			baseTheme="shadcn"
+			shikiTheme="github-dark"
+			allowedImagePrefixes={['data:image/', '*']}
+			class="space-y-4"
+		/>
 	</Card.Content>
 </Card.Root>

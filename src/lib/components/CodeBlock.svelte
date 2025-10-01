@@ -1,26 +1,23 @@
 <script lang="ts">
-	import { createHighlighter, type BundledLanguage, type BundledTheme, type HighlighterGeneric } from 'shiki';
-	import { onMount } from 'svelte';
+	import { Streamdown } from 'svelte-streamdown';
 
-	let { code, language }: { code: string; language: BundledLanguage } = $props();
+	let { class: className, code, language }: { class?: string; code: string; language: string } = $props();
 
-	let highlighter = $state<HighlighterGeneric<BundledLanguage, BundledTheme> | null>(null);
 	let htmlCode = $state('');
 
-	onMount(async () => {
-		highlighter = await createHighlighter({
-			themes: ['github-dark'],
-			langs: [language]
-		});
-	});
-
 	$effect(() => {
-		if (highlighter && code) {
-			htmlCode = highlighter.codeToHtml(code, { theme: 'github-dark', lang: language });
+		if (code) {
+			htmlCode = `\`\`\`${language}\n${code || ''}\n\`\`\``;
 		}
 	});
 </script>
 
 {#if htmlCode}
-	{@html htmlCode}
+	<Streamdown
+		content={htmlCode}
+		class={className}
+		baseTheme="shadcn"
+		shikiTheme="github-dark"
+		animation={{ enabled: true, type: 'fade' }}
+	/>
 {/if}

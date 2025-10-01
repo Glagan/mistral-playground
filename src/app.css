@@ -1,5 +1,6 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
+@source "../node_modules/svelte-streamdown/**/*";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -154,23 +155,6 @@
 	}
 }
 
-.shiki.github-dark {
-	@apply rounded p-4 wrap-anywhere whitespace-pre-wrap;
-}
-
-.rendered-markdown code {
-	@apply overflow-x-auto rounded px-[3px] py-[3px] font-mono text-base;
-	font-feature-settings: normal;
-	font-variation-settings: normal;
-	color: #c9d1d9;
-	background: #0d1117;
-}
-
-.rendered-markdown pre code,
-pre.codeblock-pre > code.codeblock-code {
-	@apply block w-full;
-}
-
 .rendered-markdown img {
 	@apply m-auto shadow shadow-neutral-600;
 }
@@ -247,4 +231,8 @@ pre.codeblock-pre > code.codeblock-code {
 	@apply bg-repeat;
 	background-size: 100px;
 	background-image: url('/noise-dark.png');
+}
+
+.export-code > div > div:last-child {
+	@apply max-h-[384px] overflow-y-auto;
 }

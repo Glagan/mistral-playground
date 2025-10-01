@@ -1,29 +1,7 @@
 <script lang="ts">
 	import '../app.css';
 
-	import hljs from 'highlight.js/lib/core';
-	import xml from 'highlight.js/lib/languages/xml';
-	import css from 'highlight.js/lib/languages/css';
-	import json from 'highlight.js/lib/languages/json';
-	import javascript from 'highlight.js/lib/languages/javascript';
-	import typescript from 'highlight.js/lib/languages/typescript';
-	import shell from 'highlight.js/lib/languages/shell';
-	import sql from 'highlight.js/lib/languages/sql';
-	import python from 'highlight.js/lib/languages/python';
 	import Button from '$lib/components/ui/button/button.svelte';
-
-	hljs.registerLanguage('xml', xml);
-	hljs.registerLanguage('css', css);
-	hljs.registerLanguage('json', json);
-	hljs.registerLanguage('javascript', javascript);
-	hljs.registerLanguage('typescript', typescript);
-	hljs.registerLanguage('shell', shell);
-	hljs.registerLanguage('bash', shell);
-	hljs.registerLanguage('sql', sql);
-	hljs.registerLanguage('python', python);
-
-	import 'highlight.js/styles/github-dark.css';
-
 	import AppSidebar from '$lib/components/app-sidebar.svelte';
 	import * as Breadcrumb from '$lib/components/ui/breadcrumb/index.js';
 	import { Separator } from '$lib/components/ui/separator/index.js';
