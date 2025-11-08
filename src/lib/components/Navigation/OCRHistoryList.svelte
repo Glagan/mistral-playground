@@ -9,6 +9,7 @@
 
 	const { mobile = false }: { mobile?: boolean } = $props();
 
+	let historyTotal = liveQuery(() => db.ocr.count());
 	let ocrHistory = liveQuery(() => db.ocr.reverse().toArray());
 
 	function onLoad(entry: ChatState | OCRState | TranscribeState) {
@@ -35,4 +36,4 @@
 	}
 </script>
 
-<NavHistory items={ocrHistory} {onLoad} {onDestroy} />
+<NavHistory mode="ocr" items={ocrHistory} total={historyTotal} {onLoad} {onDestroy} />

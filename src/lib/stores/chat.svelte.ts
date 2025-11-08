@@ -3,12 +3,14 @@ import type { ChatOptions, Usage, Message } from '../types';
 import { settings } from './settings';
 import { v7 as uuid } from 'uuid';
 import { models } from './models.svelte';
+import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type ChatState = {
 	id: string;
 	messages: Message[];
 	usage?: Usage;
 	options: ChatOptions;
+	createdAtTimestamp?: number;
 };
 
 export function defaultOptions(): ChatOptions {
@@ -27,7 +29,12 @@ export function defaultOptions(): ChatOptions {
 }
 
 export function createCurrent() {
-	const state: ChatState = $state({ id: uuid(), messages: [], options: defaultOptions() });
+	const state: ChatState = $state({
+		id: uuid(),
+		messages: [],
+		options: defaultOptions(),
+		createdAtTimestamp: Date.now()
+	});
 
 	function reset() {
 		state.id = uuid();
@@ -53,6 +60,7 @@ export function createCurrent() {
 			state.options.systemPrompt = state.messages[0].versions[state.messages[0].index].content[0].text as string;
 			state.messages.splice(0, 1);
 		}
+		state.createdAtTimestamp = entry.createdAtTimestamp ?? extractTimestampFromUUIDv7(entry.id);
 	}
 
 	return {

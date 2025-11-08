@@ -1,12 +1,14 @@
 import type { EmbeddingsOptions } from '../types';
 import { v7 as uuid } from 'uuid';
 import { models } from './models.svelte';
+import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type EmbeddingsState = {
 	id: string;
 	promptText: string;
 	result: number[];
 	options: EmbeddingsOptions;
+	createdAtTimestamp?: number;
 };
 
 function defaultOptions(): EmbeddingsOptions {
@@ -15,7 +17,13 @@ function defaultOptions(): EmbeddingsOptions {
 }
 
 export function createCurrent() {
-	const state: EmbeddingsState = $state({ id: uuid(), promptText: '', result: [], options: defaultOptions() });
+	const state: EmbeddingsState = $state({
+		id: uuid(),
+		promptText: '',
+		result: [],
+		options: defaultOptions(),
+		createdAtTimestamp: Date.now()
+	});
 
 	function reset() {
 		state.id = uuid();
@@ -29,6 +37,7 @@ export function createCurrent() {
 		state.promptText = entry.promptText;
 		state.result = entry.result;
 		state.options = entry.options;
+		state.createdAtTimestamp = entry.createdAtTimestamp ?? extractTimestampFromUUIDv7(entry.id);
 	}
 
 	return {

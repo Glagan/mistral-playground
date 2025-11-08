@@ -90,7 +90,8 @@
 			id: chat.state.id,
 			messages: JSON.parse(JSON.stringify(chat.state.messages)),
 			usage: chat.state.usage ? JSON.parse(JSON.stringify(chat.state.usage)) : undefined,
-			options: JSON.parse(JSON.stringify(chat.state.options))
+			options: JSON.parse(JSON.stringify(chat.state.options)),
+			createdAtTimestamp: Date.now()
 		});
 	}
 

@@ -39,6 +39,7 @@
 		settings: 'Settings',
 		transcribe: 'Transcribe',
 		about: 'About',
+		history: 'History',
 		'': 'Login'
 	};
 </script>

@@ -2,6 +2,7 @@ import type { OCROptions } from '../types';
 import { v7 as uuid } from 'uuid';
 import type { OCRPageObject, OCRUsageInfo } from '@mistralai/mistralai/models/components';
 import { models } from './models.svelte';
+import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type OCRState = {
 	id: string;
@@ -9,6 +10,7 @@ export type OCRState = {
 	pages: OCRPageObject[];
 	usage?: OCRUsageInfo;
 	options: OCROptions;
+	createdAtTimestamp?: number;
 };
 
 function defaultOptions(): OCROptions {
@@ -17,7 +19,13 @@ function defaultOptions(): OCROptions {
 }
 
 export function createCurrent() {
-	const state: OCRState = $state({ id: uuid(), filename: '', pages: [], options: defaultOptions() });
+	const state: OCRState = $state({
+		id: uuid(),
+		filename: '',
+		pages: [],
+		options: defaultOptions(),
+		createdAtTimestamp: Date.now()
+	});
 
 	function reset() {
 		resetResult();
@@ -37,6 +45,7 @@ export function createCurrent() {
 		state.options = entry.options;
 		state.usage = entry.usage;
 		state.pages = entry.pages;
+		state.createdAtTimestamp = entry.createdAtTimestamp ?? extractTimestampFromUUIDv7(entry.id);
 	}
 
 	return {

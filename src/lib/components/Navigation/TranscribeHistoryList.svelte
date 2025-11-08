@@ -9,6 +9,7 @@
 
 	const { mobile = false }: { mobile?: boolean } = $props();
 
+	let historyTotal = liveQuery(() => db.transcribe.count());
 	let transcribeHistory = liveQuery(() => db.transcribe.reverse().toArray());
 
 	function onLoad(entry: ChatState | OCRState | TranscribeState) {
@@ -35,4 +36,4 @@
 	}
 </script>
 
-<NavHistory items={transcribeHistory} {onLoad} {onDestroy} />
+<NavHistory mode="transcribe" items={transcribeHistory} total={historyTotal} {onLoad} {onDestroy} />
