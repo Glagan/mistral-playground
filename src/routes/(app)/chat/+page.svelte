@@ -2,7 +2,7 @@
 	import { fade } from 'svelte/transition';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Usage, Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
+	import type { Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Messages from '$lib/components/Chat/Messages.svelte';
@@ -15,10 +15,9 @@
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
-	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
+	import type { TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
@@ -35,6 +34,7 @@
 	import MessageSquareMoreIcon from '@lucide/svelte/icons/message-square-more';
 	import autosize from 'autosize';
 	import { extractErrorContent } from '$lib/utils/error';
+	import { generateChatMessage } from '$lib/generator';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -111,140 +111,37 @@
 	async function generate(messages: Message[], answer: AssistantMessage) {
 		const outputNode = document.getElementById('messages-container')?.parentElement;
 		loading = true;
+		error = null;
 
 		abortController = new AbortController();
 		const startedAt = performance.now();
+
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
-			const finalMessages: ChatCompletionStreamRequest['messages'] = messages.map((message) => {
-				// Useless condition to avoid type errors
-				if (message.role === 'user') {
-					return {
-						role: message.role,
-						content: message.versions[message.index].content
-					};
-				} else if (message.role === 'assistant') {
-					const content = message.versions[message.index].content;
-					if (chat.model.reasoning && message.versions[message.index].thinking) {
-						// Sadly we need to check for this model specifically to re-insert the <think> tag
-						if (chat.model.id === 'magistral-medium-2506') {
-							const firstChunkText = content.find((c) => c.type === 'text');
-							if (firstChunkText) {
-								firstChunkText.text = `<think>${message.versions[message.index].thinking}</think>\n${firstChunkText.text}`;
-							}
-						} else {
-							content.unshift({
-								type: 'thinking',
-								thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
-							});
-						}
-					}
-					return { role: message.role, content };
-				}
-				return {
-					role: message.role,
-					content: message.versions[message.index].content
-				};
-			});
-			if (chat.state.options.systemPrompt) {
-				finalMessages.unshift({ role: 'system', content: chat.state.options.systemPrompt! });
-			}
-			const chatStreamResponse = await client.chat.stream(
-				{
-					model: chat.state.options.model ? chat.state.options.model : defaultChatModel,
-					messages: finalMessages,
-					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
-					randomSeed: typeof chat.state.options.seed === 'number' ? chat.state.options.seed : undefined,
-					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
-					safePrompt: chat.state.options.safePrompt,
-					temperature: chat.state.options.temperature,
-					topP: chat.state.options.topP,
-					frequencyPenalty: chat.state.options.frequencyPenalty,
-					presencePenalty: chat.state.options.presencePenalty
+
+			await generateChatMessage({
+				client,
+				messages,
+				answer,
+				options: chat.state.options,
+				modelInfo: {
+					id: chat.model.id,
+					reasoning: chat.model.reasoning
 				},
-				{ fetchOptions: { signal: abortController.signal } }
-			);
-			if (chat.model.reasoning) {
-				answer.versions[answer.index].thinking = '';
-			}
-			let reasoningStep = chat.model.id === 'magistral-medium-2506' ? 0 : 2;
-			let reasoningBuffer = '';
-			for await (const message of chatStreamResponse) {
-				const data = message.data;
-				if (data.choices[0].delta.content !== undefined) {
-					const content = data.choices[0].delta.content;
-					if (Array.isArray(content)) {
-						for (let index = 0; index < content.length; index++) {
-							const entry = content[index];
-							if (entry.type === 'text') {
-								(answer.versions[answer.index].content[index] as TextChunk).text += entry.text;
-							} else if (entry.type === 'thinking') {
-								for (let j = 0; j < entry.thinking.length; j++) {
-									const block = entry.thinking[j];
-									if (block.type === 'text') {
-										answer.versions[answer.index].thinking += block.text;
-									} else {
-										console.log('unsupported content in chunk', entry, block);
-									}
-								}
-							} else {
-								console.log('unsupported chunk content', entry);
-							}
-						}
-					} else {
-						// If the model is reasoning (in the old way with <think> blocks), we add a special logic to convert it to the new way
-						if (chat.model.reasoning && reasoningStep < 2) {
-							if (!content) {
-								continue;
-							}
-							reasoningBuffer += content;
-							if (reasoningStep === 0) {
-								const start = reasoningBuffer.indexOf('<think>');
-								if (start >= 0) {
-									reasoningBuffer = reasoningBuffer.slice(start + 7).trim();
-									reasoningStep = 1;
-									if (reasoningBuffer.length) {
-										answer.versions[answer.index].thinking = reasoningBuffer;
-									}
-								}
-							} else if (reasoningStep === 1) {
-								const end = reasoningBuffer.indexOf('</think>');
-								if (end >= 0) {
-									answer.versions[answer.index].thinking += reasoningBuffer.slice(0, end);
-									answer.versions[answer.index].thinking = answer.versions[answer.index].thinking?.trim();
-									reasoningStep = 2;
-									reasoningBuffer = reasoningBuffer.slice(end + 8).trim();
-									if (reasoningBuffer.length) {
-										(answer.versions[answer.index].content[0] as TextChunk).text += reasoningBuffer;
-									}
-								} else {
-									answer.versions[answer.index].thinking += content;
-								}
-							}
-						} else {
-							(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
-						}
+				abortSignal: abortController.signal,
+				callbacks: {
+					onChunk: () => {
+						scrollDown(outputNode);
+					},
+					onComplete: (usage) => {
+						const completionTime = performance.now() - startedAt;
+						chat.state.usage = usage;
+						chat.state.usage.tps = Math.round(usage.completionTokens / (completionTime / 1000));
+						emitter.emit('message:complete');
+						scrollDown(outputNode);
 					}
 				}
-				if (data.usage) {
-					const completionTime = performance.now() - startedAt;
-					chat.state.usage = {
-						promptTokens: data.usage.promptTokens ?? 0,
-						completionTokens: data.usage.completionTokens ?? 0,
-						totalTokens: data.usage.totalTokens ?? 0
-					};
-					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
-				}
-				scrollDown(outputNode);
-			}
-			if (!abortController.signal.aborted) {
-				if (chat.state.options.json && answer.versions[answer.index].content[0].type === 'text') {
-					(answer.versions[answer.index].content[0] as TextChunk).text =
-						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
-				}
-			}
-			emitter.emit('message:complete');
-			scrollDown(outputNode);
+			});
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors
