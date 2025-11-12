@@ -14,14 +14,17 @@
 	import ShareModal from '$lib/components/File/ShareModal.svelte';
 	import ExportModal from '$lib/components/File/ExportModal.svelte';
 	import { chat } from '$lib/stores/chat.svelte';
+	import { comparison } from '$lib/stores/comparison.svelte';
 	import MessageCirclePlusIcon from '@lucide/svelte/icons/message-circle-plus';
 	import { ocr } from '$lib/stores/ocr.svelte';
 	import ScanSearchIcon from '@lucide/svelte/icons/scan-search';
 	import { embeddings } from '$lib/stores/embeddings.svelte';
 	import SquareTerminalIcon from '@lucide/svelte/icons/square-terminal';
 	import MicIcon from '@lucide/svelte/icons/mic';
+	import ColumnsIcon from '@lucide/svelte/icons/columns-2';
 	import { ModeWatcher } from 'mode-watcher';
 	import { transcribe } from '$lib/stores/transcribe.svelte';
+	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 
 	const { data, children } = $props();
 
@@ -32,6 +35,7 @@
 
 	const pages: Record<string, string> = {
 		chat: 'Chat',
+		'chat/compare': 'Compare',
 		ocr: 'OCR',
 		embeddings: 'Embeddings',
 		shared: 'Shared chats',
@@ -65,20 +69,49 @@
 						</Breadcrumb.Item>
 						<Breadcrumb.Separator class="hidden md:block" />
 						<Breadcrumb.Item>
-							<Breadcrumb.Page>{pages[page.url.pathname.split('/')[1]]}</Breadcrumb.Page>
+							<Breadcrumb.Page>{pages[page.url.pathname.split('/').slice(1).join('/')]}</Breadcrumb.Page>
 						</Breadcrumb.Item>
 					</Breadcrumb.List>
 				</Breadcrumb.Root>
 			</div>
-			{#if page.url.pathname === '/chat' || page.url.pathname === '/ocr' || page.url.pathname === '/embeddings' || page.url.pathname === '/transcribe'}
+			{#if page.url.pathname.startsWith('/chat') || page.url.pathname === '/ocr' || page.url.pathname === '/embeddings' || page.url.pathname === '/transcribe'}
 				<div class="flex flex-row gap-2 px-4">
 					{#if page.url.pathname === '/chat'}
-						<Button variant="secondary" onclick={() => chat.reset()}>
+						<Button
+							variant="secondary"
+							onclick={() => {
+								chat.reset();
+							}}
+						>
 							<MessageCirclePlusIcon />
 							<span class="hidden lg:inline">New chat</span>
 						</Button>
+						<Button href="/chat/compare" variant="secondary">
+							<ColumnsIcon />
+							<span class="hidden lg:inline">Compare</span>
+						</Button>
 						<ExportModal />
 						<ShareModal />
+					{:else if page.url.pathname === '/chat/compare'}
+						<Button
+							variant="secondary"
+							onclick={() => {
+								comparison.reset();
+							}}
+						>
+							<MessageCirclePlusIcon />
+							<span class="hidden lg:inline">New chat</span>
+						</Button>
+						<Button
+							href="/chat"
+							variant="secondary"
+							onclick={() => {
+								chat.reset();
+							}}
+						>
+							<ChevronLeftIcon />
+							<span class="hidden lg:inline">Exit</span>
+						</Button>
 					{:else if page.url.pathname === '/ocr'}
 						<Button variant="secondary" onclick={() => ocr.reset()}>
 							<ScanSearchIcon />

@@ -43,6 +43,12 @@ export function createCurrent() {
 		state.messages = [];
 	}
 
+	function asNewChat() {
+		state.id = uuid();
+		state.createdAtTimestamp = Date.now();
+		state.usage = undefined;
+	}
+
 	function setFromEntry(entry: ChatState) {
 		state.id = entry.id;
 		state.options = entry.options;
@@ -67,6 +73,7 @@ export function createCurrent() {
 		state,
 		defaultOptions,
 		setFromEntry,
+		asNewChat,
 		reset,
 		get model() {
 			return models.byName[state.options.model];
@@ -86,4 +93,5 @@ export function createCurrent() {
 	};
 }
 
+export type ChatStore = ReturnType<typeof createCurrent>;
 export const chat = createCurrent();

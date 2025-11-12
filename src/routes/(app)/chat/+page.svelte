@@ -9,6 +9,7 @@
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
+	import { comparison } from '$lib/stores/comparison.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import FileUpIcon from '@lucide/svelte/icons/file-up';
@@ -25,16 +26,16 @@
 	import SendHorizontalIcon from '@lucide/svelte/icons/send-horizontal';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import Options from './Options.svelte';
+	import Options from '$lib/components/Chat/Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { emitter } from '$lib/emitter';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
-	import MessageSquareMoreIcon from '@lucide/svelte/icons/message-square-more';
 	import autosize from 'autosize';
 	import { extractErrorContent } from '$lib/utils/error';
 	import { generateChatMessage } from '$lib/generator';
+	import EmptyState from '$lib/components/Chat/EmptyState.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -447,7 +448,7 @@
 </script>
 
 <div class="flex max-h-[calc(100svh-80px)] shrink grow flex-row gap-0">
-	<Options class="hidden lg:flex" />
+	<Options bind:options={chat.state.options} class="hidden lg:flex lg:w-[25vw] lg:max-w-[25vw]" />
 	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-2 lg:px-4">
 			{#if chat.state.messages.length}
@@ -468,13 +469,7 @@
 					{error}
 				/>
 			{:else}
-				<div
-					class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-3 text-center"
-					style="background: radial-gradient(circle,rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 30%) ;"
-				>
-					<MessageSquareMoreIcon size={52} />
-					<p class="text-muted-foreground leading-7">Your messages will appear here...</p>
-				</div>
+				<EmptyState />
 			{/if}
 		</div>
 		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
@@ -530,7 +525,7 @@
 					/>
 					{#if isDragging}
 						<div
-							class="dropzone textarea !border-primary-500 rounded-container-token absolute top-0 right-0 bottom-0 left-0 flex flex-row items-center gap-2 border-2 border-dashed p-4 py-4"
+							class="dropzone textarea border-primary-500! rounded-container-token absolute top-0 right-0 bottom-0 left-0 flex flex-row items-center gap-2 border-2 border-dashed p-4 py-4"
 						>
 							<div class="shrink-0 grow-0">
 								<FileTextIcon class="mx-auto" size="32" />
@@ -559,7 +554,7 @@
 							<SlidersHorizontalIcon size={20} />
 						</Drawer.Trigger>
 						<Drawer.Content class="flex max-h-screen overflow-auto p-4">
-							<Options />
+							<Options bind:options={chat.state.options} />
 						</Drawer.Content>
 					</Drawer.Root>
 					{#if chat.model?.capabilities.vision}
