@@ -7,7 +7,8 @@
 	import type { OCRState } from '$lib/stores/ocr.svelte';
 	import type { TranscribeState } from '$lib/stores/transcribe.svelte';
 
-	let chatHistory = liveQuery(() => db.chat.reverse().toArray());
+	let historyTotal = liveQuery(() => db.chat.count());
+	let chatHistory = liveQuery(() => db.chat.limit(20).reverse().toArray());
 
 	function onLoad(entry: ChatState | OCRState | TranscribeState) {
 		if ('pages' in entry || 'text' in entry) {
@@ -33,4 +34,4 @@
 	}
 </script>
 
-<NavHistory items={chatHistory} {onLoad} {onDestroy} />
+<NavHistory mode="chat" items={chatHistory} total={historyTotal} {onLoad} {onDestroy} />

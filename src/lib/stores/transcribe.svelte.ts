@@ -2,6 +2,7 @@ import type { TranscribeOptions } from '../types';
 import { v7 as uuid } from 'uuid';
 import { models } from './models.svelte';
 import type { TranscriptionSegmentChunk, UsageInfo } from '@mistralai/mistralai/models/components';
+import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type TranscribeState = {
 	id: string;
@@ -11,6 +12,7 @@ export type TranscribeState = {
 	segments: TranscriptionSegmentChunk[];
 	usage?: UsageInfo;
 	options: TranscribeOptions;
+	createdAtTimestamp?: number;
 };
 
 function defaultOptions(): TranscribeOptions {
@@ -24,7 +26,8 @@ export function createCurrent() {
 		text: '',
 		language: null,
 		segments: [],
-		options: defaultOptions()
+		options: defaultOptions(),
+		createdAtTimestamp: Date.now()
 	});
 
 	function reset() {
@@ -49,6 +52,7 @@ export function createCurrent() {
 		state.segments = entry.segments;
 		state.usage = entry.usage;
 		state.options = entry.options;
+		state.createdAtTimestamp = entry.createdAtTimestamp ?? extractTimestampFromUUIDv7(entry.id);
 	}
 
 	return {

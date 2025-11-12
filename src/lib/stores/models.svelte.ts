@@ -111,6 +111,8 @@ export async function loadModels() {
 		const client = getClientForRequest({ apiKey: get(apiKey), endpoint: get(settings).endpoint });
 		const response = await client.models.list();
 		models.list = response.data ?? [];
+		// De-duplicate models since the API returns duplicate by ID for some reasons...
+		models.list = models.list.filter((model, index) => models.list.findIndex((m) => m.id === model.id) === index);
 		models.byName = {};
 		for (let index = 0; index < models.list.length; index++) {
 			const model = models.list[index];

@@ -2,23 +2,23 @@
 	import { fade } from 'svelte/transition';
 	import { get_encoding } from 'tiktoken';
 	import { apiKey } from '$lib/stores/apiKey';
-	import type { Usage, Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
+	import type { Message, AssistantMessage, MessageRole, MessageContent } from '$lib/types';
 	import { goto } from '$app/navigation';
 	import { browser } from '$app/environment';
 	import Messages from '$lib/components/Chat/Messages.svelte';
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
+	import { comparison } from '$lib/stores/comparison.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import FileUpIcon from '@lucide/svelte/icons/file-up';
 	import { loadModels, models } from '$lib/stores/models.svelte';
 	import { getClientForRequest } from '$lib/mistral';
 	import ModelError from '$lib/components/ModelError.svelte';
-	import { defaultChatModel } from '$lib/const';
 	import { fileToB64, handleFileUpload, mimeTypesAccept } from '$lib/files';
 	import FileUploadPreview from '$lib/components/File/UploadPreview.svelte';
-	import type { ChatCompletionStreamRequest, TextChunk } from '@mistralai/mistralai/models/components';
+	import type { TextChunk } from '@mistralai/mistralai/models/components';
 	import { editing } from '$lib/stores/editing.svelte';
 	import { db } from '$lib/stores/db';
 	import { toast } from 'svelte-sonner';
@@ -26,15 +26,16 @@
 	import SendHorizontalIcon from '@lucide/svelte/icons/send-horizontal';
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import Badge from '$lib/components/ui/badge/badge.svelte';
-	import Options from './Options.svelte';
+	import Options from '$lib/components/Chat/Options.svelte';
 	import * as Drawer from '$lib/components/ui/drawer/index.js';
 	import SlidersHorizontalIcon from '@lucide/svelte/icons/sliders-horizontal';
 	import { emitter } from '$lib/emitter';
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
-	import MessageSquareMoreIcon from '@lucide/svelte/icons/message-square-more';
 	import autosize from 'autosize';
 	import { extractErrorContent } from '$lib/utils/error';
+	import { generateChatMessage } from '$lib/generator';
+	import EmptyState from '$lib/components/Chat/EmptyState.svelte';
 
 	if (browser && !$apiKey) {
 		goto('/', { replaceState: true });
@@ -90,7 +91,8 @@
 			id: chat.state.id,
 			messages: JSON.parse(JSON.stringify(chat.state.messages)),
 			usage: chat.state.usage ? JSON.parse(JSON.stringify(chat.state.usage)) : undefined,
-			options: JSON.parse(JSON.stringify(chat.state.options))
+			options: JSON.parse(JSON.stringify(chat.state.options)),
+			createdAtTimestamp: Date.now()
 		});
 	}
 
@@ -110,140 +112,37 @@
 	async function generate(messages: Message[], answer: AssistantMessage) {
 		const outputNode = document.getElementById('messages-container')?.parentElement;
 		loading = true;
+		error = null;
 
 		abortController = new AbortController();
 		const startedAt = performance.now();
+
 		try {
 			const client = getClientForRequest({ apiKey: $apiKey, endpoint: $settings.endpoint });
-			const finalMessages: ChatCompletionStreamRequest['messages'] = messages.map((message) => {
-				// Useless condition to avoid type errors
-				if (message.role === 'user') {
-					return {
-						role: message.role,
-						content: message.versions[message.index].content
-					};
-				} else if (message.role === 'assistant') {
-					const content = message.versions[message.index].content;
-					if (chat.model.reasoning && message.versions[message.index].thinking) {
-						// Sadly we need to check for this model specifically to re-insert the <think> tag
-						if (chat.model.id === 'magistral-medium-2506') {
-							const firstChunkText = content.find((c) => c.type === 'text');
-							if (firstChunkText) {
-								firstChunkText.text = `<think>${message.versions[message.index].thinking}</think>\n${firstChunkText.text}`;
-							}
-						} else {
-							content.unshift({
-								type: 'thinking',
-								thinking: [{ type: 'text', text: message.versions[message.index].thinking! }]
-							});
-						}
-					}
-					return { role: message.role, content };
-				}
-				return {
-					role: message.role,
-					content: message.versions[message.index].content
-				};
-			});
-			if (chat.state.options.systemPrompt) {
-				finalMessages.unshift({ role: 'system', content: chat.state.options.systemPrompt! });
-			}
-			const chatStreamResponse = await client.chat.stream(
-				{
-					model: chat.state.options.model ? chat.state.options.model : defaultChatModel,
-					messages: finalMessages,
-					maxTokens: typeof chat.state.options.maxTokens === 'number' ? chat.state.options.maxTokens : undefined,
-					randomSeed: typeof chat.state.options.seed === 'number' ? chat.state.options.seed : undefined,
-					responseFormat: chat.state.options.json ? { type: 'json_object' } : undefined,
-					safePrompt: chat.state.options.safePrompt,
-					temperature: chat.state.options.temperature,
-					topP: chat.state.options.topP,
-					frequencyPenalty: chat.state.options.frequencyPenalty,
-					presencePenalty: chat.state.options.presencePenalty
+
+			await generateChatMessage({
+				client,
+				messages,
+				answer,
+				options: chat.state.options,
+				modelInfo: {
+					id: chat.model.id,
+					reasoning: chat.model.reasoning
 				},
-				{ fetchOptions: { signal: abortController.signal } }
-			);
-			if (chat.model.reasoning) {
-				answer.versions[answer.index].thinking = '';
-			}
-			let reasoningStep = chat.model.id === 'magistral-medium-2506' ? 0 : 2;
-			let reasoningBuffer = '';
-			for await (const message of chatStreamResponse) {
-				const data = message.data;
-				if (data.choices[0].delta.content !== undefined) {
-					const content = data.choices[0].delta.content;
-					if (Array.isArray(content)) {
-						for (let index = 0; index < content.length; index++) {
-							const entry = content[index];
-							if (entry.type === 'text') {
-								(answer.versions[answer.index].content[index] as TextChunk).text += entry.text;
-							} else if (entry.type === 'thinking') {
-								for (let j = 0; j < entry.thinking.length; j++) {
-									const block = entry.thinking[j];
-									if (block.type === 'text') {
-										answer.versions[answer.index].thinking += block.text;
-									} else {
-										console.log('unsupported content in chunk', entry, block);
-									}
-								}
-							} else {
-								console.log('unsupported chunk content', entry);
-							}
-						}
-					} else {
-						// If the model is reasoning (in the old way with <think> blocks), we add a special logic to convert it to the new way
-						if (chat.model.reasoning && reasoningStep < 2) {
-							if (!content) {
-								continue;
-							}
-							reasoningBuffer += content;
-							if (reasoningStep === 0) {
-								const start = reasoningBuffer.indexOf('<think>');
-								if (start >= 0) {
-									reasoningBuffer = reasoningBuffer.slice(start + 7).trim();
-									reasoningStep = 1;
-									if (reasoningBuffer.length) {
-										answer.versions[answer.index].thinking = reasoningBuffer;
-									}
-								}
-							} else if (reasoningStep === 1) {
-								const end = reasoningBuffer.indexOf('</think>');
-								if (end >= 0) {
-									answer.versions[answer.index].thinking += reasoningBuffer.slice(0, end);
-									answer.versions[answer.index].thinking = answer.versions[answer.index].thinking?.trim();
-									reasoningStep = 2;
-									reasoningBuffer = reasoningBuffer.slice(end + 8).trim();
-									if (reasoningBuffer.length) {
-										(answer.versions[answer.index].content[0] as TextChunk).text += reasoningBuffer;
-									}
-								} else {
-									answer.versions[answer.index].thinking += content;
-								}
-							}
-						} else {
-							(answer.versions[answer.index].content[0] as TextChunk).text += content ?? '';
-						}
+				abortSignal: abortController.signal,
+				callbacks: {
+					onChunk: () => {
+						scrollDown(outputNode);
+					},
+					onComplete: (usage) => {
+						const completionTime = performance.now() - startedAt;
+						chat.state.usage = usage;
+						chat.state.usage.tps = Math.round(usage.completionTokens / (completionTime / 1000));
+						emitter.emit('message:complete');
+						scrollDown(outputNode);
 					}
 				}
-				if (data.usage) {
-					const completionTime = performance.now() - startedAt;
-					chat.state.usage = {
-						promptTokens: data.usage.promptTokens ?? 0,
-						completionTokens: data.usage.completionTokens ?? 0,
-						totalTokens: data.usage.totalTokens ?? 0
-					};
-					chat.state.usage.tps = Math.round(Number((data.usage as Usage).completionTokens / (completionTime / 1000)));
-				}
-				scrollDown(outputNode);
-			}
-			if (!abortController.signal.aborted) {
-				if (chat.state.options.json && answer.versions[answer.index].content[0].type === 'text') {
-					(answer.versions[answer.index].content[0] as TextChunk).text =
-						`\`\`\`json\n${JSON.stringify(JSON.parse((answer.versions[answer.index].content[0] as TextChunk).text), undefined, 4)}\n\`\`\``;
-				}
-			}
-			emitter.emit('message:complete');
-			scrollDown(outputNode);
+			});
 		} catch (__error) {
 			const _error = __error as Error;
 			// Ignore abort errors
@@ -549,7 +448,7 @@
 </script>
 
 <div class="flex max-h-[calc(100svh-80px)] shrink grow flex-row gap-0">
-	<Options class="hidden lg:flex" />
+	<Options bind:options={chat.state.options} class="hidden lg:flex lg:w-[25vw] lg:max-w-[25vw]" />
 	<div class="relative flex h-full w-[calc(75vw-4rem-var(--sidebar-width))] flex-1 flex-col gap-4">
 		<div class="flex-1 overflow-y-auto px-2 lg:px-4">
 			{#if chat.state.messages.length}
@@ -570,13 +469,7 @@
 					{error}
 				/>
 			{:else}
-				<div
-					class="text-muted-foreground flex h-full w-full flex-col items-center justify-center gap-3 text-center"
-					style="background: radial-gradient(circle,rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 30%) ;"
-				>
-					<MessageSquareMoreIcon size={52} />
-					<p class="text-muted-foreground leading-7">Your messages will appear here...</p>
-				</div>
+				<EmptyState />
 			{/if}
 		</div>
 		<form class="flex shrink-0 flex-col gap-2 lg:px-4" onsubmit={onSubmit}>
@@ -632,7 +525,7 @@
 					/>
 					{#if isDragging}
 						<div
-							class="dropzone textarea !border-primary-500 rounded-container-token absolute top-0 right-0 bottom-0 left-0 flex flex-row items-center gap-2 border-2 border-dashed p-4 py-4"
+							class="dropzone textarea border-primary-500! rounded-container-token absolute top-0 right-0 bottom-0 left-0 flex flex-row items-center gap-2 border-2 border-dashed p-4 py-4"
 						>
 							<div class="shrink-0 grow-0">
 								<FileTextIcon class="mx-auto" size="32" />
@@ -661,7 +554,7 @@
 							<SlidersHorizontalIcon size={20} />
 						</Drawer.Trigger>
 						<Drawer.Content class="flex max-h-screen overflow-auto p-4">
-							<Options />
+							<Options bind:options={chat.state.options} />
 						</Drawer.Content>
 					</Drawer.Root>
 					{#if chat.model?.capabilities.vision}
