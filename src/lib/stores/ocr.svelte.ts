@@ -6,6 +6,7 @@ import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type OCRState = {
 	id: string;
+	favorite?: boolean;
 	filename: string;
 	pages: OCRPageObject[];
 	usage?: OCRUsageInfo;
@@ -21,6 +22,7 @@ function defaultOptions(): OCROptions {
 export function createCurrent() {
 	const state: OCRState = $state({
 		id: uuid(),
+		favorite: false,
 		filename: '',
 		pages: [],
 		options: defaultOptions(),
@@ -34,6 +36,7 @@ export function createCurrent() {
 
 	function resetResult() {
 		state.id = uuid();
+		state.favorite = false;
 		state.filename = '';
 		state.usage = undefined;
 		state.pages = [];
@@ -41,6 +44,7 @@ export function createCurrent() {
 
 	function setFromEntry(entry: OCRState) {
 		state.id = entry.id;
+		state.favorite = entry.favorite;
 		state.filename = entry.filename;
 		state.options = entry.options;
 		state.usage = entry.usage;

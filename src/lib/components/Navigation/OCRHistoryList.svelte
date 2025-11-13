@@ -25,6 +25,13 @@
 		});
 	}
 
+	async function onFavorite(entry: ChatState | OCRState | TranscribeState) {
+		if (!('pages' in entry)) {
+			return;
+		}
+		await db.ocr.update(entry.id, { favorite: !entry.favorite });
+	}
+
 	async function onDestroy(entry: ChatState | OCRState | TranscribeState) {
 		if (!('pages' in entry)) {
 			return;
@@ -36,4 +43,4 @@
 	}
 </script>
 
-<NavHistory mode="ocr" items={ocrHistory} total={historyTotal} {onLoad} {onDestroy} />
+<NavHistory mode="ocr" items={ocrHistory} total={historyTotal} {onLoad} {onFavorite} {onDestroy} />

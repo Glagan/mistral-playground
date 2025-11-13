@@ -19,7 +19,6 @@
 	import { apiKey } from '$lib/stores/apiKey';
 	import { settings } from '$lib/stores/settings';
 	import { models } from '$lib/stores/models.svelte';
-	import { db } from '$lib/stores/db';
 	import { extractErrorContent } from '$lib/utils/error';
 	import { emitter } from '$lib/emitter';
 	import { get_encoding } from 'tiktoken';
@@ -27,8 +26,6 @@
 	import * as Alert from '$lib/components/ui/alert/index.js';
 	import AlertCircleIcon from '@lucide/svelte/icons/alert-circle';
 	import ArrowBigLeftIcon from '@lucide/svelte/icons/arrow-big-left';
-	import RefreshCw from '@lucide/svelte/icons/refresh-cw';
-	import RefreshCwOff from '@lucide/svelte/icons/refresh-cw-off';
 	import ModelError from '$lib/components/ModelError.svelte';
 	import EmptyState from '$lib/components/Chat/EmptyState.svelte';
 	import type { ChatStore } from '$lib/stores/chat.svelte';
@@ -84,16 +81,6 @@
 		}
 	}
 
-	async function updateOrInsertHistory(chatInstance: ChatStore) {
-		await db.chat.put({
-			id: chatInstance.state.id,
-			messages: JSON.parse(JSON.stringify(chatInstance.state.messages)),
-			usage: chatInstance.state.usage ? JSON.parse(JSON.stringify(chatInstance.state.usage)) : undefined,
-			options: JSON.parse(JSON.stringify(chatInstance.state.options)),
-			createdAtTimestamp: Date.now()
-		});
-	}
-
 	async function generate(messages: Message[], answer: AssistantMessage, chatInstance: ChatStore, side: 'a' | 'b') {
 		const outputNode = document.getElementById(`messages-container-${side}`);
 		sides[side].loading = true;
@@ -145,9 +132,6 @@
 			}
 		} finally {
 			sides[side].loading = false;
-			if (chatInstance.state.messages.length) {
-				await updateOrInsertHistory(chatInstance);
-			}
 		}
 	}
 

@@ -18,6 +18,7 @@
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import ChevronLeftIcon from '@lucide/svelte/icons/chevron-left';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
+	import StarIcon from '@lucide/svelte/icons/star';
 
 	import ConfirmDialog from '$lib/components/Dialog/ConfirmDialog.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
@@ -94,6 +95,16 @@
 		} else {
 			chat.setFromEntry(entry);
 			goto('/chat');
+		}
+	}
+
+	async function favoriteEntry(entry: ChatState | OCRState | TranscribeState) {
+		if ('pages' in entry) {
+			await db.ocr.update(entry.id, { favorite: !entry.favorite });
+		} else if ('text' in entry) {
+			await db.transcribe.update(entry.id, { favorite: !entry.favorite });
+		} else {
+			await db.chat.update(entry.id, { favorite: !entry.favorite });
 		}
 	}
 
@@ -190,6 +201,9 @@
 										<Button onclick={() => loadEntry(entry)}>
 											<FileTextIcon size={16} />
 											<span>Open</span>
+										</Button>
+										<Button variant="outline" onclick={() => favoriteEntry(entry)}>
+											<StarIcon size={12} class="text-yellow-400 {entry.favorite ? 'fill-yellow-400' : ''}" />
 										</Button>
 										<ConfirmDialog
 											title="Confirm deletion"
