@@ -6,6 +6,7 @@ import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type TranscribeState = {
 	id: string;
+	favorite?: boolean;
 	filename: string;
 	text: string;
 	language: string | null;
@@ -22,6 +23,7 @@ function defaultOptions(): TranscribeOptions {
 export function createCurrent() {
 	const state: TranscribeState = $state({
 		id: uuid(),
+		favorite: false,
 		filename: '',
 		text: '',
 		language: null,
@@ -37,6 +39,7 @@ export function createCurrent() {
 
 	function resetResult() {
 		state.id = uuid();
+		state.favorite = false;
 		state.filename = '';
 		state.text = '';
 		state.language = null;
@@ -46,6 +49,7 @@ export function createCurrent() {
 
 	function setFromEntry(entry: TranscribeState) {
 		state.id = entry.id;
+		state.favorite = entry.favorite;
 		state.filename = entry.filename;
 		state.text = entry.text;
 		state.language = entry.language;

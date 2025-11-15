@@ -19,8 +19,8 @@ export const db = new Dexie('MistralPlayground') as Dexie & {
 
 // Schema declaration:
 db.version(1).stores({
-	chat: '++id, messages, usage, options, createdAt',
-	ocr: '++id, filename, pages, usage, options, createdAt',
-	transcribe: '++id, filename, text, language, segments, usage, options, createdAt',
+	chat: '++id, favorite, messages, usage, options, createdAt',
+	ocr: '++id, favorite, filename, pages, usage, options, createdAt',
+	transcribe: '++id, favorite, filename, text, language, segments, usage, options, createdAt',
 	share: '++id, title, deletionKey, createdAt'
 });

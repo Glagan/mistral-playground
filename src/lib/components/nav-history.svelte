@@ -7,6 +7,7 @@
 	import type { Observable } from 'dexie';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
+	import StarIcon from '@lucide/svelte/icons/star';
 	import HistoryIcon from '@lucide/svelte/icons/history';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import type { TranscribeState } from '$lib/stores/transcribe.svelte';
@@ -17,60 +18,88 @@
 		items,
 		total,
 		onLoad,
+		onFavorite,
 		onDestroy
 	}: {
 		mode: HistoryType;
 		items: Observable<OCRState[] | ChatState[] | TranscribeState[]>;
 		total: Observable<number>;
 		onLoad: (item: OCRState | ChatState | TranscribeState) => void;
+		onFavorite: (item: OCRState | ChatState | TranscribeState) => void;
 		onDestroy: (item: OCRState | ChatState | TranscribeState) => void;
 	} = $props();
 
 	const sidebar = Sidebar.useSidebar();
 
+	const favorites = $derived($items?.filter((item) => item.favorite) ?? []);
 	const groupedItems = $derived(groupByDate($items));
 </script>
 
+{#snippet itemComponent(item: OCRState | ChatState | TranscribeState, props: Record<string, unknown>)}
+	{@const title = 'filename' in item ? item.filename : (findFirstTextNode(item.messages)?.text ?? '')}
+	<Sidebar.MenuItem {...props}>
+		<Sidebar.MenuButton tooltipContent={title} isActive={item.id === chat.state.id || item.id === ocr.state.id}>
+			{#snippet child({ props })}
+				<div
+					{...props}
+					class={['group/row', props.class ?? '']}
+					onclick={() => {
+						onLoad(item);
+						sidebar.closeOnMedium();
+					}}
+				>
+					<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
+					<div
+						class="flex w-10 shrink-0 flex-row gap-2 overflow-hidden transition-all group-hover/row:w-10 group-data-[active=true]/row:w-10 xl:w-0"
+					>
+						<Button
+							variant="ghost"
+							class="cursor-pointer p-0 px-0!"
+							onclick={(event) => {
+								event.preventDefault();
+								event.stopPropagation();
+								onFavorite(item);
+							}}
+						>
+							<StarIcon size={12} class="text-yellow-400 {item.favorite ? 'fill-yellow-400' : ''}" />
+						</Button>
+						<Button
+							variant="ghost"
+							class="cursor-pointer p-0 px-0!"
+							onclick={(event) => {
+								event.preventDefault();
+								event.stopPropagation();
+								onDestroy(item);
+							}}
+						>
+							<Trash2Icon size={12} class="text-red-400" />
+						</Button>
+					</div>
+				</div>
+			{/snippet}
+		</Sidebar.MenuButton>
+	</Sidebar.MenuItem>
+{/snippet}
+
 <Sidebar.Group>
+	{#if favorites.length}
+		<Sidebar.GroupLabel>Favorites</Sidebar.GroupLabel>
+		{#each favorites as item (item.id)}
+			<Collapsible.Root open>
+				{#snippet child({ props })}
+					{@render itemComponent(item, props)}
+				{/snippet}
+			</Collapsible.Root>
+		{/each}
+		<div class="mb-4"></div>
+	{/if}
 	<Sidebar.GroupLabel>History</Sidebar.GroupLabel>
 	{#each groupedItems as group (group.dateKey)}
 		<Sidebar.GroupLabel>{group.label}</Sidebar.GroupLabel>
-		{#each group.items as mainItem (mainItem.id)}
-			{@const title = 'filename' in mainItem ? mainItem.filename : (findFirstTextNode(mainItem.messages)?.text ?? '')}
+		{#each group.items as item (item.id)}
 			<Collapsible.Root open>
 				{#snippet child({ props })}
-					<Sidebar.MenuItem {...props}>
-						<Sidebar.MenuButton
-							tooltipContent={title}
-							isActive={mainItem.id === chat.state.id || mainItem.id === ocr.state.id}
-						>
-							{#snippet child({ props })}
-								<div
-									{...props}
-									class={['group/row', props.class ?? '']}
-									onclick={() => {
-										onLoad(mainItem);
-										sidebar.closeOnMedium();
-									}}
-								>
-									<span class="min-w-6 shrink grow cursor-pointer truncate">{title}</span>
-									<div class="w-8 shrink transition-all group-hover/row:w-8 group-data-[active=true]/row:w-8 xl:w-0">
-										<Button
-											variant="ghost"
-											class="cursor-pointer"
-											onclick={(event) => {
-												event.preventDefault();
-												event.stopPropagation();
-												onDestroy(mainItem);
-											}}
-										>
-											<Trash2Icon size={12} class="text-red-400" />
-										</Button>
-									</div>
-								</div>
-							{/snippet}
-						</Sidebar.MenuButton>
-					</Sidebar.MenuItem>
+					{@render itemComponent(item, props)}
 				{/snippet}
 			</Collapsible.Root>
 		{/each}

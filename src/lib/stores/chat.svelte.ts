@@ -7,6 +7,7 @@ import { extractTimestampFromUUIDv7 } from '$lib/utils/uuid';
 
 export type ChatState = {
 	id: string;
+	favorite?: boolean;
 	messages: Message[];
 	usage?: Usage;
 	options: ChatOptions;
@@ -38,6 +39,7 @@ export function createCurrent() {
 
 	function reset() {
 		state.id = uuid();
+		state.favorite = false;
 		state.options = defaultOptions();
 		state.usage = undefined;
 		state.messages = [];
@@ -45,12 +47,14 @@ export function createCurrent() {
 
 	function asNewChat() {
 		state.id = uuid();
+		state.favorite = false;
 		state.createdAtTimestamp = Date.now();
 		state.usage = undefined;
 	}
 
 	function setFromEntry(entry: ChatState) {
 		state.id = entry.id;
+		state.favorite = entry.favorite;
 		state.options = entry.options;
 		// Add new options
 		if (state.options.frequencyPenalty === undefined) {

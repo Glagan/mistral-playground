@@ -9,7 +9,6 @@
 	import { settings } from '$lib/stores/settings';
 	import { onDestroy, onMount, tick } from 'svelte';
 	import { chat } from '$lib/stores/chat.svelte';
-	import { comparison } from '$lib/stores/comparison.svelte';
 	import { v7 as uuid } from 'uuid';
 	import FileTextIcon from '@lucide/svelte/icons/file-text';
 	import FileUpIcon from '@lucide/svelte/icons/file-up';
