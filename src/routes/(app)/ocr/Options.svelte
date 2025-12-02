@@ -42,10 +42,10 @@
 					<Command.Input placeholder="Search model..." />
 					<Command.List>
 						<Command.Empty>No model found.</Command.Empty>
-						{#each Object.entries(models.ocrGroups) as [groupName, items]}
+						{#each models.ocrGroups as group (group.name)}
 							<Command.Group>
-								<Select.Label>{groupName}</Select.Label>
-								{#each items as item (item.id)}
+								<Select.Label>{group.name}</Select.Label>
+								{#each group.models as item (item.id)}
 									<Command.Item
 										value={item.id}
 										onSelect={() => {

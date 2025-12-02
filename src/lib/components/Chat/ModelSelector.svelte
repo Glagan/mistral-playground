@@ -40,10 +40,10 @@
 			<Command.Input placeholder="Search model..." />
 			<Command.List>
 				<Command.Empty>No model found.</Command.Empty>
-				{#each Object.entries(models.chatGroups) as [groupName, items]}
+				{#each models.chatGroups as group (group.name)}
 					<Command.Group>
-						<Select.Label>{groupName}</Select.Label>
-						{#each items as item (item.id)}
+						<Select.Label>{group.name}</Select.Label>
+						{#each group.models as item (item.id)}
 							<Tooltip.Provider delayDuration={0}>
 								<Tooltip.Root>
 									<Tooltip.Trigger class="block w-full">
