@@ -2,6 +2,9 @@
 	import type { Message } from '$lib/types';
 	import FileMessagePreview from '$lib/components/File/MessagePreview.svelte';
 	import { Streamdown } from 'svelte-streamdown';
+	import Code from 'svelte-streamdown/code';
+	import Mermaid from 'svelte-streamdown/mermaid';
+	import Math from 'svelte-streamdown/math';
 	import { mode } from 'mode-watcher';
 
 	let { message }: { message: Message } = $props();
@@ -45,6 +48,7 @@
 					content={part}
 					baseTheme="shadcn"
 					{shikiTheme}
+					components={{ code: Code, mermaid: Mermaid, math: Math }}
 					animation={{ enabled: true, type: 'fade' }}
 					class="space-y-4"
 					{theme}
