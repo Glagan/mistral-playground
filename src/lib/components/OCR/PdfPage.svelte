@@ -2,6 +2,9 @@
 	import type { OCRPageObject } from '@mistralai/mistralai/models/components';
 	import * as Card from '$lib/components/ui/card/index.js';
 	import { Streamdown } from 'svelte-streamdown';
+	import Code from 'svelte-streamdown/code';
+	import Mermaid from 'svelte-streamdown/mermaid';
+	import Math from 'svelte-streamdown/math';
 
 	let { page, loading }: { page: OCRPageObject; loading: boolean } = $props();
 
@@ -25,6 +28,7 @@
 			content={markdown}
 			baseTheme="shadcn"
 			shikiTheme="github-dark"
+			components={{ code: Code, mermaid: Mermaid, math: Math }}
 			allowedImagePrefixes={['data:image/', '*']}
 			class="space-y-4"
 		/>
